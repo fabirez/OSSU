@@ -240,7 +240,7 @@ def count_sqrts(nums_list):
     """
     @Assumes that nums_list only contains positive numbers and that there are no duplicates.
 
-    @param {list} nums_list
+    @params {list} nums_list
     @returns {int} 
         how many elements in nums_list are 
         exact squares of elements in the same list, including itself.
@@ -258,4 +258,82 @@ assert count_sqrts([4,16,2,256,65536]) == 4, "Instead we got this " + str(count_
 print("Assert 25:done")
 assert count_sqrts([0,0,0]) == 3, "Instead we got this " + str(count_sqrts([0,0,0]))
 print("Assert 26:done")
+
+###################################
+### Finger Exercise Lecture 13
+###################################
+def sum_str_lengths(L):
+    """
+    @params {list} L 
+        Assume is a non-empty list containing either: 
+             string elements or 
+             a non-empty sublist of string elements
+    @returns {int}
+        the sum of the length of all strings in L and 
+        lengths of strings in the sublists of L.
+        If L contains an element that is not a string or a list, or L's sublists 
+        contain an element that is not a string, raise a ValueError.
+    """
+    res = len(L[0]);
+    for item in L[1]:
+        try:
+            res += len(item)
+        except ValueError:
+            print("You cannot have something different than a string")
+    return res;
+
+        
+
+assert sum_str_lengths(["abcd", ["e", "fg"]]) == 7, "Instead we got this " + str(sum_str_lengths(["abcd", ["e", "fg"]]))
+print("Assert 27:done")
+assert sum_str_lengths(["abcd", ["e", "fgh1i"]]) == 10, "Instead we got this " + str(sum_str_lengths(["abcd", ["e", "fgh1i"]]))
+print("Assert 28:done")
+# print(sum_str_lengths([12, ["e", "fg"]]))      # raises ValueError
+# print(sum_str_lengths(["abcd", [3, "fg"]]))    # raises ValueError
+
+
+def keys_with_value(aDict, target):
+    """
+    @assume that keys and values in aDict are integers or strings.
+
+    @params {dict} aDict 
+    @params {int|str} target
+    @returns  {list}
+        a sorted list of the keys in aDict with the value target.
+        If aDict does not contain the value target, returns an empty list.
+    """
+    L = []
+    for k,v in aDict.items():
+        if v == target:
+            L.append(k)
+    return L;
+
+assert keys_with_value({1:2, 2:4, 5:2}, 2) == [1,5] 
+print("Assert 29:done")
+assert keys_with_value({1:4, 2:4, 5:4}, 4) == [1,2,5] 
+print("Assert 30:done")
+
+
+def all_positive(d):
+    """
+    Suppose an element in d is a key k mapping to value v (a non-empty list).
+
+    @parmas {dict} d
+        is a dictionary that maps int:list
+    @returns {list} 
+        the sorted list of all k whose v elements sums up to a 
+        positive value.
+    """
+    L = []
+    for k,v in d.items():
+        if sum(v) >= 0:
+            L.append(k)
+    return sorted(L)
+
+assert all_positive({5:[2,-4], 2:[1,2,3], 1:[2]}) == [1,2]
+print("Assert 31:done")
+assert all_positive({5:[2,4], 2:[1,2,3], 1:[2]}) == [1,2,5]
+print("Assert 32:done")
+assert all_positive({10:[2,4], 0:[0], 1:[1,-2]}) == [0,10]
+print("Assert 33:done")
 

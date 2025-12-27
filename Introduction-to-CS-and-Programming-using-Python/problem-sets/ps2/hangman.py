@@ -244,7 +244,7 @@ def hangman(secret_word, with_help):
                     print(f"Your total score for this game is {total_score}")
                     break;
         else:
-            if(user_char in ["a","e","i","e","o","u"]):
+            if(user_char in "aeiou"):
                 guesses -= 2;
             else:
                 guesses -= 1;

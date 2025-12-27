@@ -11,6 +11,8 @@ def f(i):
 # The initial amount in your savings account ( initial_deposit)
 # initial_deposit = float(input("Your initial amount: "))
     initial_deposit = float(i);
+
+
 # The months we got for paying the down paymnet
     months = 36
 # The price of our dream home
@@ -18,37 +20,39 @@ def f(i):
 # The percentual of the down payment (0.25 -> 25%)
     down_payment = 0.25; 
 # The amount of money  of the down_pay
-    down_pay = cost_house * 0.25; 
+    down_pay = cost_house * down_payment; 
 # The range where r lies
-    max = 1;
-    min = 0.01;
+    high = 1;
+    low = 0.01;
+    epsilon = 100
 # Rendiment needed to achieve a down payment
-    r = (max + min) / 2;
+    r = (high + low) / 2;
 # The result, of finding the lowest rate 
-    res = initial_deposit * (1 + r/12)**36
+    res = initial_deposit * (1 + r/12)**months
 # Steps taked by the biserction search
     steps = 0
-# Break when the res is between -100 +100 of downpay
+# Break when the res is between [-100 +100](epsilon) of downpay
     while(True):
         if(res > down_pay):
-            max = r;
+            high = r;
         else:
-            min = r;
-        r = (max + min) / 2;
+            low = r;
+        r = (high + low) / 2;
         res = initial_deposit * (1 + r/12)**36;
         steps += 1
-        if(res >= down_pay - 100 and res < down_pay + 100):
+
+        if(res >= down_pay - epsilon and res < down_pay + epsilon):
             return [r,steps] 
         if(r >= 1): return None;
 
 print("Starting assets...")
-a = f(65000)
-steps = 12;
-assert a[0] >= 0.380615234375 - 0.001 or a[0] < 0.380615234375 + 0.001 and a[1] >= steps - 2 or a[1] < steps + 2,str(a)
+r,steps = f(65000)
+expected_steps = 12;
+assert r >= 0.380615234375 - 0.001 or r < 0.380615234375 + 0.001 and steps >= expected_steps - 2 or steps < expected_steps + 2,str([r,steps])
 print("Asset 1:done")
-b = f(150000)
-steps = 11;
-assert b[0] >= 0.09619140625 - 0.001 or b[0] < 0.09619140625 + 0.001 and b[1] >= steps - 2 or b[1] < steps + 2,str(b)
+r,steps = f(150000)
+expected_steps = 11;
+assert r >= 0.09619140625 - 0.001 or r < 0.09619140625 + 0.001 and steps >= expected_steps - 2 or steps < expected_steps + 2,str(b)
 print("Asset 2:done")
 c = f(1000)
 assert c == None ,str(c)
