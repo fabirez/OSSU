@@ -38,7 +38,6 @@ def text_to_list(input_text):
     Returns:
         list representation of input_text, where each word is a different element in the list
     """
-
     new_s = "" 
     symbols = ["\r","\n",""]
     for char in input_text:
@@ -66,7 +65,13 @@ def get_frequencies(input_iterable):
     Note: 
         You can assume that the only kinds of white space in the text documents we provide will be new lines or space(s) between words (i.e. there are no tabs)
     """
-    pass
+    d = {}
+    for el in input_iterable:
+        if(el in d):
+            d[el] += 1;
+        else:
+            d[el] = 1;
+    return d;
 
 
 ### Problem 2: Letter Frequencies ###
@@ -79,7 +84,14 @@ def get_letter_frequencies(word):
         is a letter in word and the corresponding int
         is the frequency of the letter in word
     """
-    pass
+    d = {}
+    for el in word:
+        if el in d:
+            d[el] += 1;
+        else:
+            d[el] = 1;
+
+    return d
 
 
 ### Problem 3: Similarity ###
@@ -107,7 +119,42 @@ def calculate_similarity_score(freq_dict1, freq_dict2):
          all frequencies in both dict1 and dict2.
         Return 1-(DIFF/ALL) rounded to 2 decimal places
     """
-    pass
+
+    if(len(freq_dict1) <= 0 or len(freq_dict2) <= 0):
+        return 0
+
+    if(type(freq_dict2) == str):
+         freq_dict2 = get_letter_frequencies(freq_dict2)   
+
+    if(type(freq_dict1) == str):
+         freq_dict1 = get_letter_frequencies(freq_dict1)   
+
+    result = 1;
+    total = 0;
+    diff = 0;
+
+    for v in freq_dict1.values():
+           total += v;
+
+    for v in freq_dict2.values():
+           total += v;
+
+    for k,v in freq_dict1.items():
+        if(k in freq_dict2):
+            diff += abs(v - freq_dict2[k])
+            freq_dict2[k] = 0
+        else:
+           diff += v;
+
+    for v in freq_dict2.values():
+        diff += v;
+
+    return  round(result - (diff / total), 2);
+
+
+                
+
+
 
 
 ### Problem 4: Most Frequent Word(s) ###
@@ -131,7 +178,20 @@ def get_most_frequent_words(freq_dict1, freq_dict2):
     If multiple words are tied (i.e. share the same highest frequency),
     return an alphabetically ordered list of all these words.
     """
-    pass
+    l = []
+    for k,v, in freq_dict2.items():
+        if(k in freq_dict1 and v > freq_dict1[k]):
+            freq_dict1[k] = v;
+        elif(k not in freq_dict1):
+            freq_dict1[k] = v;
+            
+    max_value = max(freq_dict1.values())
+
+    for k,v, in freq_dict1.items():
+        if(v == max_value):
+            l.append(k);
+
+    return sorted(l);
 
 
 ### Problem 5: Finding TF-IDF ###
@@ -146,7 +206,33 @@ def get_tf(file_path):
         in the document) / (total number of words in the document)
     * Think about how we can use get_frequencies from earlier
     """
-    pass
+
+    s = load_file(file_path)
+
+    def get_word_frequencies(s):
+        """
+        Args:
+            s: string of words 
+        Returns:
+            a list with
+                a dictionary mapping each word to its TF
+                a number of words in the string
+        """
+        d = {}
+        l = s.split(" ")
+        for el in l:
+            if(el in d):
+                d[el] += 1;
+            else:
+                d[el] = 1;
+        return [d,len(l)];
+
+    d_words,number_of_words = get_word_frequencies(s) 
+
+    for el in d_words:
+        d_words[el] = (d_words[el] / number_of_words)
+    return d_words
+    
 
 def get_idf(file_paths):
     """
@@ -160,12 +246,44 @@ def get_idf(file_paths):
     with math.log10()
 
     """
-    pass
+    D_g = {}
+
+    def get_word_frequencies(l):
+        """
+        Args:
+            l: list of string 
+        Returns:
+            a dictionary mapping each word to its IDF
+        """
+        d = {}
+        for el in l:
+                d[el] = 1;
+        return d;
+
+    L_s = []
+    for el in file_paths:
+        L_s.append(load_file(el))
+        
+    for el in L_s:
+        d_l = get_word_frequencies(el.split(" "))
+        for k in d_l.keys():
+            if(k in D_g):
+                D_g[k] += 1;
+            else:
+                D_g[k] = 1;
+        d_l = {}
+
+    number_of_documents = len(file_paths)
+
+    # Calculate the IDF 
+    for k,v in D_g.items():
+        D_g[k] = max(0.0,math.log10(number_of_documents / v))
+    return D_g
 
 def get_tfidf(tf_file_path, idf_file_paths):
     """
         Args:
-            tf_file_path: name of file in the form of a string (used to calculate TF)
+            tf_file_pat: name of file in the form of a string (used to calculate TF)
             idf_file_paths: list of names of files, where each file name is a string
             (used to calculate IDF)
         Returns:
@@ -175,7 +293,23 @@ def get_tfidf(tf_file_path, idf_file_paths):
 
         * TF-IDF(i) = TF(i) * IDF(i)
         """
-    pass
+
+    D_tf = get_tf(tf_file_path) 
+    D_idf = get_idf(idf_file_paths) 
+
+    L_res = []
+    for k,v in D_tf.items():
+        L_res.append((k, v * D_idf[k]))
+
+    L_fs = sorted(L_res)
+    for i in range(len(L_fs)):
+        for j in range(i+1,len(L_fs)):
+            if L_fs[i][1] > L_fs[j][1]:
+                temp = L_fs[i]
+                L_fs[i] = L_fs[j]
+                L_fs[j] = temp
+
+    return L_fs
 
 
 if __name__ == "__main__":

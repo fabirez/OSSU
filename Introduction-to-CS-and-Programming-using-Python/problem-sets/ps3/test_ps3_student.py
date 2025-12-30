@@ -533,11 +533,11 @@ if __name__ == '__main__':
     loader = unittest.defaultTestLoader
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromTestCase(TestPrepData))
-    # suite.addTests(loader.loadTestsFromTestCase(TestWordFrequency))
-    # suite.addTests(loader.loadTestsFromTestCase(TestLetterFrequency))
-    # suite.addTests(loader.loadTestsFromTestCase(TestGetFrequentWords))
-    # suite.addTests(loader.loadTestsFromTestCase(TestSimilarity))
-    # suite.addTests(loader.loadTestsFromTestCase(TestTFIDF))
+    suite.addTests(loader.loadTestsFromTestCase(TestWordFrequency))
+    suite.addTests(loader.loadTestsFromTestCase(TestLetterFrequency))
+    suite.addTests(loader.loadTestsFromTestCase(TestGetFrequentWords))
+    suite.addTests(loader.loadTestsFromTestCase(TestSimilarity))
+    suite.addTests(loader.loadTestsFromTestCase(TestTFIDF))
     result = unittest.TextTestRunner(verbosity=4, resultclass=Results_600).run(suite)
 
     output = result.getOutput()
