@@ -38,20 +38,24 @@ def text_to_list(input_text):
     Returns:
         list representation of input_text, where each word is a different element in the list
     """
-    new_s = "" 
-    symbols = ["\r","\n",""]
-    for char in input_text:
-        if(char in symbols):
-            char = " "
-        new_s += char
 
-    newL= new_s.split(" ")
+    return input_text.split();
+    # OR:
+    # new_s = "" 
+    # symbols = ["\r","\n",""]
+    # for char in input_text:
+    #     if(char in symbols):
+    #         char = " "
+    #     new_s += char
+    #
+    # newL= new_s.split(" ")
+    #
+    # a = newL[:]
+    # for i in range(len(newL)):
+    #     if(newL[i] == ''):
+    #         a.remove("")
+    # return a 
 
-    a = newL[:]
-    for i in range(len(newL)):
-        if(newL[i] == ''):
-            a.remove("")
-    return a 
 
 ### Problem 1: Get Frequency ###
 def get_frequencies(input_iterable):
@@ -65,7 +69,7 @@ def get_frequencies(input_iterable):
     Note: 
         You can assume that the only kinds of white space in the text documents we provide will be new lines or space(s) between words (i.e. there are no tabs)
     """
-    d = {}
+    d = {};
     for el in input_iterable:
         if(el in d):
             d[el] += 1;
@@ -84,14 +88,7 @@ def get_letter_frequencies(word):
         is a letter in word and the corresponding int
         is the frequency of the letter in word
     """
-    d = {}
-    for el in word:
-        if el in d:
-            d[el] += 1;
-        else:
-            d[el] = 1;
-
-    return d
+    return get_frequencies(word);
 
 
 ### Problem 3: Similarity ###
@@ -121,13 +118,7 @@ def calculate_similarity_score(freq_dict1, freq_dict2):
     """
 
     if(len(freq_dict1) <= 0 or len(freq_dict2) <= 0):
-        return 0
-
-    if(type(freq_dict2) == str):
-         freq_dict2 = get_letter_frequencies(freq_dict2)   
-
-    if(type(freq_dict1) == str):
-         freq_dict1 = get_letter_frequencies(freq_dict1)   
+        return 0;
 
     result = 1;
     total = 0;
@@ -149,13 +140,7 @@ def calculate_similarity_score(freq_dict1, freq_dict2):
     for v in freq_dict2.values():
         diff += v;
 
-    return  round(result - (diff / total), 2);
-
-
-                
-
-
-
+    return round(result - (diff / total), 2);
 
 ### Problem 4: Most Frequent Word(s) ###
 def get_most_frequent_words(freq_dict1, freq_dict2):
@@ -218,13 +203,8 @@ def get_tf(file_path):
                 a dictionary mapping each word to its TF
                 a number of words in the string
         """
-        d = {}
         l = s.split(" ")
-        for el in l:
-            if(el in d):
-                d[el] += 1;
-            else:
-                d[el] = 1;
+        d = get_frequencies(l)
         return [d,len(l)];
 
     d_words,number_of_words = get_word_frequencies(s) 
