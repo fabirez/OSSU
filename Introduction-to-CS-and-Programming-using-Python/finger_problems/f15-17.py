@@ -74,6 +74,9 @@ class Circle():
          Returns self or c, the Circle object with the bigger radius """
          return self if self.radius > c.radius else c;
 
+
+
+
 ###################################
 ### Finger Exercise Lecture 18
 ###################################
@@ -92,84 +95,5 @@ class Circle1():
     return Circle(self.radius + c.radius)
  def __str__(self):
     """ A Circle's string representation is the radius """
+    # your code here
     return str(self.radius)
-
-###################################
-### Finger Exercise Lecture 19
-###################################
-class Container(object):
-     """
-     A container object is a list and can store elements of any type
-     """
-     def __init__(self):
-         """
-         Initializes an empty list
-         """
-         self.myList = []
-
-     def size(self):
-         """
-         Returns the length of the container list
-         """
-         return len(self.myList)
-
-     def add(self, elem):
-         """
-         Adds the elem to one end of the container list, keeping the end
-         you add to consistent. Does not return anything
-         """
-         self.myList.append(elem)
-
-     def get_list(self):
-         """
-         Returns the current list
-         """
-         return self.myList
-
-print("#######################################")
-print("# Assert Container")
-print("#######################################")
-c = Container()
-assert c.size() == 0;
-c.add(1)
-c.add(2)
-c.add(3)
-assert c.size() == 3;
-assert c.get_list() == [1,2,3];
-print("v Asset Passed")
-
-
-class Stack(Container):
-     """
-     A subclass of Container. Has an additional method to remove elements.
-     """
-     def remove(self):
-         """
-         The newest element in the container list is removed
-         Returns the element removed or None if the queue contains no elements
-         """
-         if len(self.myList) == 0:
-            return None
-         a = self.myList[0]
-         self.myList=self.myList[1:]
-         return a
-
-
-
-print("#######################################")
-print("# Assert Stack")
-print("#######################################")
-
-s = Stack()
-assert s.size() == 0;
-s.add(1)
-assert s.size() == 1;
-s.add(2)
-assert s.size() == 2;
-s.add(3)
-assert s.size() == 3;
-s.remove()
-assert s.get_list() == [2,3]
-assert s.size() == 2;
-
-print("v Asset Passed")
