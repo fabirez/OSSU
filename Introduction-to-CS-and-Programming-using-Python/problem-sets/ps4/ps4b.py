@@ -204,14 +204,8 @@ class EncryptedMessage(Message):
 
         Returns: (PlaintextMessage) the decrypted message (containing the pad)
         '''
-        # all_chars = string.ascii_lowercase
-
-
         new_pad = copy.copy(pad);
         for idx in range(len(new_pad)):
             new_pad[idx] = -new_pad[idx]
         message_encr = self.apply_pad(new_pad);
-        print("\n***************************************")
-        print("PAD", pad);
-        print("***************************************")
         return PlaintextMessage(message_encr, pad)

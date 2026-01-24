@@ -4,7 +4,6 @@
 
 import json
 import ps4b # Importing your work from Part B
-import string
 
 my_message = ps4b.Message("My message!")
 ### HELPER CODE ###
