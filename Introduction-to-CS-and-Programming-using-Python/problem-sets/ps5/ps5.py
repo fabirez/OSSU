@@ -93,14 +93,13 @@ def pix_to_img(pixels_list, size, mode):
     for idx in range(len(pixels_list)):
         if(type(pixels_list[idx]) == tuple): #rgb
             temp = []
-
             for el in pixels_list[idx]:
-                temp.append(el * 255)
-
+                temp.append(el * 255 // (2**3 - 1)) # rgb formula
             pixels_list[idx] = tuple(temp)
         else:
             pixels_list[idx] = pixels_list[idx] * 255;
     a.putdata(pixels_list)
+    a.show()
     return a;
 
 
@@ -192,14 +191,13 @@ def reveal_color_image(filename):
     Returns:
         result: an Image object containing the hidden image
     """
-
     img = Image.open(filename);
     pixels = list(img.get_flattened_data());
 
-    new_pixels=[]
+    new_pixels = [];
     for pixel in pixels:
-        a = extract_end_bits(3,pixel)
-        new_pixels.append(a)
+        extracted_bits = extract_end_bits(3, pixel);
+        new_pixels.append(extracted_bits);
     
 
     return pix_to_img(new_pixels, img.size, img.mode);
@@ -246,7 +244,6 @@ def draw_kerb(filename, kerb):
 
 
 def main():
-    pass
 
     # Uncomment the following lines to test part 1
 
