@@ -89,19 +89,28 @@ def pix_to_img(pixels_list, size, mode):
         img: Image object made from list of pixels
     """
 
-    a = Image.new(mode, size);
-    for idx in range(len(pixels_list)):
-        if(type(pixels_list[idx]) == tuple): #rgb
-            temp = []
-            for el in pixels_list[idx]:
-                temp.append(el * 255 // (2**3 - 1)) # rgb formula
-            pixels_list[idx] = tuple(temp)
-        else:
-            pixels_list[idx] = pixels_list[idx] * 255;
-    a.putdata(pixels_list)
-    a.show()
-    return a;
+    # Create a blank image, so we can paint on it
+    # imagine it as an empty canvas
+    img = Image.new(mode, size);
 
+    def get_right_color(px):
+        """
+        convert a 3-bit (0,7) number in 8 bit (0,255) for rgb
+            @param {number} px
+                - 3-bit value, range between 0 & 7
+            @return {int}
+                - 8-bit value, range between 0 & 255
+        """
+        return px * 255 // (2**3 - 1);
+
+    if(type(pixels_list[0]) == tuple):
+        for idx,(r,g,b) in enumerate(pixels_list):
+            pixels_list[idx] = (get_right_color(r), get_right_color(g), get_right_color(b))
+    else:
+        pixels_list = [px * 255 for px in pixels_list];
+
+    img.putdata(pixels_list)
+    return img;
 
 def filter(pixels_list, color):
     """
@@ -155,10 +164,12 @@ def extract_end_bits(num_end_bits, pixel):
     """
 
     res = [];
+    # If the current pixel is rapresented by (R,G,B)
     if(type(pixel) == tuple):
         for el in pixel:
             res.append(el % 2**num_end_bits)
         res = tuple(res)
+    # Or it's only 1 color (BW)
     else:
         res = pixel % 2**num_end_bits;
     return res;
@@ -172,14 +183,13 @@ def reveal_bw_image(filename):
     Returns:
         result: an Image object containing the hidden image
     """
-
+    # Open the image
     img = Image.open(filename)
+    # Get all the pixels from the img
     pixels = list(img.get_flattened_data())
-
-    new_pixels=[]
-    for pixel in pixels:
-        new_pixels.append(extract_end_bits(1,pixel))
-
+    # Get the LSB 
+    new_pixels = [extract_end_bits(1,pixel) for pixel in pixels];
+    # Create the new image with the new pixels [LSB,LSB,...]
     return pix_to_img(new_pixels, img.size, img.mode)
 
 
@@ -191,15 +201,13 @@ def reveal_color_image(filename):
     Returns:
         result: an Image object containing the hidden image
     """
+    # Open the image
     img = Image.open(filename);
+    # Get all the pixels from the img
     pixels = list(img.get_flattened_data());
-
-    new_pixels = [];
-    for pixel in pixels:
-        extracted_bits = extract_end_bits(3, pixel);
-        new_pixels.append(extracted_bits);
-    
-
+    # Get the LSB 
+    new_pixels = [extract_end_bits(3,pixel) for pixel in pixels];
+    # Create the new image with the new pixels [(LSB,LSB,LSB),(LSB,LSB,LSB),...]
     return pix_to_img(new_pixels, img.size, img.mode);
 
 
