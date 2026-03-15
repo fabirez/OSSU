@@ -3,3 +3,4 @@
 #.gitignore file itself.
 # Otherwise the pattern may also match at any level below the .gitignore level
 temp.py
+**/*~
