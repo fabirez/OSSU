@@ -101,40 +101,40 @@
 
 (check-expect
  (render E0)
- (place-image CURSOR 0 (/ HEIGHT 2) MTS)
+ (overlay/align "left" "middle" CURSOR MTS)
  )
 
 (check-expect
  (render E1)
- (place-image
-  (beside
-   (text "a" TEXT-SIZE TEXT-COLOR)
-   CURSOR
-   )
-  TEXT-SIZE (/ HEIGHT 2) MTS)
+ (overlay/align "left" "middle"
+                (beside
+                 (text "a" TEXT-SIZE TEXT-COLOR)
+                 CURSOR
+                 )
+                MTS)
  )
 
 (check-expect
  (render E2)
- (place-image
-  (beside
-   CURSOR
-   (text "b" TEXT-SIZE TEXT-COLOR)
-   )
-  TEXT-SIZE (/ HEIGHT 2) MTS)
+ (overlay/align "left" "middle"
+                (beside
+                 CURSOR
+                 (text "b" TEXT-SIZE TEXT-COLOR)
+                 )
+                MTS)
  )
 
 
 ; (define (render e) MTS) ; stub
 
 (define (render e)
-  (place-image
-   (beside
-    (text (editor-pre e)  TEXT-SIZE TEXT-COLOR)
-    CURSOR
-    (text (editor-post e) TEXT-SIZE TEXT-COLOR)
-    )
-   (handle-cursor-pos e) (/ HEIGHT 2) MTS)
+  (overlay/align "left" "middle"
+                 (beside
+                  (text (editor-pre e)  TEXT-SIZE TEXT-COLOR)
+                  CURSOR
+                  (text (editor-post e) TEXT-SIZE TEXT-COLOR)
+                  )
+                 MTS)
   )
 
 
@@ -157,7 +157,10 @@
 ; (define (get-first s) "")  stub
 
 (define (get-first s)
-  (substring s 0 1)
+  (if (> (string-length s) 0)
+      (substring s 0 1)
+      s
+      )
   )
 
 
@@ -166,11 +169,15 @@
 
 (check-expect (get-last "ab") "b")
 (check-expect (get-last  " ") " ")
+(check-expect (get-last  "") "")
 
 ; (define (get-last s) "") ; stub
 
 (define (get-last s) 
-  (substring s (- (string-length s) 1) (string-length s))
+  (if (> (string-length s) 0)
+      (substring s (- (string-length s) 1) (string-length s))
+      s
+      )
   )
 
 
@@ -241,24 +248,6 @@
 
 (define (handle-key e ke)
   (cond 
-    [(key=? ke " ") (make-editor (string-append (editor-pre e) " ") (editor-post e))]
-
-    [ 
-     (and
-      (or (key=? ke "left") (key=? ke "\b"))
-      (is-empty? (editor-pre e))
-      )
-     e
-     ]
-
-    [ 
-     (and 
-      (key=? ke "right")
-      (is-empty? (editor-post e))
-      )
-     e
-     ]
-
     [
      (or 
       (key=? ke "shift") (key=? ke "control") (key=? ke "\r")
@@ -289,4 +278,4 @@
      ]
 
     [else 
-     (make-editor (string-append (editor-pre e) ke) "")]))
+     (make-editor (string-append (editor-pre e) ke) (editor-post e))]))
