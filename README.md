@@ -20,4 +20,4 @@ Courses | Started | Finished | Article
 
 Courses | Started | Finished | Article 
 :-- | :--: | :--: | :--:
-[Systematic Program Design](coursepages/spd/README.md) | Future | Future | Future 
+[Systematic Program Design](coursepages/spd/README.md) | 10/03/2026 | Future | Still nothing...
