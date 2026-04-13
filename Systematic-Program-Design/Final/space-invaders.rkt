@@ -46,6 +46,10 @@
 (define TANK-RIGHT 1)
 (define TANK-LEFT -1)
 
+(define INVADER-MAX-RANDOM 5) 
+(define INVADER-I-POSY -10) 
+(define INVADER-I-DX -1) 
+
 
 
 ;; Data Definitions:
@@ -126,10 +130,11 @@
 ;; start the world with (main G0)
 ;; 
 (define (main g)
-  (big-bang g                         ; Game
+  (big-bang g                 ; Game
     (on-tick           tock)  ; Game -> Game
     (to-draw         render)  ; Game -> Image
-    (on-key    handle-key)))  ; Game KeyEvent -> Game
+    (on-key      handle-key)  ; Game KeyEvent -> Game
+    (stop-when handle-stop))) ; Game -> Boolean
 
 ;; Game -> Game
 ;; produce the next ...
@@ -140,8 +145,179 @@
 ;; !!!
 ;; change name ceck-direction in chec-dir-taknk
 (define (tock g)
-  (make-game (dir-invaders (move-invaders (game-invaders g))) (move-missiles (game-missiles g)) (check-direction (move-tank (game-tank g)))))
+  (make-game
 
+   (check-collision
+    (dir-invaders (move-invaders
+                   (gen-invaders (game-invaders g))))
+    (game-missiles g)
+    )
+   (filter-missiles (move-missiles (game-missiles g)))
+   (check-direction (move-tank (game-tank g)))))
+
+
+
+;; ListOfMissiles -> ListOfMissiles
+;; filter out all the missiles out of the viewport (missile-y < 0)
+
+(check-expect (filter-missiles empty) empty)
+(check-expect (filter-missiles (list (make-missile 0 0))) (list (make-missile 0 0)))
+(check-expect (filter-missiles (list (make-missile 150 150))) (list (make-missile 150 150)))
+(check-expect (filter-missiles (list (make-missile WIDTH HEIGHT))) (list (make-missile WIDTH HEIGHT)))
+
+(check-expect (filter-missiles (list (make-missile 150 -1))) empty)
+(check-expect (filter-missiles (list (make-missile WIDTH -100))) empty)
+
+(check-expect (filter-missiles (list (make-missile 0 0) (make-missile 150 -1))) (list (make-missile 0 0)))
+(check-expect (filter-missiles (list (make-missile 150 -1) (make-missile 0 0))) (list (make-missile 0 0)))
+
+;; (define (filter-missiles lom) empty) ; stub
+
+(define (filter-missiles lom)
+  (cond
+    [(empty? lom) empty]
+    [else
+     (if
+      (out-missile? (first lom))
+      (rest lom)
+      (cons (first lom) (filter-missiles (rest lom)))
+      )
+     ]
+    ))
+
+;; Missile -> Boolean
+;; produces true if the pos-y of the missile is less than 0
+
+
+(check-expect (out-missile? (make-missile 0 -10)) true)
+(check-expect (out-missile? (make-missile -10 0)) false)
+(check-expect (out-missile? (make-missile 0 0)) false)
+(check-expect (out-missile? (make-missile 150 1500)) false)
+(check-expect (out-missile? (make-missile WIDTH HEIGHT)) false)
+
+;; (define (out-missile? m) false) ; stub
+
+(define (out-missile? m) (< (missile-y m) 0)) 
+
+;; ListOfInvaders ListOfMissiles -> ListOfInvaders 
+;; !!!
+
+
+;; (define (check-collision loi lom) empty) ; stub
+
+(define (check-collision loi lom)
+  (cond
+    [(empty? loi) empty]
+    [else
+     (if (check-hit? (first loi) lom)
+         (check-collision (rest loi) lom)
+         (cons (first loi)
+               (check-collision (rest loi) lom)))
+     ]
+    )) 
+
+
+
+
+
+;; Invader ListOfMissiles -> Boolean
+;; if hte invader go hitted by one of missiles return true otherwise false
+
+
+
+;; (define (check-hit? i lom) false) ; stub
+
+(define (check-hit? i lom) 
+  (cond
+    [(empty? lom) false]
+    [else
+     (if (hit? i (first lom))
+         true
+         (check-hit? i (rest  lom)))
+     ]
+    )
+  ) 
+
+
+
+;; Invader Misisle -> Boolean
+;; prdouces true if the missile hit the invader otherwise false
+
+(check-expect (hit? (make-invader 0 0 -1) (make-missile 10 10)) true)
+(check-expect (hit? (make-invader 0 0 -1) (make-missile 15 15)) true)
+(check-expect (hit? (make-invader 0 0 -1) (make-missile 0 15)) true)
+(check-expect (hit? (make-invader 0 0 -1) (make-missile 15 0)) false)
+(check-expect (hit? (make-invader 0 0 -1) (make-missile 20 20)) false)
+(check-expect (hit? (make-invader 10 10 -1) (make-missile 10 10)) true)
+
+;; (define (hit? i m) false) ; stub
+
+(define (hit? i m)
+  (and 
+   (> (missile-y m) 0) ;; avoid hit outside of the viewport just to make sure
+   (< (invader-x i)  (+ (missile-x m)  (image-width MISSILE)))
+   (> (+ (invader-x i) (image-width INVADER)) (missile-x m))
+   (< (invader-y i)  (+ (missile-y m)  (image-height MISSILE)))
+   (> (+ (invader-y i) (image-height INVADER)) (missile-y m))))
+
+
+
+
+;; ListOfInvaders -> ListOfInvaders
+;; !!!
+
+(check-expect (gen-invaders empty) empty)
+;; (check-expect (gen-invaders (list I1) 3) (list I1))
+
+;; (define (gen-invaders loi) empty) ; stub
+
+(define (gen-invaders loi) (if (= (random INVADE-RATE) 1) (append loi (n-to-i (gen-naturals (random INVADER-MAX-RANDOM)))) loi))
+
+;; ListOfNatural -> ListOfInvaders
+;; produces a ListOfInvaders, based on the length of ListOfNatural 
+
+(check-random (n-to-i (list 0))   (list (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX)))
+(check-random (n-to-i (list 1 0)) (list 
+                                   (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX)
+                                   (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX)))
+(check-random (n-to-i (list 3 2 1 0)) 
+              (list 
+               (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX)
+               (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX)
+               (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX)
+               (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX)
+               ))
+
+;; (define (n-to-i lon) empty) ; stub
+
+(define (n-to-i lon)
+  (cond 
+    [(empty? lon) empty]
+    [else
+     (cons (make-invader (random WIDTH) INVADER-I-POSY INVADER-I-DX) 
+           (n-to-i (rest lon)))]
+    ))
+
+
+
+;; Natural -> ListOfNaturals
+;; produce a lsit of natural numbers starting on the consumed natural
+;; ASSUME: Natural can't be more than INVADER-MAX-RANDOM
+
+(check-expect (gen-naturals 0) (list 0))
+(check-expect (gen-naturals 1) (list 1 0))
+(check-expect (gen-naturals 3) (list 3 2 1 0))
+(check-expect (gen-naturals 6) (list 6 5 4 3 2 1 0))
+
+;; (define (gen-naturals n) empty) ; stub
+
+(define (gen-naturals n) 
+  (cond 
+    [(zero? n) (cons 0 empty)] 
+    [else 
+     (cons n (gen-naturals (- n 1)))
+     ]
+    ))
 
 
 
@@ -419,3 +595,37 @@
                 )]
     [else 
      g]))
+
+
+;; Game -> Boolean
+;; produces true when the y of one of the ivnaders is >= HEIGHT (land)
+
+(check-expect (handle-stop G0) false)
+(check-expect (handle-stop G1) false)
+(check-expect (handle-stop G2) false)
+(check-expect (handle-stop G3) true)
+
+;; (define (handle-stop g) false) ; stub
+
+(define (handle-stop g) (landed-invader? (game-invaders g)))
+
+;; ListOfInvaders -> Boolean
+;; produces true when the y of one of the ivnaders is >= HEIGHT (land)
+
+
+(check-expect (landed-invader? (list (make-invader 0 0 -1))) false)
+(check-expect (landed-invader? (list (make-invader 150 150 1))) false)
+(check-expect (landed-invader? (list (make-invader WIDTH HEIGHT 10))) true)
+(check-expect (landed-invader? (list (make-invader 0 HEIGHT -10))) true)
+(check-expect (landed-invader? (list (make-invader WIDTH 0 10))) false)
+
+;; (define (landed-invader? loi) false) ; stub
+
+(define (landed-invader? loi)
+  (cond
+    [(empty? loi) false]
+    [else
+     (if (>= (invader-y (first loi)) HEIGHT)
+         true
+         (landed-invader? (rest loi)))])) 
+
