@@ -49,7 +49,14 @@
 (define INVADER-MAX-RANDOM 5) 
 (define INVADER-I-POSY -10) 
 (define INVADER-I-DX -1) 
-
+(define GAME-OVER
+  (place-image
+ (text "Space Invader" 16 "black") (/ WIDTH 2) 100
+ (place-image
+  (text "Game Over!!!" 32 "red") (/ WIDTH 2) 130
+  (place-image (text "Try Again" 24 "black") (/ WIDTH 2) 230
+               (place-image
+                (beside INVADER (rectangle 20 20 "solid" "white") TANK) (/ WIDTH 2) 340 BG)))))
 
 
 ;; Data Definitions:
@@ -122,7 +129,8 @@
 
 ;; [S]tub[G]ame an utily for stubs
 (define SG (make-game empty empty (make-tank 0 TANK-RIGHT)))
-
+;; an utility for last scene in the game
+(define (game-over g) GAME-OVER)
 ;; =================
 ;; Functions:
 
@@ -130,11 +138,11 @@
 ;; start the world with (main G0)
 ;; 
 (define (main g)
-  (big-bang g                 ; Game
-    (on-tick           tock)  ; Game -> Game
-    (to-draw         render)  ; Game -> Image
-    (on-key      handle-key)  ; Game KeyEvent -> Game
-    (stop-when handle-stop))) ; Game -> Boolean
+  (big-bang g                            ; Game
+    (on-tick                      tock)  ; Game -> Game
+    (to-draw                    render)  ; Game -> Image
+    (on-key                 handle-key)  ; Game KeyEvent -> Game
+    (stop-when handle-stop game-over))) ; Game -> Boolean
 
 ;; Game -> Game
 ;; produce the next ...
