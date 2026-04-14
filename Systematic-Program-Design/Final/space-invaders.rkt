@@ -51,12 +51,12 @@
 (define INVADER-I-DX -1) 
 (define GAME-OVER
   (place-image
- (text "Space Invader" 16 "black") (/ WIDTH 2) 100
- (place-image
-  (text "Game Over!!!" 32 "red") (/ WIDTH 2) 130
-  (place-image (text "Try Again" 24 "black") (/ WIDTH 2) 230
-               (place-image
-                (beside INVADER (rectangle 20 20 "solid" "white") TANK) (/ WIDTH 2) 340 BG)))))
+   (text "Space Invader" 16 "black") (/ WIDTH 2) 100
+   (place-image
+    (text "Game Over!!!" 32 "red") (/ WIDTH 2) 130
+    (place-image (text "Try Again" 24 "black") (/ WIDTH 2) 230
+                 (place-image
+                  (beside INVADER (rectangle 20 20 "solid" "white") TANK) (/ WIDTH 2) 340 BG)))))
 
 
 ;; Data Definitions:
@@ -129,14 +129,15 @@
 
 ;; [S]tub[G]ame an utily for stubs
 (define SG (make-game empty empty (make-tank 0 TANK-RIGHT)))
-;; an utility for last scene in the game
+;; an utility function for last scene in the game
 (define (game-over g) GAME-OVER)
+
 ;; =================
 ;; Functions:
 
 ;; Game -> Game
 ;; start the world with (main G0)
-;; 
+
 (define (main g)
   (big-bang g                            ; Game
     (on-tick                      tock)  ; Game -> Game
@@ -145,23 +146,16 @@
     (stop-when handle-stop game-over))) ; Game -> Boolean
 
 ;; Game -> Game
-;; produce the next ...
-;; !!!
+;; produce the next state of the Game
 
-;; (define (tock g) SG)
-
-;; !!!
-;; change name ceck-direction in chec-dir-taknk
 (define (tock g)
   (make-game
-
    (check-collision
     (dir-invaders (move-invaders
                    (gen-invaders (game-invaders g))))
-    (game-missiles g)
-    )
+    (game-missiles g))
    (filter-missiles (move-missiles (game-missiles g)))
-   (check-direction (move-tank (game-tank g)))))
+   (dir-tank (move-tank (game-tank g)))))
 
 
 
@@ -194,8 +188,7 @@
     ))
 
 ;; Missile -> Boolean
-;; produces true if the pos-y of the missile is less than 0
-
+;; produces true when the missile is out of the viewport (when the pos-y < 0)
 
 (check-expect (out-missile? (make-missile 0 -10)) true)
 (check-expect (out-missile? (make-missile -10 0)) false)
@@ -208,7 +201,36 @@
 (define (out-missile? m) (< (missile-y m) 0)) 
 
 ;; ListOfInvaders ListOfMissiles -> ListOfInvaders 
-;; !!!
+;; produce an updated ListOfInvaders, removing all the invader hitted by a Missile
+
+
+(check-expect (check-collision empty empty) empty)
+
+(check-expect (check-collision
+               (list (make-invader 0 INVADER-I-POSY -1)) 
+               empty)
+              (list (make-invader 0 INVADER-I-POSY -1)))
+
+(check-expect (check-collision
+               empty 
+               (list (make-missile 0 MISSILE-POSY)))
+              empty)
+
+(check-expect (check-collision
+               (list (make-invader 0 INVADER-I-POSY -1)) 
+               (list (make-missile 0 MISSILE-POSY)))
+              (list (make-invader 0 INVADER-I-POSY -1)))
+
+
+(check-expect (check-collision
+               (list (make-invader 100  85 -1)) 
+               (list (make-missile 100 100)))
+              empty)
+
+(check-expect (check-collision
+               (list (make-invader 100 85 -1) (make-invader 100 INVADER-I-POSY -1)) 
+               (list (make-missile 100 100) (make-missile 100 MISSILE-POSY)))
+              (list (make-invader 100 INVADER-I-POSY -1)))
 
 
 ;; (define (check-collision loi lom) empty) ; stub
@@ -220,18 +242,23 @@
      (if (check-hit? (first loi) lom)
          (check-collision (rest loi) lom)
          (cons (first loi)
-               (check-collision (rest loi) lom)))
-     ]
+               (check-collision (rest loi) lom)))]
     )) 
 
 
-
-
-
 ;; Invader ListOfMissiles -> Boolean
-;; if hte invader go hitted by one of missiles return true otherwise false
+;; produce true when a Missile hit an invader false otherwise
 
+(check-expect (check-hit? (make-invader 100 85 -1) empty)
+              false)
 
+(check-expect (check-hit? (make-invader 100 85 -1) 
+                          (list (make-missile 250 250) (make-missile 0 MISSILE-POSY)))
+              false)
+
+(check-expect (check-hit? (make-invader 100 85 -1)
+                          (list (make-missile 100 100)))
+              true)
 
 ;; (define (check-hit? i lom) false) ; stub
 
@@ -271,15 +298,19 @@
 
 
 
-;; ListOfInvaders -> ListOfInvaders
+;; ListOfInvaders -> ListOfInvaders 
+;; produce new invaders when (random INVADE-RATE) is equal 1
 ;; !!!
 
-(check-expect (gen-invaders empty) empty)
-;; (check-expect (gen-invaders (list I1) 3) (list I1))
+(check-random (gen-invaders empty) empty)
+(check-random (gen-invaders (list I1)) (list I1))
 
 ;; (define (gen-invaders loi) empty) ; stub
 
-(define (gen-invaders loi) (if (= (random INVADE-RATE) 1) (append loi (n-to-i (gen-naturals (random INVADER-MAX-RANDOM)))) loi))
+(define (gen-invaders loi)
+  (if (= (random INVADE-RATE) 1)
+      (append loi (n-to-i (gen-naturals (random INVADER-MAX-RANDOM))))
+      loi))
 
 ;; ListOfNatural -> ListOfInvaders
 ;; produces a ListOfInvaders, based on the length of ListOfNatural 
@@ -330,12 +361,13 @@
 
 
 ;; ListOfInvaders -> ListOfInvaders 
-;; produce a new list of invaders with updated directions if needed
-;; !!! Add more check-expect for the directions thing  (use list too)
+;; produce a new ListOfInvaders with updated directions when their posX > WIDTH or < 0
 
 (check-expect (dir-invaders empty) empty)
-(check-expect (dir-invaders (cons (make-invader 150 100 12) empty)) (cons (make-invader 150 100 12) empty))
-(check-expect (dir-invaders (cons (make-invader 150 100 12) (cons (make-invader  50 150 12) empty))) (cons (make-invader 150 100 12) (cons (make-invader 50 150 12) empty)))
+(check-expect (dir-invaders (list (make-invader 0 100 1))) (list (make-invader 0 100 1)))
+(check-expect (dir-invaders (list (make-invader -1 100 -1))) (list (make-invader -1 100 1)))
+(check-expect (dir-invaders (list (make-invader (+ WIDTH 1) 100 1))) (list (make-invader (+ WIDTH 1) 100 -1)))
+(check-expect (dir-invaders (list (make-invader 150 100 12) (make-invader  50 150 12))) (list (make-invader 150 100 12) (make-invader 50 150 12)))
 
 ;; (define (dir-invaders loi) empty) ; stub
 
@@ -448,15 +480,15 @@
 ;; Tank -> Tank
 ;; consume a tank and adjust the direction of the tank, when hits the edges
 
-(check-expect (check-direction (make-tank  0 TANK-LEFT)) (make-tank  0 TANK-LEFT))  ;; reaching left-edge
-(check-expect (check-direction (make-tank -1 TANK-LEFT)) (make-tank -1 TANK-RIGHT)) ;; reached left-edge
+(check-expect (dir-tank (make-tank  0 TANK-LEFT)) (make-tank  0 TANK-LEFT))  ;; reaching left-edge
+(check-expect (dir-tank (make-tank -1 TANK-LEFT)) (make-tank -1 TANK-RIGHT)) ;; reached left-edge
 
-(check-expect (check-direction (make-tank WIDTH TANK-RIGHT)) (make-tank WIDTH TANK-RIGHT))             ;; reaching right-edge
-(check-expect (check-direction (make-tank (+ WIDTH 1) TANK-RIGHT)) (make-tank (+ WIDTH  1) TANK-LEFT)) ;; reached right-edge
+(check-expect (dir-tank (make-tank WIDTH TANK-RIGHT)) (make-tank WIDTH TANK-RIGHT))             ;; reaching right-edge
+(check-expect (dir-tank (make-tank (+ WIDTH 1) TANK-RIGHT)) (make-tank (+ WIDTH  1) TANK-LEFT)) ;; reached right-edge
 
-;; (define (check-direction t) T0) ; stub
+;; (define (dir-tank t) T0) ; stub
 
-(define (check-direction t) 
+(define (dir-tank t) 
   (cond
     [(and (< (tank-x t) 0)  (= (tank-dir t) TANK-LEFT)) (make-tank (tank-x t) TANK-RIGHT)]
     [(and (> (tank-x t) WIDTH)  (= (tank-dir t) TANK-RIGHT)) (make-tank (tank-x t) TANK-LEFT)]
@@ -554,7 +586,6 @@
 ;; produce a list of images missiles, based on how many missile we have
 
 (check-expect (gen-loim empty) empty)
-   
 (check-expect (gen-loim (list (make-missile 0 0) (make-missile 10 10))) (list MISSILE MISSILE))
 
 ;; (define (gen-loim loim) empty) ; stub
@@ -636,4 +667,7 @@
      (if (>= (invader-y (first loi)) HEIGHT)
          true
          (landed-invader? (rest loi)))])) 
+
+
+
 
