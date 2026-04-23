@@ -173,6 +173,8 @@
 (check-expect (filter-missiles (list (make-missile 0 0) (make-missile 150 -1))) (list (make-missile 0 0)))
 (check-expect (filter-missiles (list (make-missile 150 -1) (make-missile 0 0))) (list (make-missile 0 0)))
 
+(check-expect (filter-missiles (list (make-missile 150 -1) (make-missile 150 10) (make-missile 150 -1))) (list (make-missile 150 10)))
+
 ;; (define (filter-missiles lom) empty) ; stub
 
 (define (filter-missiles lom)
@@ -181,7 +183,7 @@
     [else
      (if
       (out-missile? (first lom))
-      (rest lom)
+      (filter-missiles (rest lom))
       (cons (first lom) (filter-missiles (rest lom)))
       )
      ]
@@ -289,7 +291,7 @@
 
 (define (hit? i m)
   (and 
-   (> (missile-y m) 0) ;; avoid hit outside of the viewport just to make sure
+   (> (missile-y m) 0) ;; avoid hit outside of the viewport
    (< (invader-x i)  (+ (missile-x m)  (image-width MISSILE)))
    (> (+ (invader-x i) (image-width INVADER)) (missile-x m))
    (< (invader-y i)  (+ (missile-y m)  (image-height MISSILE)))
@@ -667,6 +669,7 @@
      (if (>= (invader-y (first loi)) HEIGHT)
          true
          (landed-invader? (rest loi)))])) 
+
 
 
 
