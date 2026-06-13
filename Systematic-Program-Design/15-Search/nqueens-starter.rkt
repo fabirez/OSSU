@@ -125,30 +125,47 @@
     (make-cell (make-pos 0 7) E)   (make-cell (make-pos 1 7) E) (make-cell (make-pos 2 7) E) (make-cell (make-pos 3 7) E) (make-cell (make-pos 4 7) E)  (make-cell (make-pos 5 7) E) (make-cell (make-pos 6 7) E) (make-cell (make-pos 7 7) E)
 ))
 
+;; [A]ll [P]os [4]x4
+(define AP4 (list                 
+                      (make-pos 0 0)    (make-pos 1 0)  (make-pos 2 0)  (make-pos 3 0) 
+                      (make-pos 0 1)    (make-pos 1 1)  (make-pos 2 1)  (make-pos 3 1) 
+                      (make-pos 0 2)    (make-pos 1 2)  (make-pos 2 2)  (make-pos 3 2) 
+                      (make-pos 0 3)    (make-pos 1 3)  (make-pos 2 3)  (make-pos 3 3)))
+
+
+;; [A]ll [P]os [5]x5
+(define AP5 (list                 
+                      (make-pos 0 0)    (make-pos 1 0)  (make-pos 2 0)  (make-pos 3 0)  (make-pos 4 0)
+                      (make-pos 0 1)    (make-pos 1 1)  (make-pos 2 1)  (make-pos 3 1)  (make-pos 4 1)
+                      (make-pos 0 2)    (make-pos 1 2)  (make-pos 2 2)  (make-pos 3 2)  (make-pos 4 2)
+                      (make-pos 0 3)    (make-pos 1 3)  (make-pos 2 3)  (make-pos 3 3)  (make-pos 4 3)
+                      (make-pos 0 4)    (make-pos 1 4)  (make-pos 2 4)  (make-pos 3 4)  (make-pos 4 4)
+                      ))
+
+
 ;; Natural -> Board | False 
 ;; consume a natural, generate a board Natural x Natural and produce a solved board if there is any, otherwise false.
 
-;; (check-expect (solve B0) B0_S)
-;; (check-expect (solve B0_NP) false)
-;;
-;; ;; (define (solve b) false) ; stub
-;;
-;; (define (solve b)
-;; 	(local
-;; 		[(define (solve--bd b)									 ;; Board -> Board | False
-;; 				(if (is-solved? b)									 ;; Board -> Boolean
-;; 						b
-;; 						(solve--lobd (next-boards b))))  ;; Board -> (listof Board) | False
-;;
-;; 		 (define (solve--lobd lobd)
-;; 			 (cond 
-;; 				 [(empty? lobd) false]
-;; 				 [else
-;; 					 (local [(define try (solve--bd (first lobd)))]
-;; 					 (if (not (false? try))
-;; 						 try 
-;; 						 (solve--lobd (rest b))))]) ;; (listof Board) -> (listof Board) | False
-;; 		 (solve--bd b)))											;; trampoline
+(check-expect (solve B0) B0_S)
+(check-expect (solve B0_NP) false)
+
+;; (define (solve b) false) ; stub
+
+(define (solve b)
+	(local
+		[(define (solve--bd b)									   ;; Board -> Board | False
+				(if (is-solved? b 4)									 ;; Board Natural -> Boolean
+						b
+						(solve--lobd (next-boards b))))  ;; Board -> (listof Board) | False
+
+		 (define (solve--lobd lobd)
+			 (cond [(empty? lobd) false]
+				 [else
+					 (local [(define try (solve--bd (first lobd)))]
+					 (if (not (false? try))
+						 try 
+						 (solve--lobd (rest lobd))))]))]  ;; (listof Board) -> (listof Board) | False
+		 (solve--bd b)))											    ;; trampoline
 
 
 
@@ -178,86 +195,466 @@
 (check-expect (is-solved?    B0 4) false)
 (check-expect (is-solved?  B0_S 4)  true)
 
-;; (define (is-solved? b) false) ;; stub
+;; (define (is-solved? b n) false) ;; stub
 
-(define (is-solved? b n) 
-	(local
-		[(define (queen? c) (not (false? (cell-v c)))) ]
-	(= (length (filter queen? b)) n)))
+(define (is-solved? b n) (= (length (only-queen b)) n))
 
 
-(define ALL (list
-	(make-pos 0 0)   (make-pos 1 0) (make-pos 2 0) (make-pos 3 0)
-	(make-pos 0 1)   (make-pos 1 1) (make-pos 2 1) (make-pos 3 1)
-	(make-pos 0 2)   (make-pos 1 2) (make-pos 2 2) (make-pos 3 2)
-	(make-pos 0 3)   (make-pos 1 3) (make-pos 2 3) (make-pos 3 3)))
-(define ALL_1 (list (make-pos 1 0) (make-pos 3 0) (make-pos 2 1) (make-pos 3 1) (make-pos 2 3) (make-pos 3 3)))
-(define ALL_2 (list (make-pos 3 1) (make-pos 2 3) (make-pos 3 3)))
-(define ALL_3 (list (make-pos 3 1)))
+;; Board -> (lisof Board) 
+;; consume a board and produce all the possible variation or false if there is no variations
 
-#; (check-expect (next-boards B0) 
-							(list
-									(list
-											(make-cell (make-pos 0 0) Q)   (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E) (make-cell (make-pos 3 0) E)
-											(make-cell (make-pos 0 1) E)   (make-cell (make-pos 1 1) E) (make-cell (make-pos 2 1) E) (make-cell (make-pos 3 1) E)
-											(make-cell (make-pos 0 2) E)   (make-cell (make-pos 1 2) E) (make-cell (make-pos 2 2) E) (make-cell (make-pos 3 2) E)
-											(make-cell (make-pos 0 3) E)   (make-cell (make-pos 1 3) E) (make-cell (make-pos 2 3) E) (make-cell (make-pos 3 3) E)
-									)
-									(list
-											(make-cell (make-pos 0 0) E)   (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E) (make-cell (make-pos 3 0) E)
-											(make-cell (make-pos 0 1) Q)   (make-cell (make-pos 1 1) E) (make-cell (make-pos 2 1) E) (make-cell (make-pos 3 1) E)
-											(make-cell (make-pos 0 2) E)   (make-cell (make-pos 1 2) E) (make-cell (make-pos 2 2) E) (make-cell (make-pos 3 2) E)
-											(make-cell (make-pos 0 3) E)   (make-cell (make-pos 1 3) E) (make-cell (make-pos 2 3) E) (make-cell (make-pos 3 3) E)
-									)
-									(list
-											(make-cell (make-pos 0 0) E)   (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E) (make-cell (make-pos 3 0) E)
-											(make-cell (make-pos 0 1) E)   (make-cell (make-pos 1 1) E) (make-cell (make-pos 2 1) E) (make-cell (make-pos 3 1) E)
-											(make-cell (make-pos 0 2) Q)   (make-cell (make-pos 1 2) E) (make-cell (make-pos 2 2) E) (make-cell (make-pos 3 2) E)
-											(make-cell (make-pos 0 3) E)   (make-cell (make-pos 1 3) E) (make-cell (make-pos 2 3) E) (make-cell (make-pos 3 3) E)
-									)
-									(list
-											(make-cell (make-pos 0 0) E)   (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E) (make-cell (make-pos 3 0) E)
-											(make-cell (make-pos 0 1) E)   (make-cell (make-pos 1 1) E) (make-cell (make-pos 2 1) E) (make-cell (make-pos 3 1) E)
-											(make-cell (make-pos 0 2) E)   (make-cell (make-pos 1 2) E) (make-cell (make-pos 2 2) E) (make-cell (make-pos 3 2) E)
-											(make-cell (make-pos 0 3) E)   (make-cell (make-pos 1 3) E) (make-cell (make-pos 2 3) E) (make-cell (make-pos 3 3) E))))
+(check-expect (next-boards B0) 
+              (list
+               (list
+                (make-cell (make-pos 0 0) Q)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) Q)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) Q)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) Q)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) Q)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) Q)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) Q)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) Q)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) Q)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) Q)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) Q)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) Q)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) Q)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) Q)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) Q)
+                (make-cell (make-pos 3 3) E))
+               (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) E)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) Q))))
 
-;; (check-expect (next-boards B0_1)  (list B0_2))
-;; (check-expect (next-boards B0_2)  (list B0_3))
-;; (check-expect (next-boards B0_3)  (list B0_S))
+(check-expect (next-boards B0_1)  
+              (list 
+              (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) Q)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) Q)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+            (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) Q)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) Q)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+          (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) Q)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) Q)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+          (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) Q)
+                (make-cell (make-pos 0 2) Q)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) E))
+          (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) Q)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) Q)
+                (make-cell (make-pos 3 3) E))
+          (list
+                (make-cell (make-pos 0 0) E)
+                (make-cell (make-pos 1 0) E)
+                (make-cell (make-pos 2 0) E)
+                (make-cell (make-pos 3 0) E)
+                (make-cell (make-pos 0 1) E)
+                (make-cell (make-pos 1 1) E)
+                (make-cell (make-pos 2 1) E)
+                (make-cell (make-pos 3 1) E)
+                (make-cell (make-pos 0 2) Q)
+                (make-cell (make-pos 1 2) E)
+                (make-cell (make-pos 2 2) E)
+                (make-cell (make-pos 3 2) E)
+                (make-cell (make-pos 0 3) E)
+                (make-cell (make-pos 1 3) E)
+                (make-cell (make-pos 2 3) E)
+                (make-cell (make-pos 3 3) Q))))
 
-(define (next-boards b) empty)
-;; insert-queen is based on the list of position available of the find-availbe-lcol output
+(check-expect (next-boards B0_2)  
+              (list 
+                (list
+                  (make-cell (make-pos 0 0) E)   (make-cell (make-pos 1 0) Q) (make-cell (make-pos 2 0) E) (make-cell (make-pos 3 0) E)
+                  (make-cell (make-pos 0 1) E)   (make-cell (make-pos 1 1) E) (make-cell (make-pos 2 1) E) (make-cell (make-pos 3 1) Q)
+                  (make-cell (make-pos 0 2) Q)   (make-cell (make-pos 1 2) E) (make-cell (make-pos 2 2) E) (make-cell (make-pos 3 2) E)
+                  (make-cell (make-pos 0 3) E)   (make-cell (make-pos 1 3) E) (make-cell (make-pos 2 3) E) (make-cell (make-pos 3 3) E))
+                (list
+                  (make-cell (make-pos 0 0) E)   (make-cell (make-pos 1 0) Q) (make-cell (make-pos 2 0) E) (make-cell (make-pos 3 0) E)
+                  (make-cell (make-pos 0 1) E)   (make-cell (make-pos 1 1) E) (make-cell (make-pos 2 1) E) (make-cell (make-pos 3 1) E)
+                  (make-cell (make-pos 0 2) Q)   (make-cell (make-pos 1 2) E) (make-cell (make-pos 2 2) E) (make-cell (make-pos 3 2) E)
+                  (make-cell (make-pos 0 3) E)   (make-cell (make-pos 1 3) E) (make-cell (make-pos 2 3) Q) (make-cell (make-pos 3 3) E))
+                (list
+                  (make-cell (make-pos 0 0) E)   (make-cell (make-pos 1 0) Q) (make-cell (make-pos 2 0) E) (make-cell (make-pos 3 0) E)
+                  (make-cell (make-pos 0 1) E)   (make-cell (make-pos 1 1) E) (make-cell (make-pos 2 1) E) (make-cell (make-pos 3 1) E)
+                  (make-cell (make-pos 0 2) Q)   (make-cell (make-pos 1 2) E) (make-cell (make-pos 2 2) E) (make-cell (make-pos 3 2) E)
+                  (make-cell (make-pos 0 3) E)   (make-cell (make-pos 1 3) E) (make-cell (make-pos 2 3) E) (make-cell (make-pos 3 3) Q))
+                ))
+(check-expect (next-boards B0_3)  (list B0_S))
 
-#; (define (next-boards b) (insert-queen (find-available-col b)))
+;; (define (next-boards b) empty)
 
-;; (listof Cell) Cell Number -> Number | false
-;; consume a list, the value to be find and the initial index produce the current index of a value in a list or false if the value doesn't exist.
-;; IMPORTANT: start with an idx = 0.
+;; With false
+#; (define (next-boards b) 
+  (local
+    [
+     (define new-boards (insert-queen b (filter-board b)))
+    ]
+ (if (empty? new-boards)
+     false
+     new-boards)))
 
-(check-expect (find-cell empty (make-cell (make-pos 0 0) E) 0) false)
-(check-expect (find-cell (list (make-cell (make-pos 0 0) E) (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E)) (make-cell (make-pos 0 0) E) 0) 0)
-(check-expect (find-cell (list (make-cell (make-pos 0 0) E) (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E)) (make-cell (make-pos 2 0) E) 0) 2)
+(define (next-boards b) (insert-queen b (filter-board b)))
 
-;; (define (find-cell loc c) 0) ; stub
+;; Board (listof Pos) -> (listof Board)
+;; consume the current board and the list of position available for the next queen
+;; add the queen in the positions givend by listof Pos, and remeain the old board untouched
 
-(define (find-cell loc c idx)
-	(cond 
-		[(empty? loc) false]
-		[else
-		(local
-			[
-			 (define (equal-cell? c0 c1) 
-				 (and
-					 (= (get-x c0) (get-x c1))
-					 (= (get-y c0) (get-y c1))
-					 (or 
-						 (and (false? (cell-v c0)) (false? (cell-v c1)))
-						 (and (not (false? (cell-v c0))) (not (false? (cell-v c1)))))))
-			]
+;; (check-expect (insert-queen B0 AP4) (cons (make-cell (make-pos 0 0) Q) (rest B0))) 
+(check-expect (insert-queen B0_3 (list (make-pos 3 1)))  (list B0_S))
 
-			(if (equal-cell? (first loc) c)
-					idx
-					(find-cell (rest loc) c (add1 idx))))])) 
+;; (define (insert-queen b lop) empty) ; stub
+
+#; (define (insert-queen b lop)
+  (cond 
+    [(empty? lop) empty]
+    [else
+        (list
+          (if (equal-pos? (cell-pos (first b)) (first lop))
+           (cons (make-cell (cell-pos (first b)) Q) (rest b)) 
+           (cons (first b) (insert-queen (rest b) lop))
+            (insert-queen b (rest lop))))]))
+
+(define (insert-queen b lop)
+  (cond
+    [(empty? lop) empty]
+    [else (cons (build-board (first lop) b) (insert-queen b (rest lop)))]))
+
+
+;; Pos Board -> Board
+;; find the pos in the board, produce a board with the cell founded filled with a queen 
+;; ASSUME: the pos is in the board and is empty
+
+(check-expect (build-board (make-pos 0 0) B0) (cons (make-cell (make-pos 0 0) Q) (rest B0)))
+(check-expect (build-board (make-pos 1 0) B0) (cons (make-cell (make-pos 0 0) E) (cons (make-cell (make-pos 1 0) Q) (rest (rest B0)))))
+
+;; (define (build-board p b) empty) ;; stub
+
+(define (build-board p b) 
+  (if (equal-pos? (cell-pos (first b)) p)
+      (cons (make-cell (cell-pos (first b)) Q) (rest b))
+      (cons (first b) (build-board p (rest b)))))
 
 ;; Board -> (listof Pos)
 ;; consume a board an produce the list of position that are available and valid 
@@ -280,14 +677,31 @@
               (list (make-pos 3 1)))
 
 (check-expect (filter-board B0_S) ;; Board with 4 queen
-              empty)
+             empty)
 
-(define (filter-board b) empty) ; stub
+;; (define (filter-board b) empty) ; stub
 
-#; (define (filter-board b)  
+(define (filter-board b)  
 (local
   [(define queens (only-queen b))] ;; Board -> (listof Queen)
-    (no-pos-duplicate (all-queens-pos queens (length b)))))
+    (only-valid-pos (board-pos b) (no-pos-duplicate (all-queens-pos queens (length b))))))
+
+
+;; Board -> (listof Pos)
+;; consume a board and produce all the pos inside of it
+
+(check-expect (board-pos   B0) AP4)
+(check-expect (board-pos B0_1) AP4)
+(check-expect (board-pos B0_2) AP4)
+(check-expect (board-pos B0_3) AP4)
+(check-expect (board-pos   B1) AP5)
+
+;; (define (board-pos b) empty) ;; stub
+
+(define (board-pos b)
+  (cond 
+    [(empty? b) empty]
+    [else (cons (cell-pos (first b)) (board-pos (rest b)))]))
 
 
 ;; (listof Pos) (listof Pos) -> (listof Pos)
@@ -297,12 +711,6 @@
 ;; produce
 ;; list of all available and vaild position not occupied by queen by filtering the first with the second
 ;; (occoupied means that the queen cannot eat)
-;; [A]ll [P]os [4]x4
-(define AP4 (list                 
-                      (make-pos 0 0)    (make-pos 1 0)  (make-pos 2 0)  (make-pos 3 0) 
-                      (make-pos 0 1)    (make-pos 1 1)  (make-pos 2 1)  (make-pos 3 1) 
-                      (make-pos 0 2)    (make-pos 1 2)  (make-pos 2 2)  (make-pos 3 2) 
-                      (make-pos 0 3)    (make-pos 1 3)  (make-pos 2 3)  (make-pos 3 3)))
 
 
 (check-expect (only-valid-pos AP4 (queen-pos (make-cell (make-pos 0 2) Q) 4))
@@ -322,7 +730,7 @@
         [(empty? lop1) true]
         [else
           (if (and (= (pos-x p) (pos-x (first lop1))) (= (pos-y p) (pos-y (first lop1))))
-          false 
+         false 
           (check-pos? p (rest lop1)))]))]
 
   (filter same-pos? lop0)))
@@ -620,3 +1028,44 @@
 
 (define (get-y c) (pos-y (cell-pos c)))
 
+;; (listof Cell) Cell Number -> Number | false
+;; consume a list, the value to be find and the initial index produce the current index of a value in a list or false if the value doesn't exist.
+;; IMPORTANT: start with an idx = 0.
+
+(check-expect (find-cell empty (make-cell (make-pos 0 0) E) 0) false)
+(check-expect (find-cell (list (make-cell (make-pos 0 0) E) (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E)) (make-cell (make-pos 0 0) E) 0) 0)
+(check-expect (find-cell (list (make-cell (make-pos 0 0) E) (make-cell (make-pos 1 0) E) (make-cell (make-pos 2 0) E)) (make-cell (make-pos 2 0) E) 0) 2)
+
+;; (define (find-cell loc c) 0) ; stub
+
+(define (find-cell loc c idx)
+	(cond 
+		[(empty? loc) false]
+		[else
+		(local
+			[
+			 (define (equal-cell? c0 c1) 
+				 (and
+					 (= (get-x c0) (get-x c1))
+					 (= (get-y c0) (get-y c1))
+					 (or 
+						 (and (false? (cell-v c0)) (false? (cell-v c1)))
+						 (and (not (false? (cell-v c0))) (not (false? (cell-v c1)))))))
+			]
+
+			(if (equal-cell? (first loc) c)
+					idx
+					(find-cell (rest loc) c (add1 idx))))])) 
+
+
+
+;; Pos Pos -> Boolean
+;; consume two pos and return true if they have the same val otherwise false
+
+(check-expect (equal-pos? (make-pos 0 0) (make-pos 0 0)) true)
+(check-expect (equal-pos? (make-pos 0 0) (make-pos 0 1)) false)
+(check-expect (equal-pos? (make-pos 0 0) (make-pos 1 0)) false)
+
+;; (define (equal-pos? p0 p1) false) ; stub
+
+(define (equal-pos? p0 p1) (and (= (pos-x p0) (pos-x p1)) (= (pos-y p0) (pos-y p1))))
