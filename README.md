@@ -12,7 +12,7 @@ Courses | Started | Finished | Article
 
 ## Core Programming
 
-- [ ] [Systematic Program Design](coursepages/spd/README.md) 
+- [x] [Systematic Program Design](coursepages/spd/README.md) 
 - [ ] [Class-based Program Design](https://course.ccs.neu.edu/cs2510sp22/index.html) 
 - [ ] [Programming Languages](https://courses.cs.washington.edu/courses/cse341/19sp/#lectures) 
 - [ ] [Object-Oriented Design](https://course.ccs.neu.edu/cs3500f19/) 
@@ -20,4 +20,4 @@ Courses | Started | Finished | Article
 
 Courses | Started | Finished | Article 
 :-- | :--: | :--: | :--:
-[Systematic Program Design](coursepages/spd/README.md) | 10/03/2026 | Future | Still nothing...
+[Systematic Program Design](coursepages/spd/README.md) | 10/03/2026 | 19/06/2026 | Still nothing...
