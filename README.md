@@ -3,11 +3,11 @@
     
 ## Intro CS
 
-- [x] [Introduction to Computer Science and Programming using Python](coursepages/intro-cs/README.md) 
+- [x] [Introduction to Computer Science and Programming using Python](https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/) 
 
 Courses | Started | Finished | Article 
 :-- | :--: | :--: | :--:
-[Introduction to Computer Science and Programming using Python](coursepages/intro-cs/README.md) | 16/12/2025 | 09/03/2026 | Still nothing...
+[Introduction to Computer Science and Programming using Python](https://ocw.mit.edu/courses/6-100l-introduction-to-cs-and-programming-using-python-fall-2022/) | 16/12/2025 | 09/03/2026 | Still nothing...
 
 
 ## Core Programming
