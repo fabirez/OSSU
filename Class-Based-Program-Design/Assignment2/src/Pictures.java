@@ -18,7 +18,7 @@ Beside (takes two pictures, and draws picture1 to the left of picture2),
 and Overlay (takes two pictures, and draws top-picture on top of bottom-picture, with their centers aligned).
 
 - [x] Design the classes (and interfaces) needed to represent the given information. 
-- [ ] Sketch the class diagram for the classes and interfaces you have designed. !!! DO THIS AFTER!
+- [x] Sketch the class diagram for the classes and interfaces you have designed. !!! DO THIS AFTER!
     (You can draw this on paper, or in ASCII art as a comment in your submitted file. You do not need to hand this in.)
 
 - [x] In the ExamplesPicture class define example data that represents the following images (the colors don’t matter; they’re just for illustration here):
@@ -37,11 +37,78 @@ and Overlay (takes two pictures, and draws top-picture on top of bottom-picture,
   Note: Make sure you count every shape each time it is used.
 - [x] Design the method comboDepth, that computes how deeply operations are nested in the construction of this picture. For example, the comboDepth of the last example picture above is 3.
 - [x] Design the method mirror. This should leave the entire image unchanged, except Beside combos, which should have their two sub-images flipped (all names can remain untouched). This mirroring should happen the entire way down the image.
-- [ ] Tricky! Design the method pictureRecipe that takes an integer depth, and produces a String representing the contents of this picture, where the recipe for the picture has been expanded only depth times. For example, the pictureRecipe at depth 0 for the last example image above is "doubled square on circle", at depth 2 is "beside(overlay(square, big circle), overlay(square, big circle))", and at depth 3 or more is "beside(overlay(square, scale(circle)), overlay(square, scale(circle)))".
+- [x] Tricky! Design the method pictureRecipe that takes an integer depth, and produces a String representing the contents of this picture, where the recipe for the picture has been expanded only depth times. For example, the pictureRecipe at depth 0 for the last example image above is "doubled square on circle", at depth 2 is "beside(overlay(square, big circle), overlay(square, big circle))", and at depth 3 or more is "beside(overlay(square, scale(circle)), overlay(square, scale(circle)))".
   In more detail: invoking pictureRecipe on a Combo produces its name if the given depth is less than or equal to 0, and the formula of its mixture (at that depth) otherwise.
   Hint: If you get stuck, you may want to use a wish list to determine subproblems that may be of use to you, and that you can delegate to when needed.
 */
 
+/*
+                    +-----------------------------------------------+
+                    | IPicture                                      |
+                    +-----------------------------------------------+                        
+                    | int getWidth()                                |                        
+                    | int countShapes()                             |                        
+                    | int comboDepth()                              |                        
+                    | IPicture mirror()                             |                        
+                    | String pictureRecipe(int depth)               |                        
+                    +-----------------------------------------------+                        
+                                          |                                                  
+                                         / \                                                 
+                                         ---                                                 
+                                          |                                                  
+                          --------------------------------                                   
+                          |                              |                                   
+   +-----------------------+               +----------------------------------+              
+   | Shape                 |               | Combo                            |              
+   +-----------------------+               +----------------------------------+              
+   | String kind           |             +-| IOperation operation             |              
+   | int size              |             | | String name                      |              
+   +-----------------------+             | +----------------------------------+              
+   | int getWidth()        |             | | int getWidth()                   |              
+   | int countShapes()     |             | | int countShapes()                |              
+   | int comboDepth()      |             | | int comboDepth()                 |              
+   | IPicture mirror()     |             | | IPicture mirror()                |              
+   | String pictureRecipe()|             | | String pictureRecipe(int depth)  |              
+   +-----------------------+             | +----------------------------------+              
+                                         |                                                   
+                                         v                                                   
+                    +-----------------------------------------------+                        
+                    | IOperation                                    |
+                    +-----------------------------------------------+                        
+                    | int getPictureWidth()                         |                        
+                    | int countPictureShapes()                      |                        
+                    | int comboPictureDepth()                       |                        
+                    | IOperation pictureMirror()                    |                        
+                    | String pictureRecipe(int depth)               |                        
+                    +-----------------------------------------------+                        
+                                          |                                                  
+                                         / \                                                 
+                                         ---                                                 
+                                          |                                                  
+                    ---------------------------------------------------------------------                                 
+                    |                                       |                           |      
+   +----------------+-----------------+    +----------------+---------------+   +-------+-----------------------+                     
+   | Scale                            |    | Beside                         |   | Overlay                       |                     
+   +----------------------------------+    +--------------------------------+   +-------------------------------+                     
+   | String description               |    | String description             |   | String description            |        
+ +-| IPicture picture1                |  +-| IPicture picture1              |   | IPicture top                  |----+    
+ | +----------------------------------+  +-| IPicture picture2              |   | IPicture bottom               |----+        
+ | | int    getPictureWidth()         |  | |+-------------------------------+  +--------------------------------+    |   
+ | | int        countShapes()         |  | |int           getPictureWidth() |  |int           getPictureWidth() |    |    
+ | | int  comboPictureDepth()         |  | |int               countShapes() |  |int               countShapes() |    |       
+ | | IPicture pictureMirror()         |  | |int         comboPictureDepth() |  |int         comboPictureDepth() |    |      
+ | | String   pictureRecipe(int depth)|  | |IPicture        pictureMirror() |  |IPicture        pictureMirror() |    |       
+ | +---------------------------------+|  | |String pictureRecipe(int depth) |  |String pictureRecipe(int depth) |    |       
+ |                                       | +--------------------------------+  +--------------------------------+    |     
+ |                                       |                                                                           |
+ |                                       |                                                                           |              
+ |                                       |                                                                           |               
+ |                  +--------------------+--------------------------+                                                |
+ +------------------| IPicture                                      |------------------------------------------------+
+                    +-----------------------------------------------+                        
+                        
+
+*/
 
 interface IPicture{
   // return the width of the picture;
@@ -211,11 +278,11 @@ class Combo implements IPicture{
 }
 
 class Scale implements IOperation{
-  String name;
+  String description;
   IPicture picture1;
 
-  Scale(String name, IPicture picture1){
-    this.name=name;
+  Scale(String description, IPicture picture1){
+    this.description=description;
     this.picture1=picture1;
   }
 
@@ -282,7 +349,7 @@ class Scale implements IOperation{
      * this.picture1.countShapes() -- int
      * this.picture1.comboDepth()  -- int
     */
-    return this.name;
+    return "scale(" + this.picture1.pictureRecipe(depth) + ")";
   }
 }
 
@@ -376,7 +443,7 @@ class Beside implements IOperation{
      * this.picture1.comboDepth()  -- int
      * this.picture2.comboDepth()  -- int
     */
-    return this.picture1.pictureRecipe(depth) + this.picture2.pictureRecipe(depth);
+    return "beside(" + this.picture1.pictureRecipe(depth) + ", " +  this.picture2.pictureRecipe(depth) + ")";
   }
 
 }
@@ -400,7 +467,7 @@ class Overlay implements IOperation{
      * this.topPicture.getWidth()    -- int
      * this.bottomPicture.getWidth() -- int
     */
-    return this.topPicture.getWidth(); 
+    return Math.max(this.topPicture.getWidth(), this.bottomPicture.getWidth()); 
   }
 
   public int countPictureShapes(){
@@ -469,7 +536,7 @@ class Overlay implements IOperation{
      * this.topPicture.comboDepth()     -- int
      * this.bottomPicture.comboDepth()  -- int
     */
-    return this.topPicture.pictureRecipe(depth) + this.bottomPicture.pictureRecipe(depth);
+    return "overlay(" + this.topPicture.pictureRecipe(depth) + ", " + this.bottomPicture.pictureRecipe(depth) + ")";
   }
 }
 
@@ -482,7 +549,7 @@ class ExamplesPicture{
    IOperation   scale = new Scale("takes a single picture and draws it twice as large", this.circle);
    IPicture bigCircle = new Combo("Big circle", this.scale);
 
-   IOperation      overlay = new Overlay("takes two pictures, and draws top-picture on top of bottom-picture, with their centers aligned", this.bigCircle, this.square);
+   IOperation      overlay = new Overlay("takes two pictures, and draws top-picture on top of bottom-picture, with their centers aligned",  this.square, this.bigCircle);
    IPicture squareOnCircle = new Combo("Square on Circle", this.overlay);
 
    IOperation              beside = new Beside("takes two pictures, and draws picture1 to the left of picture2", this.squareOnCircle, this.squareOnCircle);
@@ -492,7 +559,7 @@ class ExamplesPicture{
    IOperation   scale0 = new Scale("takes a single picture and draws it twice as large", this.square);
    IPicture  bigSquare = new Combo("Big square", this.scale0);
 
-   IOperation      overlay0 = new Overlay("takes two pictures, and draws top-picture on top of bottom-picture, with their centers aligned", this.bigSquare, this.circle);
+   IOperation      overlay0 = new Overlay("takes two pictures, and draws top-picture on top of bottom-picture, with their centers aligned", this.circle, this.bigSquare);
    IPicture  circleOnSquare = new Combo("Circle on square", this.overlay0);
 
    IOperation              beside0 = new Beside("takes two pictures, and draws picture1 to the left of picture2", this.circleOnSquare, this.circleOnSquare);
@@ -540,33 +607,14 @@ class ExamplesPicture{
       t.checkExpect(this.resBeside1.mirror(),   this.testResBeside1);
     }
 
-
-    // Tricky! Design the method pictureRecipe that takes an integer depth,
-    // and produces a String representing the contents of this picture, where the recipe for the picture has been expanded only depth times.
-
-    //  For example, the pictureRecipe 
-    //  at depth 0 for the last example image above is "doubled square on circle",
-    //  at depth 1 is "beside(Square on Circle, Square on Circle)", 
-    //  at depth 2 is "beside(overlay(square, big circle), overlay(square, big circle))", 
-    //  at depth 3 or more is "beside(overlay(square, scale(circle)), overlay(square, scale(circle)))".
-
-    // In more detail:
-    // invoking pictureRecipe on a Combo produces its name if the given depth is less than or equal to 0,
-    // and the formula of its mixture (at that depth) otherwise.
-
-    // Hint: If you get stuck, you may want to use a wish list to determine subproblems that may be of use to you,
-    // and that you can delegate to when needed.
-  
     boolean testPictureRecipe(Tester t){
       return 
       t.checkExpect(this.circle.pictureRecipe(1),         "circle") &&
       t.checkExpect(this.circle.pictureRecipe(5),         "circle") &&
       t.checkExpect(this.square.pictureRecipe(1),         "square") &&
-      // t.checkExpect(this.bigCircle.pictureRecipe(),      this.bigCircle) &&
-      // t.checkExpect(this.squareOnCircle.pictureRecipe(), this.squareOnCircle) &&
       t.checkExpect(this.doubledSquareOnCircle.pictureRecipe(0), "Doubled square on circle") &&
       t.checkExpect(this.doubledSquareOnCircle.pictureRecipe(1), "beside(Square on Circle, Square on Circle)") &&
-      t.checkExpect(this.doubledSquareOnCircle.pictureRecipe(2), "beside(overlay(square, big circle), overlay(square, big circle))") &&
+      t.checkExpect(this.doubledSquareOnCircle.pictureRecipe(2), "beside(overlay(square, Big circle), overlay(square, Big circle))") &&
       t.checkExpect(this.doubledSquareOnCircle.pictureRecipe(3), "beside(overlay(square, scale(circle)), overlay(square, scale(circle)))");
     }
    
