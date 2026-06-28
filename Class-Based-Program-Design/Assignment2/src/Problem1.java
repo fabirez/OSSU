@@ -109,11 +109,6 @@ interface ILoMotif {
   // return all names of cross-stitch and chain-stitch motifs in an EmbroideryPiece
   String embroideryInfo();
   String embroideryInfoHelp(String description);
-
-  ILoMotif appendGroup();
-  ILoMotif appendGroupHelper(ILoMotif otherList);
-  ILoMotif appendList(ILoMotif otherList);
-
 }
 
 class ConsLoMotif implements ILoMotif{
@@ -151,32 +146,18 @@ class ConsLoMotif implements ILoMotif{
     * Methods Field
     * this.first.embroideryInfo() -- String
     */
-    return this.appendGroup().embroideryInfoHelp(this.first.embroideryInfo());
+    return this.rest.embroideryInfoHelp(this.first.embroideryInfo());
   }
 
-
   // concatenate the list present in the group if any.
-  public ILoMotif appendGroup(){
-    return this.appendGroupHelper(this);
-  }
-
-
-  // concatenate the list present in the group if any.
-  public ILoMotif appendGroupHelper(ILoMotif firstList){
+  public String embroideryInfoHelp(String description){
     if(this.first.isAGroup()){
-      return firstList.appendList(this.first.getGroup());
+      return this.first.getGroup().embroideryInfoHelp(description);
     }else{
-      return this.rest.appendGroupHelper(firstList);
+      return description + ", " +  this.rest.embroideryInfoHelp(this.first.embroideryInfo());
     }
   }
 
-  public ILoMotif appendList(ILoMotif otherList){
-    return new ConsLoMotif(this.first, this.rest.appendList(otherList));
-  }
-
-  public String embroideryInfoHelp(String description){
-     return description + ", " + this.embroideryInfo();
-  }
 }
 
 class MtLoMotif implements ILoMotif{
@@ -194,27 +175,14 @@ class MtLoMotif implements ILoMotif{
     return 0.0;
   }
 
-  // return all names of cross-stitch and chain-stitch motifs in an EmbroideryPiece
+  // return all names of cross-stitch and chain-stitch Strings in an EmbroideryString
   public String embroideryInfo(){
     return "";
   }
 
   public String embroideryInfoHelp(String description){ 
-    return description + ".";
+    return description;
   }
-
-  public ILoMotif appendGroup(){
-    return this;
-  }
-
-  public ILoMotif appendGroupHelper(ILoMotif firstList){
-    return firstList;
-  }
-
-  public ILoMotif appendList(ILoMotif otherList){
-    return otherList;
-  }
-
 }
 
 interface IMotif { 
@@ -269,7 +237,7 @@ class EmbroideryPiece {
   }
 
   String embroideryInfo(){
-    return this.name + ": " + this.motif.embroideryInfo();
+    return this.name + ": " + this.motif.embroideryInfo() + ".";
   }
 
   public boolean isAGroup(){
@@ -414,12 +382,12 @@ class GroupMotif implements IMotif{
 class ExamplesEmbroidery{
   ExamplesEmbroidery(){}
   
-   IMotif c1 = new  CrossStichMotif("bird", 4.50);
-   IMotif c2 = new ChainStitchMotif("tree", 3.00);
+  IMotif c1 = new  CrossStichMotif("bird", 4.50);
+  IMotif c2 = new ChainStitchMotif("tree", 3.00);
   
-   IMotif c3 = new  CrossStichMotif( "rose", 5.00);
-   IMotif c4 = new ChainStitchMotif("poppy", 4.75);
-   IMotif c5 = new  CrossStichMotif("daisy", 3.20);
+  IMotif c3 = new  CrossStichMotif( "rose", 5.00);
+  IMotif c4 = new ChainStitchMotif("poppy", 4.75);
+  IMotif c5 = new  CrossStichMotif("daisy", 3.20);
 
   ILoMotif empty = new MtLoMotif();
 
@@ -448,7 +416,7 @@ class ExamplesEmbroidery{
 
   boolean testEmbroideryInfo(Tester t){
     return t.checkExpect(this.pillowCover.embroideryInfo(), this.resultEmbroideryInfo);
- }
+  }
 
 }
 
