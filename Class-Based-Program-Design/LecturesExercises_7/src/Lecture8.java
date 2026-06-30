@@ -56,6 +56,34 @@ class Author{
      */
     return this.surname.compareTo(author.getSurname()) > 0;
   }
+
+  public String getName(){
+    /*Fields
+     * name     -- String
+     * surname  -- String
+     * Methods 
+     * this.biography()  -- String
+     * this.getAuthor()  -- Author
+     * this.getSurname() -- String
+     * this.sortAuthor() -- boolean
+     */
+    return this.name;
+  }
+
+  public boolean sameAuthor(Author author){
+    /*Fields
+     * name     -- String
+     * surname  -- String
+     * Methods 
+     * this.biography()  -- String
+     * this.getAuthor()  -- Author
+     * this.getSurname() -- String
+     * this.sortAuthor() -- boolean
+     * this.getName() -- String
+     */
+    return this.name.equals(author.getName()) && this.surname.equals(author.getSurname());
+  }
+
 }
 
 interface IDocument {
@@ -65,6 +93,12 @@ interface IDocument {
   Author getAuthor();
   ILoDocument sortBibliography();
   boolean sortAuthor(Author author);
+
+  ILoDocument noDuplicate();
+
+  boolean sameAuthor(Author a);
+  boolean sameTitle(IDocument doc);
+  String getTitle();
 }
 
 class Book implements IDocument{
@@ -159,6 +193,75 @@ class Book implements IDocument{
     this.sortAuthor()    -- boolean
    */
     return this.lod.sortBibliography();
+  }
+
+  public ILoDocument noDuplicate(){
+   /*Field
+    this.author      -- String
+    this.title       -- String
+    this.lod         -- ILoDocument
+    this.publisher   -- String
+    Methods
+    this.biography()        -- String
+    this.biographyHelp()    -- String
+    this.isWiki()           -- boolean
+    this.getAuthor()        -- Author
+    this.sortAuthor()       -- boolean
+    this.sortBibliography() -- ILoDocument
+   */
+    return this.lod.noDuplicate();
+  }
+
+    public boolean sameAuthor(Author a){
+     /*Field
+      this.author      -- String
+      this.title       -- String
+      this.lod         -- ILoDocument
+      this.publisher   -- String
+      Methods
+      this.biography()        -- String
+      this.biographyHelp()    -- String
+      this.isWiki()           -- boolean
+      this.getAuthor()        -- Author
+      this.sortAuthor()       -- boolean
+      this.sortBibliography() -- ILoDocument
+     */
+      return this.author.sameAuthor(a);
+    }
+
+  public String getTitle(){
+     /*Field
+      this.author      -- String
+      this.title       -- String
+      this.lod         -- ILoDocument
+      this.publisher   -- String
+      Methods
+      this.biography()        -- String
+      this.biographyHelp()    -- String
+      this.isWiki()           -- boolean
+      this.getAuthor()        -- Author
+      this.sortAuthor()       -- boolean
+      this.sortBibliography() -- ILoDocument
+     */
+    return this.title;
+  }
+
+  public boolean sameTitle(IDocument doc){
+     /*Field
+      this.author      -- String
+      this.title       -- String
+      this.lod         -- ILoDocument
+      this.publisher   -- String
+      Methods
+      this.biography()        -- String
+      this.biographyHelp()    -- String
+      this.isWiki()           -- boolean
+      this.getAuthor()        -- Author
+      this.sortAuthor()       -- boolean
+      this.sortBibliography() -- ILoDocument
+      this.getTitle()         -- String
+     */
+    return this.title.equals(doc.getTitle());
   }
 }
 
@@ -255,15 +358,89 @@ class Wiki implements IDocument{
     return this.lod.sortBibliography();
   }
 
+  public ILoDocument noDuplicate(){
+   /*Field
+    this.author      -- String
+    this.title       -- String
+    this.lod         -- ILoDocument
+    this.url         -- String
+    Methods
+    this.biography()        -- String
+    this.biographyHelp()    -- String
+    this.isWiki()           -- boolean
+    this.getAuthor()        -- Author
+    this.sortAuthor()       -- boolean
+    this.sortBibliography() -- ILoDocument
+   */
+    return this.lod.noDuplicate();
+  }
+
+    public boolean sameAuthor(Author a){
+     /*Field
+      this.author      -- String
+      this.title       -- String
+      this.lod         -- ILoDocument
+      this.url         -- String
+      Methods
+      this.biography()        -- String
+      this.biographyHelp()    -- String
+      this.isWiki()           -- boolean
+      this.getAuthor()        -- Author
+      this.sortAuthor()       -- boolean
+      this.sortBibliography() -- ILoDocument
+     */
+      return this.author.sameAuthor(a);
+    }
+
+  public String getTitle(){
+     /*Field
+      this.author      -- String
+      this.title       -- String
+      this.lod         -- ILoDocument
+      this.url         -- String
+      Methods
+      this.biography()        -- String
+      this.biographyHelp()    -- String
+      this.isWiki()           -- boolean
+      this.getAuthor()        -- Author
+      this.sortAuthor()       -- boolean
+      this.sortBibliography() -- ILoDocument
+      this.sameAuthor()       -- Boolean
+     */
+    return this.title;
+  }
+
+  public boolean sameTitle(IDocument doc){
+     /*Field
+      this.author      -- String
+      this.title       -- String
+      this.lod         -- ILoDocument
+      this.publisher   -- String
+      Methods
+      this.biography()        -- String
+      this.biographyHelp()    -- String
+      this.isWiki()           -- boolean
+      this.getAuthor()        -- Author
+      this.sortAuthor()       -- boolean
+      this.sortBibliography() -- ILoDocument
+      this.getTitle()         -- String
+     */
+    return this.title.equals(doc.getTitle());
+  }
 }
 
 interface ILoDocument{
-  public String biography();
-  public String biographyHelp();
-  public boolean isEmpty();
-  public ILoDocument filterWiki();
-  public ILoDocument sortBibliography();
-  public ILoDocument sortBibliographyHelp(IDocument doc);
+  String biography();
+  String biographyHelp();
+  boolean isEmpty();
+  ILoDocument filterWiki();
+
+  ILoDocument sortBibliography();
+  ILoDocument insert(IDocument doc);
+
+  ILoDocument noDuplicate();
+  ILoDocument insertNoDuplicate(IDocument doc);
+  boolean isUnique(IDocument doc);
 }
 
 
@@ -341,10 +518,10 @@ class ConsLoDocument implements ILoDocument{
     * this.rest.filterWiki()     -- ILoDocument
     */
 
-    return this.rest.sortBibliographyHelp(this.first);
+    return this.rest.filterWiki().sortBibliography().insert(this.first);
   }
 
-  public ILoDocument sortBibliographyHelp(IDocument doc){
+  public ILoDocument insert(IDocument doc){
 
    /*Field
     * this.first  -- IDocument
@@ -362,13 +539,38 @@ class ConsLoDocument implements ILoDocument{
     */
 
     if(this.first.sortAuthor(doc.getAuthor())){
-      return new ConsLoDocument(doc, this.rest.sortBibliographyHelp(this.first));
+      return new ConsLoDocument(doc, this.rest.insert(this.first));
     }else{
-      return new ConsLoDocument(this.first, this.rest.sortBibliographyHelp(doc));
+      return new ConsLoDocument(this.first, this.rest.insert(doc));
     }
   }
 
+  public ILoDocument noDuplicate(){
+    if(this.rest.isUnique(this.first)){
+      return new ConsLoDocument(this.first, this.rest.noDuplicate());
+    }else{
+      return this.rest.noDuplicate();
+    }
+    // return this.rest.isUnique(this.first).insertNoDuplicate(this.first); // 2,3,4 *** 1
+  };
+
+  public ILoDocument insertNoDuplicate(IDocument doc){ // 1
+    if(this.isUnique(doc)){ // 2,3,4 *** 1
+      return new ConsLoDocument(doc, this.rest.insertNoDuplicate(this.first)); /// 3,4 *** 2
+    }else{
+      return this.rest.insertNoDuplicate(this.first); /// 3,4 *** 2 
+    }
+  }
+
+  public boolean isUnique(IDocument doc){
+    if(this.first.sameAuthor(doc.getAuthor()) && this.first.sameTitle(doc)){
+      return false;
+    }else{
+      return this.rest.isUnique(doc);
+    }
+  }
 }
+
 
 
 class MtLoDocument implements ILoDocument{
@@ -394,10 +596,20 @@ class MtLoDocument implements ILoDocument{
     return this;
   }
 
-  public ILoDocument sortBibliographyHelp(IDocument doc){
+  public ILoDocument insert(IDocument doc){
     return new ConsLoDocument(doc, this);
   }
-}
+
+  public ILoDocument noDuplicate(){
+    return this;
+  };
+
+  public ILoDocument insertNoDuplicate(IDocument doc){
+    return new ConsLoDocument(doc, this);
+  }
+  
+  public boolean isUnique(IDocument doc){return true;}
+ }
 
 
 class ExamplesBibliography{
@@ -421,13 +633,13 @@ class ExamplesBibliography{
 
   ILoDocument empty = new MtLoDocument();
 
-  IDocument b1 = new Book(this.a1, "Title 1", this.empty, "Publisher 1"); // ""
+  IDocument b1 = new Book(this.a1, "Title 1", this.empty, "Publisher 1"); 
   ILoDocument lod1 = new ConsLoDocument(this.b1, this.empty);
 
-  IDocument b2 = new Book(this.a2, "Title 2",  this.lod1, "Publisher 2"); // "Name 1, Surname 1, "Title 1"."
+  IDocument b2 = new Book(this.a2, "Title 2",  this.lod1, "Publisher 2");
   ILoDocument lod2 = new ConsLoDocument(this.b1, new ConsLoDocument(this.b2, this.empty)); 
 
-  IDocument b3 = new Book(this.a3, "Title 3",  this.lod2, "Publisher 3"); // "Name 1, Surname 1, "Title 1"."
+  IDocument b3 = new Book(this.a3, "Title 3",  this.lod2, "Publisher 3"); 
   ILoDocument lod3 = new ConsLoDocument(this.b1, new ConsLoDocument(this.b2, new ConsLoDocument(this.b3, this.empty)));
 
 
@@ -453,10 +665,32 @@ class ExamplesBibliography{
                       new ConsLoDocument(this.b8,
               this.empty)))))))))));
 
-  ILoDocument sortedLs = new ConsLoDocument(this.b4, new ConsLoDocument(this.b7, new ConsLoDocument(this.b5, new ConsLoDocument(this.b1, new ConsLoDocument(this.b2, new ConsLoDocument(this.b3,
+  ILoDocument sortedLs = new ConsLoDocument(this.b4,
+    new ConsLoDocument(this.b7,
+      new ConsLoDocument(this.b5,
+        new ConsLoDocument(this.b1,
+          new ConsLoDocument(this.b2,
+            new ConsLoDocument(this.b3,
                 new ConsLoDocument(this.b8,
                   new ConsLoDocument(this.b6,
                     this.empty))))))));
+
+  Author    crazy_a = new Author("CRAZY", "BITCH");
+  IDocument crazy_b = new Book(this.crazy_a, "Crazy title", this.empty, "Crazzzy!");
+
+  ILoDocument lu = new ConsLoDocument(this.b1,
+    new ConsLoDocument(this.b2,
+      new ConsLoDocument(this.crazy_b,
+        new ConsLoDocument(this.w1,
+        new ConsLoDocument(this.w1,
+            new ConsLoDocument(this.b3,
+                this.empty))))));
+
+  ILoDocument uniqueLu = new ConsLoDocument(this.b1,
+      new ConsLoDocument(this.b3,
+        new ConsLoDocument(this.w1,
+          new ConsLoDocument(this.w3,
+       this.empty))));
 
   boolean testFilterWiki(Tester t){
     return
@@ -487,4 +721,10 @@ class ExamplesBibliography{
       t.checkExpect(this.ls.sortBibliography(), this.sortedLs);
   }
 
+  boolean testNoDuplicate(Tester t){
+    return
+      t.checkExpect(this.b1.noDuplicate(), this.empty) &&
+      t.checkExpect(this.b3.noDuplicate(), this.lod2)  &&
+      t.checkExpect(this.lu.noDuplicate(), this.uniqueLu);
+  }
 }
