@@ -1,5 +1,5 @@
-import tester.*;
 /* Problem 1
+
 
 Suppose you are working on a research paper, and you have gathered a set of documents together for your bibliography: books and Wikipedia articles.
 Every document has an author, a title, and a bibliography of documents;
@@ -15,6 +15,7 @@ additionally, books have publishers, and wiki articles have URLs.
 - Documents may be referenced more than once, but should only appear in the bibliography once. Remove any duplicates (defined as the same author name and the same title)
 
 */
+import tester.Tester;
 
 class Author{
   String    name;
@@ -439,7 +440,6 @@ interface ILoDocument{
   ILoDocument insert(IDocument doc);
 
   ILoDocument noDuplicate();
-  ILoDocument insertNoDuplicate(IDocument doc);
   boolean isUnique(IDocument doc);
 }
 
@@ -551,15 +551,6 @@ class ConsLoDocument implements ILoDocument{
     }else{
       return this.rest.noDuplicate();
     }
-    // return this.rest.isUnique(this.first).insertNoDuplicate(this.first); // 2,3,4 *** 1
-  };
-
-  public ILoDocument insertNoDuplicate(IDocument doc){ // 1
-    if(this.isUnique(doc)){ // 2,3,4 *** 1
-      return new ConsLoDocument(doc, this.rest.insertNoDuplicate(this.first)); /// 3,4 *** 2
-    }else{
-      return this.rest.insertNoDuplicate(this.first); /// 3,4 *** 2 
-    }
   }
 
   public boolean isUnique(IDocument doc){
@@ -603,12 +594,10 @@ class MtLoDocument implements ILoDocument{
   public ILoDocument noDuplicate(){
     return this;
   };
-
-  public ILoDocument insertNoDuplicate(IDocument doc){
-    return new ConsLoDocument(doc, this);
-  }
   
-  public boolean isUnique(IDocument doc){return true;}
+  public boolean isUnique(IDocument doc){
+    return true;
+  }
  }
 
 
@@ -676,20 +665,20 @@ class ExamplesBibliography{
                     this.empty))))))));
 
   Author    crazy_a = new Author("CRAZY", "BITCH");
-  IDocument crazy_b = new Book(this.crazy_a, "Crazy title", this.empty, "Crazzzy!");
+  IDocument w4 = new Wiki(this.crazy_a, "Crazy title", this.empty, "Crazy url!");
 
-  ILoDocument lu = new ConsLoDocument(this.b1,
-    new ConsLoDocument(this.b2,
-      new ConsLoDocument(this.crazy_b,
-        new ConsLoDocument(this.w1,
-        new ConsLoDocument(this.w1,
-            new ConsLoDocument(this.b3,
+  ILoDocument lu = new ConsLoDocument(this.b4,
+    new ConsLoDocument(this.b5,
+      new ConsLoDocument(this.b4,
+        new ConsLoDocument(this.w4,
+        new ConsLoDocument(this.b5,
+            new ConsLoDocument(this.b8,
                 this.empty))))));
 
-  ILoDocument uniqueLu = new ConsLoDocument(this.b1,
-      new ConsLoDocument(this.b3,
-        new ConsLoDocument(this.w1,
-          new ConsLoDocument(this.w3,
+  ILoDocument uniqueLu = new ConsLoDocument(this.b4,
+      new ConsLoDocument(this.w4,
+        new ConsLoDocument(this.b5,
+          new ConsLoDocument(this.b8,
        this.empty))));
 
   boolean testFilterWiki(Tester t){
