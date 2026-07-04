@@ -246,3 +246,142 @@
          [(empty? lon) (satisfy? acc-e acc-op acc-btw)]
          [else (fn-for-n (first lon) (rest lon) acc-e acc-op acc-btw)]))]
     (is-length-3? lon0 false false false)))
+
+;; ================================================
+;; With an arabitrary number of requirments
+;; ================================================
+
+(define-struct acc (val fn))
+;; Acc is (make-acc Boolean Number->Boolean)
+;; interp. A acc on the current recursive call,
+;; if the boolean value is true, we don't need to call the function.
+
+(define acc-even             (make-acc false is-even?))
+(define acc-odd-and-positive (make-acc false is-odd-and-positive?))
+(define acc-btw-5-and-10     (make-acc false is-between-5-and-10?))
+
+
+(define ALL (list acc-even acc-odd-and-positive acc-btw-5-and-10))
+
+
+
+
+;; (listof Acc) (listof Boolean) -> (listof Acc)
+;; filter the given listof Acc based on the position where in the given listof boolean there is a true.
+;; e.g. (a1 a2 a3) (false true false) -> (a1 a3)
+;; ASSUME: (listof Acc) and (listof Boolean) are never empty and they have the same length.
+
+(check-expect (filter-acc ALL (list  true  true  true)) empty)
+(check-expect (filter-acc ALL (list false  true  true)) (list acc-even))
+(check-expect (filter-acc ALL (list false  true false)) (list acc-even acc-btw-5-and-10))
+(check-expect (filter-acc ALL (list false false false)) ALL)
+
+;; (define (filter-acc loa lob) empty) ; stub
+(define (filter-acc loa lob)
+  (cond
+    [(empty? loa) empty]
+    [else
+     (if (false? (first lob))
+         (cons (first loa) (filter-acc (rest loa) (rest lob)))
+         (filter-acc (rest loa) (rest lob)))
+     ]))
+
+
+;; (listof Number) -> Boolean
+;; consume a listof Number produce true if the list satisfy the following requirments:
+;; at least 1 number is even
+;; at least 1 number is odd and positive
+;; at least 1 number is between 5 and 10
+;; each number can satisfy more than one requirements
+
+(check-expect (variantAZ empty) false)
+(check-expect (variantAZ (list 6 5))    true)
+(check-expect (variantAZ (list 4 3))   false)
+(check-expect (variantAZ (list 1 2 3)) false)
+(check-expect (variantAZ (list 1 2 5))  true)
+(check-expect (variantAZ (list -1 2 5)) true)
+(check-expect (variantAZ (list -1 2 5 43)) true)
+
+;; (define (variantAZ lon) false) ; stub
+
+(define (variantAZ lon0)
+  ;; acc-even             true if one of the number in the list is even;             false otherwise. boolean  - context acc 
+  ;; acc-odd-and-positive true if one of the number in the list is odd and positive; false otherwise. boolean  - context acc
+  ;; acc-btw-5-and-10     true if one of the number in the list is between 5 and 10; false otherwise. boolean  - context acc
+
+  (local
+    [
+     (define (satisfy? loa)
+       (empty? (filter false? (map acc-val loa))))
+
+     (define (call-acc? loa n) ;; (listof Acc) Number -> (listof Boolean)
+       (cond
+         [(empty? loa) empty]
+         [else
+          (cons
+           ((acc-fn (first loa)) n)
+           (call-acc? (rest loa) n))]))
+
+     (define (fn-for-n n lon loa) 
+       (if (satisfy? loa)  
+           true
+           (fn-for-lon lon (filter-acc loa (call-acc? loa n))))) 
+
+     (define (fn-for-lon lon loa)
+       (cond
+         [(empty? lon) (satisfy? loa)]
+         [else (fn-for-n (first lon) (rest lon) loa)]))]
+
+    (fn-for-lon lon0 ALL)))
+
+
+;; (listof Number) -> Boolean
+;; consume a listof Number produce true if the list satisfy the following requirments:
+;; at least 1 number is even
+;; at least 1 number is odd and positive
+;; at least 1 number is between 5 and 10
+;; each number can satisfy only one requirement
+
+(check-expect (variantBZ empty)           false)
+(check-expect (variantBZ (list 6 5))      false)
+(check-expect (variantBZ (list 6 5 6))     true)
+(check-expect (variantBZ (list 1 2 3))    false)
+(check-expect (variantBZ (list 1 2 5))     true)
+(check-expect (variantBZ (list -1 2 5))    false)
+(check-expect (variantBZ (list -1 2 5 43)) true)
+
+;; (define (variantBZ lon) false) ; stub
+
+(define (variantBZ lon0)
+  ;; acc-even             true if one of the number in the list is even;             false otherwise. boolean  - context acc 
+  ;; acc-odd-and-positive true if one of the number in the list is odd and positive; false otherwise. boolean  - context acc
+  ;; acc-btw-5-and-10     true if one of the number in the list is between 5 and 10; false otherwise. boolean  - context acc
+
+  (local
+    [
+     (define (satisfy? loa)
+       (empty? (filter false? (map acc-val loa))))
+
+     (define (call-acc-only-one? loa n) ;; (listof Acc) Number -> (listof Boolean)  
+       ;; If the number satisfy a requirement stop the recursion and return the list
+       (cond
+         [(empty? loa) empty]
+         [else
+          (local
+            [(define try ((acc-fn (first loa)) n))]
+            (if try
+                (cons try (map acc-val (rest loa)))
+                (cons try (call-acc-only-one? (rest loa) n))))]))
+
+
+     (define (fn-for-n n lon loa) 
+       (if (satisfy? loa)  
+           true
+           (fn-for-lon lon (filter-acc loa (call-acc-only-one? loa n))))) 
+
+     (define (fn-for-lon lon loa)
+       (cond
+         [(empty? lon) (satisfy? loa)]
+         [else (fn-for-n (first lon) (rest lon) loa)]))]
+
+    (fn-for-lon lon0 ALL)))
