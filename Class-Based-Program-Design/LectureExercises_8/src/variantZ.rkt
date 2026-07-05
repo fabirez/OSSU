@@ -286,6 +286,101 @@
          (filter-acc (rest loa) (rest lob)))
      ]))
 
+;; (listof acc) (listof (listof Boolean)) -> (listof (listof Acc))
+;; given a (listof (listof Boolean)) produce a (listof  acc) according to their position. 
+;; ASSUME: (listof Acc) and (listof Boolean) are never empty and they have the same length.
+
+(check-expect (filter-loacc ALL (list 
+                                 (list true  false false)
+                                 (list false true false)
+                                 (list false false true)))
+              (list
+               (filter-acc ALL (list true  false false))
+               (filter-acc ALL (list false true false))
+               (filter-acc ALL (list false false true))))
+
+;; (define (filter-loacc loa lob) empty) ; stub
+
+(define (filter-loacc loa lob)
+  (cond
+    [(empty? lob) empty]
+    [else (cons (filter-acc loa (first lob)) (filter-loacc loa (rest lob)))]))
+
+
+;; (listof Acc) Number -> (listof Boolean)  
+;; If the number satisfy a requirement stop the recursion evaluate the requirment (true) and return the list with only that true value.
+;; NOTE: that we never have a true value on the last acc.
+
+(check-expect (call-acc-only-one ALL 0) (list true false false))
+(check-expect (call-acc-only-one ALL 5) (list false true false))
+(check-expect (call-acc-only-one ALL 6) (list true false false))
+
+;; (define (call-acc-only-one? loa n) empty) ; stub
+
+(define (call-acc-only-one loa n)
+  (cond
+    [(empty? loa) empty]
+    [else
+     (local
+       [(define try ((acc-fn (first loa)) n))]
+       (if try
+           (cons try (map acc-val (rest loa)))
+           (cons try (call-acc-only-one (rest loa) n))))]))
+
+;; (listof Acc) Number -> (listof (listof Boolean))
+;; produce a (listof Boolean) anytime each number produce true for an acc, filling the others and pre with false.
+;; !!! Remove this?
+;; (check-expect (call-loa-only-one ALL 1) 
+;; 								(list
+;; 									(call-acc-only-one ALL 6)
+;; 									(call-acc-only-one (rest ALL) 6)))
+;;
+;; (define (call-loa-only-one loa n) empty) ; stub
+
+(define (call-loa-only-one loa n)
+  ;; If the number satisfy a requirement stop the recursion and return the list
+  (cond
+    [(empty? loa) empty]
+    [else
+     (list (call-acc-only-one loa n) (call-loa-only-one (rest loa) n))
+     ]))
+
+
+;; (listof Acc) Number (listof Acc) Boolean -> (listof (listof Acc))
+;; produce a list of acc each time the given Number satisfy the function by acc (produce true), without the acc itslef but with the pre (the second (listof Acc) and rest of (listof Acc). 
+
+;; (define ALL (list acc-even acc-odd-and-positive acc-btw-5-and-10))
+
+(check-expect (fn-for-acc ALL 5 empty false)
+              (list
+               (list acc-even acc-btw-5-and-10)
+               (list acc-even acc-odd-and-positive))) 
+
+(check-expect (fn-for-acc (list acc-btw-5-and-10)  5 (list acc-even acc-odd-and-positive) true)  
+              (list
+               (list acc-even acc-odd-and-positive)))
+
+(check-expect (fn-for-acc ALL -1 empty false)
+              (list
+               (list acc-even acc-odd-and-positive acc-btw-5-and-10)
+              ))
+
+(check-expect (fn-for-acc (list acc-even) 2 empty false)
+              (list empty))
+
+;; (define (fn-for-acc loa n pre) empty)  ; stub
+
+(define (fn-for-acc loa n pre flag)
+  (cond 
+    [(empty? loa) (if (false? flag) (list pre) empty)]
+    [else
+     (local
+       [(define try ((acc-fn (first loa)) n))]
+       (if try
+           (cons (append pre (rest loa)) (fn-for-acc (rest loa)  n (append pre (list (first loa))) true))
+           (fn-for-acc (rest loa) n (append pre (list (first loa))) flag)
+           ))]))  
+
 
 ;; (listof Number) -> Boolean
 ;; consume a listof Number produce true if the list satisfy the following requirments:
@@ -347,41 +442,33 @@
 (check-expect (variantBZ (list 6 5 6))     true)
 (check-expect (variantBZ (list 1 2 3))    false)
 (check-expect (variantBZ (list 1 2 5))     true)
-(check-expect (variantBZ (list -1 2 5))    false)
+(check-expect (variantBZ (list -1 2 5))   false)
 (check-expect (variantBZ (list -1 2 5 43)) true)
 
 ;; (define (variantBZ lon) false) ; stub
 
 (define (variantBZ lon0)
-  ;; acc-even             true if one of the number in the list is even;             false otherwise. boolean  - context acc 
-  ;; acc-odd-and-positive true if one of the number in the list is odd and positive; false otherwise. boolean  - context acc
-  ;; acc-btw-5-and-10     true if one of the number in the list is between 5 and 10; false otherwise. boolean  - context acc
+  ;; (listof Acc)
+  ;; - acc-even             true if one of the number in the list is even;             false otherwise. boolean  - context acc 
+  ;; - acc-odd-and-positive true if one of the number in the list is odd and positive; false otherwise. boolean  - context acc
+  ;; - acc-btw-5-and-10     true if one of the number in the list is between 5 and 10; false otherwise. boolean  - context acc
 
   (local
     [
-     (define (satisfy? loa)
-       (empty? (filter false? (map acc-val loa))))
-
-     (define (call-acc-only-one? loa n) ;; (listof Acc) Number -> (listof Boolean)  
-       ;; If the number satisfy a requirement stop the recursion and return the list
-       (cond
-         [(empty? loa) empty]
-         [else
-          (local
-            [(define try ((acc-fn (first loa)) n))]
-            (if try
-                (cons try (map acc-val (rest loa)))
-                (cons try (call-acc-only-one? (rest loa) n))))]))
-
-
      (define (fn-for-n n lon loa) 
-       (if (satisfy? loa)  
+       (if (empty? loa)  
            true
-           (fn-for-lon lon (filter-acc loa (call-acc-only-one? loa n))))) 
+           (fn-for-lon lon (fn-for-acc loa n empty false))))
 
-     (define (fn-for-lon lon loa)
+     (define (check? looa)
+       (> (length (filter empty? (map first looa))) 0))
+     
+     (define (fn-for-lon lon looa)
        (cond
-         [(empty? lon) (satisfy? loa)]
-         [else (fn-for-n (first lon) (rest lon) loa)]))]
-
-    (fn-for-lon lon0 ALL)))
+         [(empty? lon) (check? looa)]
+         [else 
+          (local
+            [(define try (fn-for-n (first lon) (rest lon) (first looa)))]
+            (or try  
+                (fn-for-lon (rest lon) (rest looa))))]))]
+    (fn-for-lon lon0 (list ALL))))
