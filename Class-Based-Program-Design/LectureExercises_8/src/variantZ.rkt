@@ -286,66 +286,6 @@
          (filter-acc (rest loa) (rest lob)))
      ]))
 
-;; (listof acc) (listof (listof Boolean)) -> (listof (listof Acc))
-;; given a (listof (listof Boolean)) produce a (listof  acc) according to their position. 
-;; ASSUME: (listof Acc) and (listof Boolean) are never empty and they have the same length.
-
-(check-expect (filter-loacc ALL (list 
-                                 (list true  false false)
-                                 (list false true false)
-                                 (list false false true)))
-              (list
-               (filter-acc ALL (list true  false false))
-               (filter-acc ALL (list false true false))
-               (filter-acc ALL (list false false true))))
-
-;; (define (filter-loacc loa lob) empty) ; stub
-
-(define (filter-loacc loa lob)
-  (cond
-    [(empty? lob) empty]
-    [else (cons (filter-acc loa (first lob)) (filter-loacc loa (rest lob)))]))
-
-
-;; (listof Acc) Number -> (listof Boolean)  
-;; If the number satisfy a requirement stop the recursion evaluate the requirment (true) and return the list with only that true value.
-;; NOTE: that we never have a true value on the last acc.
-
-(check-expect (call-acc-only-one ALL 0) (list true false false))
-(check-expect (call-acc-only-one ALL 5) (list false true false))
-(check-expect (call-acc-only-one ALL 6) (list true false false))
-
-;; (define (call-acc-only-one? loa n) empty) ; stub
-
-(define (call-acc-only-one loa n)
-  (cond
-    [(empty? loa) empty]
-    [else
-     (local
-       [(define try ((acc-fn (first loa)) n))]
-       (if try
-           (cons try (map acc-val (rest loa)))
-           (cons try (call-acc-only-one (rest loa) n))))]))
-
-;; (listof Acc) Number -> (listof (listof Boolean))
-;; produce a (listof Boolean) anytime each number produce true for an acc, filling the others and pre with false.
-;; !!! Remove this?
-;; (check-expect (call-loa-only-one ALL 1) 
-;; 								(list
-;; 									(call-acc-only-one ALL 6)
-;; 									(call-acc-only-one (rest ALL) 6)))
-;;
-;; (define (call-loa-only-one loa n) empty) ; stub
-
-(define (call-loa-only-one loa n)
-  ;; If the number satisfy a requirement stop the recursion and return the list
-  (cond
-    [(empty? loa) empty]
-    [else
-     (list (call-acc-only-one loa n) (call-loa-only-one (rest loa) n))
-     ]))
-
-
 ;; (listof Acc) Number (listof Acc) Boolean -> (listof (listof Acc))
 ;; produce a list of acc each time the given Number satisfy the function by acc (produce true), without the acc itslef but with the pre (the second (listof Acc) and rest of (listof Acc). 
 
@@ -455,7 +395,7 @@
        (> (length (filter empty? looa)) 0)) ;; suppose (list empty) -> empty
 
      (define (fn-for-n n lon loa) 
-           (fn-for-lon lon (fn-for-acc loa n empty false)))  ;; (listof Acc) Number (listof Acc) Boolean -> (listof (listof Acc))
+       (fn-for-lon lon (fn-for-acc loa n empty false)))  ;; (listof Acc) Number (listof Acc) Boolean -> (listof (listof Acc))
      
      (define (fn-for-lon lon looa)
        (cond
@@ -500,15 +440,19 @@
        (> (length (filter empty? looa)) 0)) 
 
      (define (fn-for-n n lon loa) 
-           (fn-for-lon lon (fn-for-acc loa n empty false)))
+       (fn-for-lon lon (fn-for-acc loa n empty false)))
      
      (define (fn-for-lon lon looa)
        (cond
          [(empty? lon) (check? looa)]
-				 [(empty? looa) false]
+         [(empty? looa) false]
          [else 
           (local
             [(define try (fn-for-n (first lon) (rest lon) (first looa)))]
             (or try  
                 (fn-for-lon lon (rest looa))))]))]
     (is-length-3? lon0 ALL)))
+
+;; What essential features of Racket are you using, that we do not yet have in Java?
+;; I was able to create a struct (compound data) with a field that contains a function,
+;; I think this is possible because the programming language supports first-class functions.
