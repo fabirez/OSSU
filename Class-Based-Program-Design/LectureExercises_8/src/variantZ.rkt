@@ -467,3 +467,48 @@
             (or try  
                 (fn-for-lon lon (rest looa))))]))]
     (fn-for-lon lon0 (list ALL))))
+
+;; (listof Number) -> Boolean
+;; consume a listof Number produce true if the list satisfy the following requirments:
+;; length of the list is 3
+;; at least 1 number is even
+;; at least 1 number is odd and positive
+;; at least 1 number is between 5 and 10
+;;  number can satisfy only one requirement, and the list contain only them.
+
+(check-expect (variantCZ empty)            false)
+(check-expect (variantCZ (list 6 5 42 6))  false)
+(check-expect (variantCZ (list 6 5 6))      true)
+(check-expect (variantCZ (list 6 5))       false)
+(check-expect (variantCZ (list 1 2 3))     false)
+(check-expect (variantCZ (list 1 2 5))      true)
+(check-expect (variantCZ (list -1 2 5))    false)
+(check-expect (variantCZ (list -1 2 5 43)) false)
+
+;; (define (variantCZ lon) false) ; stub
+
+(define (variantCZ lon0)
+  ;; (listof Acc) the Accumulators tha need to be satisfied -- context accumulator
+  (local
+    [
+     (define (is-length-3? lon loa) 
+       (if (= (length lon) (length loa))
+           (fn-for-lon lon0 (list loa))
+           false))
+
+     (define (check? looa)
+       (> (length (filter empty? looa)) 0)) 
+
+     (define (fn-for-n n lon loa) 
+           (fn-for-lon lon (fn-for-acc loa n empty false)))
+     
+     (define (fn-for-lon lon looa)
+       (cond
+         [(empty? lon) (check? looa)]
+				 [(empty? looa) false]
+         [else 
+          (local
+            [(define try (fn-for-n (first lon) (rest lon) (first looa)))]
+            (or try  
+                (fn-for-lon lon (rest looa))))]))]
+    (is-length-3? lon0 ALL)))
