@@ -363,7 +363,7 @@
 (check-expect (fn-for-acc ALL -1 empty false)
               (list
                (list acc-even acc-odd-and-positive acc-btw-5-and-10)
-              ))
+               ))
 
 (check-expect (fn-for-acc (list acc-even) 2 empty false)
               (list empty))
@@ -448,27 +448,22 @@
 ;; (define (variantBZ lon) false) ; stub
 
 (define (variantBZ lon0)
-  ;; (listof Acc)
-  ;; - acc-even             true if one of the number in the list is even;             false otherwise. boolean  - context acc 
-  ;; - acc-odd-and-positive true if one of the number in the list is odd and positive; false otherwise. boolean  - context acc
-  ;; - acc-btw-5-and-10     true if one of the number in the list is between 5 and 10; false otherwise. boolean  - context acc
-
+  ;; (listof Acc) the Accumulators tha need to be satisfied -- context accumulator
   (local
     [
-     (define (fn-for-n n lon loa) 
-       (if (empty? loa)  
-           true
-           (fn-for-lon lon (fn-for-acc loa n empty false))))
-
      (define (check? looa)
-       (> (length (filter empty? (map first looa))) 0))
+       (> (length (filter empty? looa)) 0)) ;; suppose (list empty) -> empty
+
+     (define (fn-for-n n lon loa) 
+           (fn-for-lon lon (fn-for-acc loa n empty false)))  ;; (listof Acc) Number (listof Acc) Boolean -> (listof (listof Acc))
      
      (define (fn-for-lon lon looa)
        (cond
          [(empty? lon) (check? looa)]
+         [(empty? looa) false]
          [else 
           (local
             [(define try (fn-for-n (first lon) (rest lon) (first looa)))]
             (or try  
-                (fn-for-lon (rest lon) (rest looa))))]))]
+                (fn-for-lon lon (rest looa))))]))]
     (fn-for-lon lon0 (list ALL))))
