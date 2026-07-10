@@ -11,7 +11,7 @@ interface ITree {
  /* see methods below */ 
   WorldImage draw();
   // !!!
-  // WorldImage drawHelp(int x, int y);
+  WorldImage drawHelp(int x, int y);
 }
  
 class Leaf implements ITree {
@@ -40,6 +40,9 @@ class Leaf implements ITree {
   }
   // !!!
   // WorldImage drawHelp(int x, int y);
+  public WorldImage drawHelp(int x, int y){
+    return new CircleImage(this.size, OUTLINE, this.color).movePinhole(x, y);
+  };
 }
  
 class Stem implements ITree {
@@ -74,7 +77,10 @@ class Stem implements ITree {
     return new LineImage(new Posn(0, this.length), GRAY);
   }
   // !!!
-  // WorldImage drawHelp(int x, int y);
+
+  public WorldImage drawHelp(int x, int y){
+    return new LineImage(new Posn(0, this.length), GRAY).movePinhole(x, y);
+  };
 }
  
 class Branch implements ITree {
@@ -116,21 +122,71 @@ class Branch implements ITree {
     this.right=right;
   }
 
+
+  // NOTE: This seems right
   public WorldImage draw(){
-    return new VisiblePinholeImage(
-      new OverlayImage( 
-        new OverlayImage( 
-          new LineImage(new Posn((int) (this.leftLength * Math.cos(this.leftTheta)), this.leftLength), GRAY).movePinhole(15, 15),
-          this.left.draw()),
+    return new OverlayImage(
         new OverlayImage(
-          new LineImage( 
-            new Posn((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength), GRAY), this.right.draw())
-      ));
+        new LineImage(
+          new Posn(
+        (int) (this.leftLength * Math.cos(Math.toRadians(this.leftTheta))),
+        (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta)))), GRAY)
+        .movePinhole(
+          this.leftLength * Math.cos(Math.toRadians(this.leftTheta)) / 2,
+          this.leftLength * Math.sin(Math.toRadians(this.leftTheta)) / 2),
+        this.left.drawHelp(
+          (int) (this.leftLength * -Math.cos(Math.toRadians(this.leftTheta))),
+          (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta))))
+      )
+       , 
+        new OverlayImage(
+        new LineImage(
+          new Posn(
+          (int) (this.rightLength * Math.cos(Math.toRadians(this.rightTheta))),
+          (int) (this.rightLength * Math.sin(Math.toRadians(this.rightTheta)))), GRAY)
+        .movePinhole(
+          this.rightLength * Math.cos(Math.toRadians(this.rightTheta)) / 2,
+          this.rightLength * Math.sin(Math.toRadians(this.rightTheta)) / 2),
+        this.right.drawHelp(
+          - (int) (this.rightLength * Math.cos(Math.toRadians(this.rightTheta))),
+          (int) (this.rightLength * Math.sin(Math.toRadians(this.rightTheta))))
+      )
+      );
   }
+
+  // public WorldImage draw(){
+  //   return new VisiblePinholeImage(
+  //     new OverlayImage( 
+  //       new OverlayImage( 
+  //         new LineImage(new Posn((int) Math.toRadians(this.leftTheta), this.leftLength), GRAY)
+  //           .movePinhole(
+  //           0,
+  //           0
+  //         ),
+  //         this.left.draw()
+  //         // this.left.drawHelp((int) (this.leftLength * Math.cos(this.leftTheta)), this.leftLength)
+  //         ),
+  //       new OverlayImage(
+  //         new LineImage(new Posn((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength), GRAY).movePinhole(-this.rightLength / 2, -this.rightLength / 2),
+  //         this.right.draw()
+  //         // this.right.drawHelp((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength)
+  //         )
+  //     ));
+  // }
 
 
   // !!!
-  // WorldImage drawHelp(int x, int y);
+  public WorldImage drawHelp(int x, int y){
+    return new VisiblePinholeImage(
+      new OverlayImage( 
+        new OverlayImage( 
+          new LineImage(new Posn(this.leftLength, (int)(this.leftLength * Math.cos(this.leftTheta))), GRAY).movePinhole(x + this.leftLength / 2, y + (-this.leftLength / 2)),
+          this.left.drawHelp(this.leftLength / 2, -this.leftLength / 2 + this.leftLength)),
+        new OverlayImage(
+          new LineImage(new Posn((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength), GRAY).movePinhole(x + -this.rightLength / 2, y + (-this.rightLength / 2)),
+          this.right.drawHelp(this.rightLength / 2, -this.rightLength / 2 + this.rightLength))
+      ));
+  }
 
   // WARNING: Experimneting out the library
     // public WorldImage draw(){
@@ -156,18 +212,25 @@ class Branch implements ITree {
 
 }
 
+// class Utility(){
+//   getX();
+//   getY();
+// }
+
 
 class ExamplesITree{
   ExamplesITree(){}
 
   ITree leaf0 = new Leaf(10, Color.RED);
   ITree leaf1 = new Leaf(15, Color.BLUE);
-  ITree tree1 = new Branch(30, 30, 135, 40, this.leaf0, this.leaf1);
-
   ITree leaf2 = new Leaf(15, Color.GREEN);
   ITree leaf3 = new Leaf(8, Color.ORANGE);
+
+  //  Branch with a left angle of 135 degrees and a right angle of 45 degrees points on both upward diagonals.
+  ITree tree1 = new Branch(30, 30, 135, 40, this.leaf0, this.leaf1);
   ITree tree2 = new Branch(30, 30, 115, 65,this.leaf2, this.leaf3);
 
+  // A Stem at an angle of 90 degrees is growing straight up;
   ITree stem1 = new Stem(40, 90, this.tree1);
   ITree stem2 = new Stem(50, 90, this.tree2);
 
