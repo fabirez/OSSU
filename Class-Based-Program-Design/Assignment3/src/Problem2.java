@@ -8,11 +8,15 @@ import javalib.worldcanvas.*;   //  display images on a WorldCanvas
 interface ITree {
   OutlineMode OUTLINE = OutlineMode.SOLID;
   Color GRAY = Color.GRAY;
+  Utility0 UTILITY = new Utility0();
 
   // renders your ITree to a picture. 
   WorldImage draw();
   WorldImage drawHelp(int x, int y);
 
+  // that computes whether any of the twigs in the tree (either stems or branches) 
+  // are pointing downward rather than upward.
+  boolean isDropping();
 }
  
 class Leaf implements ITree {
@@ -29,9 +33,11 @@ class Leaf implements ITree {
   ... this.size ...    -- int
   ... this.color ...   -- Color
 
+
   METHODS
-  ... this.draw() ...      -- WorldIMage
+  ... this.draw() ...              -- WorldIMage
   ... this.drawHelp(int, int) ...  -- WorldIMage
+  ... this.isDrooping() ...        -- boolean
 
   METHODS FOR FIELDS:
   */
@@ -39,12 +45,16 @@ class Leaf implements ITree {
 
   // renders Leaf to a picture. 
   public WorldImage draw(){
-    return new CircleImage(this.size, OUTLINE, this.color);
+    return this.drawHelp(0,0);
   }
   public WorldImage drawHelp(int x, int y){
     return new CircleImage(this.size, OUTLINE, this.color).movePinhole(x, y);
-  };
+  }
 
+  // return true if this stem or the tree (branchs or stems) are pointing downward rather than upward; false otherwise.
+  public boolean isDropping(){
+    return false;
+  }
 }
  
 class Stem implements ITree {
@@ -63,12 +73,14 @@ class Stem implements ITree {
   ... this.tree ...      -- ITree
 
   METHODS
-  ... this.draw() ...         -- WorldIMage
+  ... this.draw() ...                 -- WorldIMage
   ... this.drawHelp(int, int) ...     -- WorldIMage
+  ... this.isDropping() ...           -- boolean
 
   METHODS FOR FIELDS:
   ... this.tree.draw() ...              -- WorldIMage
   ... this.tree.drawHelp(int, int) ...  -- WorldIMage
+  ... this.tree.isDropping() ...        -- boolean
   */
 
   Stem(int length, double theta, ITree tree){
@@ -87,6 +99,11 @@ class Stem implements ITree {
       new LineImage(new Posn(0, this.length), GRAY),
       this.tree.drawHelp(0, this.length / 2)
     );
+  }
+
+  // return true if this stem or the tree (branchs or stems) are pointing downward rather than upward; false otherwise.
+  public boolean isDropping(){
+    return Math.sin(Math.toRadians(this.theta)) < 0 || this.tree.isDropping();
   }
 }
  
@@ -112,14 +129,17 @@ class Branch implements ITree {
   ... this.right ...          -- ITree
 
   METHODS
-  ... this.draw() ...    -- WorldIMage
+  ... this.draw() ...                -- WorldIMage
   ... this.drawHelp(int, int) ...    -- WorldIMage
+  ... this.isDropping() ...          -- boolean
 
   METHODS FOR FIELDS:
   ... this.left.draw()  ...              -- WorldIMage
   ... this.right.draw() ...              -- WorldIMage
   ... this.left.drawHelp(int, int)  ...  -- WorldIMage
   ... this.right.drawHelp(int, int) ...  -- WorldIMage
+  ... this.left.isDropping() ...         -- boolean
+  ... this.right.isDropping() ...        -- boolean
   */
 
   Branch(int  leftLength, int rightLength, double leftTheta, double rightTheta, ITree left, ITree right){
@@ -140,40 +160,52 @@ class Branch implements ITree {
         new OverlayImage(
         new LineImage(
           new Posn(
-        (int) (this.leftLength * Math.cos(Math.toRadians(this.leftTheta))),
-        (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta)))),
+            UTILITY.getBranchX(this.leftLength, this.leftTheta),
+            UTILITY.getBranchY(this.leftLength, this.leftTheta)
+          ),
           GRAY)
         .movePinhole(
-          this.leftLength * Math.cos(Math.toRadians(this.leftTheta)) / 2 + x,
-          this.leftLength * Math.sin(Math.toRadians(this.leftTheta)) / 2 + y),
+          UTILITY.getBranchX(this.leftLength, this.leftTheta) / 2 + x,
+          UTILITY.getBranchY(this.leftLength, this.leftTheta) / 2 + y),
         this.left.drawHelp(
-          (int) (this.leftLength * Math.cos(Math.toRadians(this.leftTheta))) + x,
-          (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta))) + y)
+          UTILITY.getBranchX(this.leftLength, this.leftTheta) + x,
+          UTILITY.getBranchY(this.leftLength, this.leftTheta) + y)
       )
        , 
         new OverlayImage(
         new LineImage(
           new Posn(
-          (int) (this.rightLength * Math.cos(Math.toRadians(this.rightTheta))),
-          (int) (this.rightLength * Math.sin(Math.toRadians(this.rightTheta)))), GRAY)
+           UTILITY.getBranchX(this.rightLength, this.rightTheta),
+           UTILITY.getBranchY(this.rightLength, this.rightTheta)),
+          GRAY)
         .movePinhole(
-          this.rightLength * Math.cos(Math.toRadians(this.rightTheta)) / 2 + x,
-          this.rightLength * Math.sin(Math.toRadians(this.rightTheta)) / 2 + y),
+           UTILITY.getBranchX(this.rightLength, this.rightTheta) / 2 + x,
+           UTILITY.getBranchY(this.rightLength, this.rightTheta) / 2 + y),
         this.right.drawHelp(
-          (int) (this.rightLength * Math.cos(Math.toRadians(this.rightTheta))) + x,
-          (int) (this.rightLength * Math.sin(Math.toRadians(this.rightTheta))) + y)
+           UTILITY.getBranchX(this.rightLength, this.rightTheta) + x,
+           UTILITY.getBranchY(this.rightLength, this.rightTheta) + y)
       )
       );
   }
 
+
+  // return true if this stem or the tree (branchs or stems) are pointing downward rather than upward; false otherwise.
+  public boolean isDropping(){
+    return Math.sin(Math.toRadians(this.leftTheta)) < 0 || Math.sin(Math.toRadians(this.rightTheta)) < 0 || this.left.isDropping() || this.right.isDropping();
+  }
+
 }
 
-// class Utility{
-//   Utility(){}
-//
-//   int getBranchX(int length, double theta);
-//   int getBranchY(int length, double theta);
-// }
+class Utility0{
+  Utility0(){}
+
+  public int getBranchX(int length, double theta){
+    return (int) (length * Math.cos(Math.toRadians(theta)));
+  }
+  public int getBranchY(int length, double theta){
+    return (int) (length * Math.sin(Math.toRadians(theta)));
+  }
+}
 
 
 class ExamplesITree{
@@ -187,11 +219,18 @@ class ExamplesITree{
   //  Branch with a left angle of 135 degrees and a right angle of 45 degrees points on both upward diagonals.
   ITree tree1 = new Branch(30, 30, 135, 40, this.leaf0, this.leaf1);
   ITree tree2 = new Branch(30, 30, 115, 65,this.leaf2, this.leaf3);
+  // For testing isDropping
+  ITree tree3 = new Branch(30, 30, 240, 65,this.leaf2, this.leaf3);
+  ITree tree4 = new Branch(30, 30, 200, 65,this.leaf2, this.leaf3);
 
   // A Stem at an angle of 90 degrees is growing straight up;
   ITree stem1 = new Stem(40, 90, this.tree1);
   ITree stem2 = new Stem(50, 90, this.tree2);
+  // For testing isDropping
+  ITree stem3 = new Stem(50, 210, this.tree2);
+  ITree stem4 = new Stem(50, 230, this.tree2);
 
+  // Utility constants for testing
   OutlineMode OUTLINE = OutlineMode.SOLID;
   Color GRAY = Color.GRAY;
   Color RED = Color.RED;
@@ -205,6 +244,20 @@ class ExamplesITree{
   boolean testDrawTree(Tester t) {
     WorldCanvas c = new WorldCanvas(500, 500);
     WorldScene s = new WorldScene(500, 500);
-    return c.drawScene(s.placeImageXY(this.stem2.draw(), 250, 250)) && c.show();
+    return c.drawScene(s.placeImageXY(this.stem4.draw(), 250, 250)) && c.show();
+  } 
+
+  boolean testIsDropping(Tester t) {
+    return 
+    t.checkExpect(this.tree1.isDropping(), false) &&
+    t.checkExpect(this.tree2.isDropping(), false) &&
+    t.checkExpect(this.stem1.isDropping(), false) &&
+    t.checkExpect(this.stem2.isDropping(), false) &&
+    t.checkExpect(this.leaf0.isDropping(), false) &&
+    t.checkExpect(this.leaf1.isDropping(), false) &&
+    t.checkExpect(this.tree3.isDropping(),  true) &&
+    t.checkExpect(this.tree4.isDropping(),  true) &&
+    t.checkExpect(this.stem3.isDropping(),  true) &&
+    t.checkExpect(this.stem4.isDropping(),  true);
   } 
 }
