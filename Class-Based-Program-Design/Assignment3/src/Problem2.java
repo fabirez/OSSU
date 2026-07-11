@@ -8,10 +8,11 @@ import javalib.worldcanvas.*;   //  display images on a WorldCanvas
 interface ITree {
   OutlineMode OUTLINE = OutlineMode.SOLID;
   Color GRAY = Color.GRAY;
- /* see methods below */ 
+
+  // renders your ITree to a picture. 
   WorldImage draw();
-  // !!!
   WorldImage drawHelp(int x, int y);
+
 }
  
 class Leaf implements ITree {
@@ -29,20 +30,21 @@ class Leaf implements ITree {
   ... this.color ...   -- Color
 
   METHODS
-  ... this.draw() ...  -- WorldIMage
+  ... this.draw() ...      -- WorldIMage
+  ... this.drawHelp(int, int) ...  -- WorldIMage
 
   METHODS FOR FIELDS:
- 
   */
 
+
+  // renders Leaf to a picture. 
   public WorldImage draw(){
-    return new VisiblePinholeImage(new CircleImage(this.size, OUTLINE, this.color));
+    return new CircleImage(this.size, OUTLINE, this.color);
   }
-  // !!!
-  // WorldImage drawHelp(int x, int y);
   public WorldImage drawHelp(int x, int y){
     return new CircleImage(this.size, OUTLINE, this.color).movePinhole(x, y);
   };
+
 }
  
 class Stem implements ITree {
@@ -61,10 +63,12 @@ class Stem implements ITree {
   ... this.tree ...      -- ITree
 
   METHODS
-  ... this.draw() ...    -- WorldIMage
+  ... this.draw() ...         -- WorldIMage
+  ... this.drawHelp(int, int) ...     -- WorldIMage
 
   METHODS FOR FIELDS:
-  ... this.tree.draw() ...  -- WorldIMage
+  ... this.tree.draw() ...              -- WorldIMage
+  ... this.tree.drawHelp(int, int) ...  -- WorldIMage
   */
 
   Stem(int length, double theta, ITree tree){
@@ -73,14 +77,17 @@ class Stem implements ITree {
     this.tree=tree;
   }
 
-  public WorldImage draw(){
-    return new LineImage(new Posn(0, this.length), GRAY);
-  }
-  // !!!
 
+  // renders Steam and the tree to a picture. 
+  public WorldImage draw(){
+    return this.drawHelp(0,0);
+  }
   public WorldImage drawHelp(int x, int y){
-    return new LineImage(new Posn(0, this.length), GRAY).movePinhole(x, y);
-  };
+    return new OverlayImage( 
+      new LineImage(new Posn(0, this.length), GRAY),
+      this.tree.drawHelp(0, this.length / 2)
+    );
+  }
 }
  
 class Branch implements ITree {
@@ -106,11 +113,13 @@ class Branch implements ITree {
 
   METHODS
   ... this.draw() ...    -- WorldIMage
+  ... this.drawHelp(int, int) ...    -- WorldIMage
 
   METHODS FOR FIELDS:
-  ... this.tree.draw()  ...  -- WorldIMage
-  ... this.left.draw()  ...  -- WorldIMage
-  ... this.right.draw() ...  -- WorldIMage
+  ... this.left.draw()  ...              -- WorldIMage
+  ... this.right.draw() ...              -- WorldIMage
+  ... this.left.drawHelp(int, int)  ...  -- WorldIMage
+  ... this.right.drawHelp(int, int) ...  -- WorldIMage
   */
 
   Branch(int  leftLength, int rightLength, double leftTheta, double rightTheta, ITree left, ITree right){
@@ -122,21 +131,24 @@ class Branch implements ITree {
     this.right=right;
   }
 
-
-  // NOTE: This seems right
+  // renders Steam and the tree to a picture. 
   public WorldImage draw(){
+    return this.drawHelp(0, 0);
+  }
+  public WorldImage drawHelp(int x, int y){
     return new OverlayImage(
         new OverlayImage(
         new LineImage(
           new Posn(
         (int) (this.leftLength * Math.cos(Math.toRadians(this.leftTheta))),
-        (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta)))), GRAY)
+        (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta)))),
+          GRAY)
         .movePinhole(
-          this.leftLength * Math.cos(Math.toRadians(this.leftTheta)) / 2,
-          this.leftLength * Math.sin(Math.toRadians(this.leftTheta)) / 2),
+          this.leftLength * Math.cos(Math.toRadians(this.leftTheta)) / 2 + x,
+          this.leftLength * Math.sin(Math.toRadians(this.leftTheta)) / 2 + y),
         this.left.drawHelp(
-          (int) (this.leftLength * -Math.cos(Math.toRadians(this.leftTheta))),
-          (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta))))
+          (int) (this.leftLength * Math.cos(Math.toRadians(this.leftTheta))) + x,
+          (int) (this.leftLength * Math.sin(Math.toRadians(this.leftTheta))) + y)
       )
        , 
         new OverlayImage(
@@ -145,76 +157,22 @@ class Branch implements ITree {
           (int) (this.rightLength * Math.cos(Math.toRadians(this.rightTheta))),
           (int) (this.rightLength * Math.sin(Math.toRadians(this.rightTheta)))), GRAY)
         .movePinhole(
-          this.rightLength * Math.cos(Math.toRadians(this.rightTheta)) / 2,
-          this.rightLength * Math.sin(Math.toRadians(this.rightTheta)) / 2),
+          this.rightLength * Math.cos(Math.toRadians(this.rightTheta)) / 2 + x,
+          this.rightLength * Math.sin(Math.toRadians(this.rightTheta)) / 2 + y),
         this.right.drawHelp(
-          - (int) (this.rightLength * Math.cos(Math.toRadians(this.rightTheta))),
-          (int) (this.rightLength * Math.sin(Math.toRadians(this.rightTheta))))
+          (int) (this.rightLength * Math.cos(Math.toRadians(this.rightTheta))) + x,
+          (int) (this.rightLength * Math.sin(Math.toRadians(this.rightTheta))) + y)
       )
       );
   }
 
-  // public WorldImage draw(){
-  //   return new VisiblePinholeImage(
-  //     new OverlayImage( 
-  //       new OverlayImage( 
-  //         new LineImage(new Posn((int) Math.toRadians(this.leftTheta), this.leftLength), GRAY)
-  //           .movePinhole(
-  //           0,
-  //           0
-  //         ),
-  //         this.left.draw()
-  //         // this.left.drawHelp((int) (this.leftLength * Math.cos(this.leftTheta)), this.leftLength)
-  //         ),
-  //       new OverlayImage(
-  //         new LineImage(new Posn((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength), GRAY).movePinhole(-this.rightLength / 2, -this.rightLength / 2),
-  //         this.right.draw()
-  //         // this.right.drawHelp((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength)
-  //         )
-  //     ));
-  // }
-
-
-  // !!!
-  public WorldImage drawHelp(int x, int y){
-    return new VisiblePinholeImage(
-      new OverlayImage( 
-        new OverlayImage( 
-          new LineImage(new Posn(this.leftLength, (int)(this.leftLength * Math.cos(this.leftTheta))), GRAY).movePinhole(x + this.leftLength / 2, y + (-this.leftLength / 2)),
-          this.left.drawHelp(this.leftLength / 2, -this.leftLength / 2 + this.leftLength)),
-        new OverlayImage(
-          new LineImage(new Posn((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength), GRAY).movePinhole(x + -this.rightLength / 2, y + (-this.rightLength / 2)),
-          this.right.drawHelp(this.rightLength / 2, -this.rightLength / 2 + this.rightLength))
-      ));
-  }
-
-  // WARNING: Experimneting out the library
-    // public WorldImage draw(){
-    //   return new VisiblePinholeImage(
-    //     new BesideImage( 
-    //       new OverlayImage( 
-    //         new LineImage( 
-    //           new Posn((int) (this.leftLength * Math.cos(this.leftTheta)), this.leftLength), GRAY), this.left.draw()),
-    //       new OverlayImage(
-    //         new LineImage( 
-    //           new Posn((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength), GRAY), this.right.draw())
-    //     ));
-    // }
-    // Without the rest of the tree
-    // public WorldImage draw(){
-    //   return new VisiblePinholeImage(
-    //     new BesideImage( 
-    //       new VisiblePinholeImage(new LineImage(new Posn((int) (this.leftLength * Math.cos(this.leftTheta)), this.leftLength), GRAY)),
-    //       new VisiblePinholeImage(new LineImage(new Posn((int) (this.rightLength * Math.sin(this.rightTheta)), this.rightLength), GRAY))
-    //     ));
-    //  }
-    //
-
 }
 
-// class Utility(){
-//   getX();
-//   getY();
+// class Utility{
+//   Utility(){}
+//
+//   int getBranchX(int length, double theta);
+//   int getBranchY(int length, double theta);
 // }
 
 
@@ -247,7 +205,6 @@ class ExamplesITree{
   boolean testDrawTree(Tester t) {
     WorldCanvas c = new WorldCanvas(500, 500);
     WorldScene s = new WorldScene(500, 500);
-    return c.drawScene(s.placeImageXY(this.tree1.draw(), 250, 250))
-        && c.show();
+    return c.drawScene(s.placeImageXY(this.stem2.draw(), 250, 250)) && c.show();
   } 
 }
