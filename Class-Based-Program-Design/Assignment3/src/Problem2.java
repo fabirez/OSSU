@@ -96,7 +96,13 @@ class Stem implements ITree {
   }
   public WorldImage drawHelp(int x, int y){
     return new OverlayImage( 
-      new LineImage(new Posn(0, this.length), GRAY),
+      new LineImage(
+        new Posn(
+          UTILITY.getBranchX(this.length, this.theta),
+          UTILITY.getBranchY(this.length, this.theta)
+        ),
+          GRAY
+      ), 
       this.tree.drawHelp(0, this.length / 2)
     );
   }
@@ -244,7 +250,7 @@ class ExamplesITree{
   boolean testDrawTree(Tester t) {
     WorldCanvas c = new WorldCanvas(500, 500);
     WorldScene s = new WorldScene(500, 500);
-    return c.drawScene(s.placeImageXY(this.stem4.draw(), 250, 250)) && c.show();
+    return c.drawScene(s.placeImageXY(this.stem1.draw(), 250, 250)) && c.show();
   } 
 
   boolean testIsDropping(Tester t) {
