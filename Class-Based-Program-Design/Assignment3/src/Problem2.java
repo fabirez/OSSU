@@ -17,6 +17,11 @@ interface ITree {
   // that computes whether any of the twigs in the tree (either stems or branches) 
   // are pointing downward rather than upward.
   boolean isDropping();
+
+  //  takes the current tree and a given tree and produces a Branch using the given arguments,
+  //  with this tree on the left and the given tree on the right... but with a twist, literally.
+  ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree);
+  ITree combineHelp(int newLength, double newTheta);
 }
  
 class Leaf implements ITree {
@@ -54,6 +59,15 @@ class Leaf implements ITree {
   // return true if this stem or the tree (branchs or stems) are pointing downward rather than upward; false otherwise.
   public boolean isDropping(){
     return false;
+  }
+
+  public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
+    return this;
+  }
+
+  
+  public ITree combineHelp(int newLength, double newTheta){
+    return this;
   }
 }
  
@@ -95,15 +109,20 @@ class Stem implements ITree {
     return this.drawHelp(0,0);
   }
   public WorldImage drawHelp(int x, int y){
-    return new OverlayImage( 
+    return
+    new OverlayImage( 
       new LineImage(
         new Posn(
           UTILITY.getBranchX(this.length, this.theta),
           UTILITY.getBranchY(this.length, this.theta)
         ),
           GRAY
-      ), 
-      this.tree.drawHelp(0, this.length / 2)
+      ).movePinhole(
+          UTILITY.getBranchX(this.length, this.theta) / 2 + x,
+          UTILITY.getBranchY(this.length, this.theta) / 2 + y),
+     this.tree.drawHelp(
+        UTILITY.getBranchX(this.length, this.theta) + x,
+        UTILITY.getBranchY(this.length, this.theta) + y)
     );
   }
 
@@ -111,6 +130,15 @@ class Stem implements ITree {
   public boolean isDropping(){
     return Math.sin(Math.toRadians(this.theta)) < 0 || this.tree.isDropping();
   }
+
+  public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
+    return this;
+  }
+
+  public ITree combineHelp(int newLength, double newTheta){
+    return this.tree.combineHelp(newLength, newTheta);
+  }
+
 }
  
 class Branch implements ITree {
@@ -167,7 +195,7 @@ class Branch implements ITree {
         new LineImage(
           new Posn(
             UTILITY.getBranchX(this.leftLength, this.leftTheta),
-            UTILITY.getBranchY(this.leftLength, this.leftTheta)
+            UTILITY.getBranchY(this.leftLength, this.leftTheta) 
           ),
           GRAY)
         .movePinhole(
@@ -176,8 +204,7 @@ class Branch implements ITree {
         this.left.drawHelp(
           UTILITY.getBranchX(this.leftLength, this.leftTheta) + x,
           UTILITY.getBranchY(this.leftLength, this.leftTheta) + y)
-      )
-       , 
+      ), 
         new OverlayImage(
         new LineImage(
           new Posn(
@@ -200,14 +227,71 @@ class Branch implements ITree {
     return Math.sin(Math.toRadians(this.leftTheta)) < 0 || Math.sin(Math.toRadians(this.rightTheta)) < 0 || this.left.isDropping() || this.right.isDropping();
   }
 
+
+  /* Branch version
+  * public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
+  *   return new Branch(leftLength, rightLength, leftTheta, rightTheta, this, otherTree);
+  * }
+  */
+
+  public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
+    return new MergedTree(
+      new Stem(leftLength, leftTheta, this.combineHelp(leftLength, leftTheta)),
+      new Stem(rightLength, rightTheta, otherTree.combineHelp(rightLength, rightTheta))
+    );
+  }
+  // ASSUME: The old stem has an angle of 90 degrees 
+  public ITree combineHelp(int newLength, double newTheta){
+    return new Branch(this.leftLength, this.rightLength, newTheta + (this.leftTheta - 90), newTheta + (this.rightTheta - 90), this.left, this.right);
+  }
+
+}
+
+
+class MergedTree implements ITree{
+  ITree leftStem;
+  ITree rightStem;
+
+  MergedTree(ITree leftStem, ITree rightStem){
+    this.leftStem = leftStem;
+    this.rightStem = rightStem;
+  }
+
+  // renders your ITree to a picture. 
+  public WorldImage draw(){
+    return this.drawHelp(0,0);
+  }
+  public WorldImage drawHelp(int x, int y){
+    return new OverlayImage( 
+      this.leftStem.drawHelp(x,y),
+      this.rightStem.drawHelp(x,y));
+  }
+
+  // that computes whether any of the twigs in the tree (either stems or branches) 
+  // are pointing downward rather than upward.
+  public boolean isDropping(){
+    return this.leftStem.isDropping() || this.rightStem.isDropping();
+  };
+
+  //  takes the current tree and a given tree and produces a Branch using the given arguments,
+  //  with this tree on the left and the given tree on the right... but with a twist, literally.
+  //  !!!
+  public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
+    return this;
+  }
+  public ITree combineHelp(int leftLength, double leftTheta){
+    return this;
+  }
 }
 
 class Utility0{
   Utility0(){}
 
+  // getTwigsX
   public int getBranchX(int length, double theta){
     return (int) (length * Math.cos(Math.toRadians(theta)));
   }
+  // getTwigsY
   public int getBranchY(int length, double theta){
     return (int) (length * Math.sin(Math.toRadians(theta)));
   }
@@ -224,19 +308,27 @@ class ExamplesITree{
 
   //  Branch with a left angle of 135 degrees and a right angle of 45 degrees points on both upward diagonals.
   ITree tree1 = new Branch(30, 30, 135, 40, this.leaf0, this.leaf1);
-  ITree tree2 = new Branch(30, 30, 115, 65,this.leaf2, this.leaf3);
-  // For testing isDropping
-  ITree tree3 = new Branch(30, 30, 240, 65,this.leaf2, this.leaf3);
-  ITree tree4 = new Branch(30, 30, 200, 65,this.leaf2, this.leaf3);
+  ITree tree2 = new Branch(30, 30, 115, 65, this.leaf2, this.leaf3);
+  // For isDropping
+  ITree tree3 = new Branch(30, 30, 240, 65, this.leaf2, this.leaf3);
+  ITree tree4 = new Branch(30, 30, 200, 65, this.leaf2, this.leaf3);
 
   // A Stem at an angle of 90 degrees is growing straight up;
   ITree stem1 = new Stem(40, 90, this.tree1);
   ITree stem2 = new Stem(50, 90, this.tree2);
-  // For testing isDropping
+  // For isDropping
   ITree stem3 = new Stem(50, 210, this.tree2);
   ITree stem4 = new Stem(50, 230, this.tree2);
 
-  // Utility constants for testing
+  ITree mt0 = new MergedTree(
+    new Stem(40,150, this.tree1),
+    new Stem(50,30, this.tree2));
+
+  ITree mt1 = new MergedTree(
+    new Stem(40,150, this.tree2),
+    new Stem(50,30, this.tree1));
+
+  // Utility constants 
   OutlineMode OUTLINE = OutlineMode.SOLID;
   Color GRAY = Color.GRAY;
   Color RED = Color.RED;
@@ -250,9 +342,20 @@ class ExamplesITree{
   boolean testDrawTree(Tester t) {
     WorldCanvas c = new WorldCanvas(500, 500);
     WorldScene s = new WorldScene(500, 500);
-    return c.drawScene(s.placeImageXY(this.stem1.draw(), 250, 250)) && c.show();
+    return 
+    // c.drawScene(s.placeImageXY(this.stem1.draw(), 250, 250)) 
+    // c.drawScene(s.placeImageXY(this.tree1.combine(40, 50, 150, 30, this.tree2).draw(), 250, 250)) 
+    c.drawScene(s.placeImageXY(this.tree1.combine(40, 50, 150, 30, this.tree2).draw(), 250, 250)) 
+    && c.show();
   } 
 
+  boolean testCombine(Tester t){
+    return
+    t.checkExpect(this.tree1.combine(40, 50, 150, 30, this.tree2), this.mt0) && 
+    t.checkExpect(this.tree2.combine(40, 50, 150, 30, this.tree1), this.mt1);
+  }
+
+  // test the method is dropping for ITree
   boolean testIsDropping(Tester t) {
     return 
     t.checkExpect(this.tree1.isDropping(), false) &&
