@@ -24,8 +24,9 @@ interface ITree {
   ITree combineHelp(int newLength, double newTheta);
 
   // returns the width of the tree.
-  // Assume that leaves are drawn as circles, and their size is used as their radius.
-  // double getWidth()
+  // ASSUME: that leaves are drawn as circles, and their size is used as their radius.
+  double getWidth();
+  double getWidthHelp(int x);
 }
  
 class Leaf implements ITree {
@@ -41,14 +42,12 @@ class Leaf implements ITree {
   FIELDS
   ... this.size ...    -- int
   ... this.color ...   -- Color
-
-
   METHODS
-  ... this.draw() ...              -- WorldIMage
-  ... this.drawHelp(int, int) ...  -- WorldIMage
-  ... this.isDrooping() ...        -- boolean
-
-  METHODS FOR FIELDS:
+  ... this.draw() ...                               -- WorldIMage
+  ... this.drawHelp(int, int) ...                   -- WorldIMage
+  ... this.isDrooping() ...                         -- boolean
+  ... this.combine(int, int, double, double, ITree) -- ITree
+  ... this.combineHelp(int, double)                 -- ITree
   */
 
 
@@ -65,12 +64,21 @@ class Leaf implements ITree {
     return false;
   }
 
+  //  takes the current tree and a given tree and produces a Branch using the given arguments,
+  //  with this tree on the left and the given tree on the right... but with a twist, literally.
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
     return this;
   }
-
   public ITree combineHelp(int newLength, double newTheta){
     return this;
+  }
+
+
+  public double getWidth(){
+    return this.getWidthHelp(0);
+  }
+  public double getWidthHelp(int x){
+    return this.size + x;
   }
 }
  
@@ -87,17 +95,21 @@ class Stem implements ITree {
   FIELDS
   ... this.length ...    -- int
   ... this.theta ...     -- double
-  ... this.tree ...      -- ITree
+  ... this.tree ...      -- ITree METHODS
+  METHODS:
+  ... this.draw() ...                               -- WorldIMage
+  ... this.drawHelp(int, int) ...                   -- WorldIMage
+  ... this.isDropping() ...                         -- boolean
+  ... this.combine(int, int, double, double, ITree) -- ITree 
+  ... this.combineHelp(int, double)                 -- ITree
 
-  METHODS
-  ... this.draw() ...                 -- WorldIMage
-  ... this.drawHelp(int, int) ...     -- WorldIMage
-  ... this.isDropping() ...           -- boolean
 
   METHODS FOR FIELDS:
-  ... this.tree.draw() ...              -- WorldIMage
-  ... this.tree.drawHelp(int, int) ...  -- WorldIMage
-  ... this.tree.isDropping() ...        -- boolean
+  ... this.tree.draw() ...                               -- WorldIMage
+  ... this.tree.drawHelp(int, int) ...                   -- WorldIMage
+  ... this.tree.isDropping() ...                         -- boolean
+  ... this.tree.combine(int, int, double, double, ITree) -- ITree 
+  ... this.tree.combineHelp(int, double)                 -- ITree
   */
 
   Stem(int length, double theta, ITree tree){
@@ -134,12 +146,22 @@ class Stem implements ITree {
     return Math.sin(Math.toRadians(this.theta)) < 0 || this.tree.isDropping();
   }
 
+
+
+  //  takes the current tree and a given tree and produces a Branch using the given arguments,
+  //  with this tree on the left and the given tree on the right... but with a twist, literally.
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
     return this;
   }
-
   public ITree combineHelp(int newLength, double newTheta){
     return this.tree.combineHelp(newLength, newTheta);
+  }
+
+  public double getWidth(){
+    return this.tree.getWidthHelp(UTILITY.getBranchX(this.length, this.theta));
+  }
+  public double getWidthHelp(int x){
+    return this.tree.getWidthHelp(UTILITY.getBranchX(this.length, this.theta) + x);
   }
 
 }
@@ -166,17 +188,21 @@ class Branch implements ITree {
   ... this.right ...          -- ITree
 
   METHODS
-  ... this.draw() ...                -- WorldIMage
-  ... this.drawHelp(int, int) ...    -- WorldIMage
-  ... this.isDropping() ...          -- boolean
+  ... this.draw() ...                               -- WorldIMage
+  ... this.drawHelp(int, int) ...                   -- WorldIMage
+  ... this.isDropping() ...                         -- boolean
+  ... this.combine(int, int, double, double, ITree) -- ITree 
+  ... this.combineHelp(int, double)                 -- ITree
 
   METHODS FOR FIELDS:
-  ... this.left.draw()  ...              -- WorldIMage
-  ... this.right.draw() ...              -- WorldIMage
-  ... this.left.drawHelp(int, int)  ...  -- WorldIMage
-  ... this.right.drawHelp(int, int) ...  -- WorldIMage
-  ... this.left.isDropping() ...         -- boolean
-  ... this.right.isDropping() ...        -- boolean
+  ... this.left.draw()  ...                               -- WorldIMage
+  ... this.right.draw() ...                               -- WorldIMage
+  ... this.left.drawHelp(int, int)  ...                   -- WorldIMage
+  ... this.right.drawHelp(int, int) ...                   -- WorldIMage
+  ... this.left.isDropping() ...                          -- boolean
+  ... this.right.isDropping() ...                         -- boolean
+  ... this.left.combine(int, int, double, double, ITree)  -- ITree 
+  ... this.right.combineHelp(int, double)                 -- ITree
   */
 
   Branch(int  leftLength, int rightLength, double leftTheta, double rightTheta, ITree left, ITree right){
@@ -237,6 +263,8 @@ class Branch implements ITree {
   * }
   */
 
+  //  takes the current tree and a given tree and produces a Branch using the given arguments,
+  //  with this tree on the left and the given tree on the right... but with a twist, literally.
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
     return new MergedTree(
       new Stem(leftLength, leftTheta, this.combineHelp(leftLength, leftTheta)),
@@ -248,12 +276,43 @@ class Branch implements ITree {
     return new Branch(this.leftLength, this.rightLength, newTheta + (this.leftTheta - 90), newTheta + (this.rightTheta - 90), this.left.combineHelp(newLength, newTheta), this.right.combineHelp(newLength, newTheta));
   }
 
+
+  public double getWidth(){
+    return Math.max(this.left.getWidthHelp(UTILITY.getBranchX(this.leftLength, this.leftTheta)), this.right.getWidthHelp(UTILITY.getBranchX(this.rightLength, this.rightTheta)));
+  }
+  public double getWidthHelp(int x){
+    return Math.max(this.left.getWidthHelp(UTILITY.getBranchX(this.leftLength, this.leftTheta) + x), this.right.getWidthHelp(UTILITY.getBranchX(this.rightLength, this.rightTheta) + x));
+  }
+
 }
 
 
 class MergedTree implements ITree{
   ITree leftStem;
   ITree rightStem;
+
+  /* TEMPLATE
+  FIELDS
+  ... this.leftStem ...           -- ITree
+  ... this.rightStem ...          -- ITree
+
+  METHODS
+  ... this.draw() ...                                    -- WorldIMage
+  ... this.drawHelp(int, int) ...                        -- WorldIMage
+  ... this.isDropping() ...                              -- boolean
+  ... this.combine(int, int, double, double, ITree)      -- ITree 
+  ... this.combineHelp(int, double)                      -- ITree
+
+  METHODS FOR FIELDS:
+  ... this.leftStem.draw()  ...                               -- WorldIMage
+  ... this.rightStem.draw() ...                               -- WorldIMage
+  ... this.leftStem.drawHelp(int, int)  ...                   -- WorldIMage
+  ... this.rightStem.drawHelp(int, int) ...                   -- WorldIMage
+  ... this.leftStem.isDropping() ...                          -- boolean
+  ... this.rightStem.isDropping() ...                         -- boolean
+  ... this.leftStem.combine(int, int, double, double, ITree)  -- ITree 
+  ... this.rightStem.combineHelp(int, double)                 -- ITree
+  */
 
   MergedTree(ITree leftStem, ITree rightStem){
     this.leftStem = leftStem;
@@ -278,12 +337,21 @@ class MergedTree implements ITree{
 
   //  takes the current tree and a given tree and produces a Branch using the given arguments,
   //  with this tree on the left and the given tree on the right... but with a twist, literally.
-  //  !!!
   public ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree){
+    return new MergedTree(
+      new Stem(leftLength, leftTheta, this.combineHelp(leftLength, leftTheta)),
+      new Stem(rightLength, rightTheta, otherTree.combineHelp(rightLength, rightTheta))
+    );
+  }
+  public ITree combineHelp(int newLength, double newTheta){
     return this;
   }
-  public ITree combineHelp(int leftLength, double leftTheta){
-    return this;
+
+  public double getWidth(){
+    return Math.max(this.leftStem.getWidthHelp(0), this.rightStem.getWidthHelp(0));
+  }
+  public double getWidthHelp(int x){
+    return Math.max(this.leftStem.getWidthHelp(x), this.rightStem.getWidthHelp(x));
   }
 }
 
@@ -315,6 +383,12 @@ class ExamplesITree{
   // For isDropping
   ITree tree3 = new Branch(30, 30, 240, 65, this.leaf2, this.leaf3);
   ITree tree4 = new Branch(30, 30, 200, 65, this.leaf2, this.leaf3);
+  // For combine
+  ITree tree5 = new Branch(30, 30, 150 + (135 - 90), 150 + (40 - 90), this.leaf0, this.leaf1);
+  ITree tree6 = new Branch(30, 30, 30 + (115 - 90), 30 + (65 - 90), this.leaf2, this.leaf3);
+
+  ITree tree7 = new Branch(30, 30, 150 + (115 - 90), 150 + (65 - 90), this.leaf2, this.leaf3);
+  ITree tree8 = new Branch(30, 30,  30 + (135 - 90), 30  + (40 - 90), this.leaf0, this.leaf1);
 
   // A Stem at an angle of 90 degrees is growing straight up;
   ITree stem1 = new Stem(40, 90, this.tree1);
@@ -324,12 +398,12 @@ class ExamplesITree{
   ITree stem4 = new Stem(50, 230, this.tree2);
 
   ITree mt0 = new MergedTree(
-    new Stem(40,150, this.tree1),
-    new Stem(50,30, this.tree2));
+    new Stem(40, 150, this.tree5),
+    new Stem(50,  30, this.tree6));
 
   ITree mt1 = new MergedTree(
-    new Stem(40,150, this.tree2),
-    new Stem(50,30, this.tree1));
+    new Stem(40, 150, this.tree7),
+    new Stem(50,  30, this.tree8));
 
   // Utility constants 
   OutlineMode OUTLINE = OutlineMode.SOLID;
@@ -372,4 +446,11 @@ class ExamplesITree{
     t.checkExpect(this.stem3.isDropping(),  true) &&
     t.checkExpect(this.stem4.isDropping(),  true);
   } 
+
+  // test the method getWidth for ITree
+  // !!!
+  // boolean testGetWidth(Tester t){
+  //   return
+  //   t.checkExpect(this.tree1.getWidth(), 10);
+  // }
 }
