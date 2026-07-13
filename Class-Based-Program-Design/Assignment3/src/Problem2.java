@@ -22,6 +22,10 @@ interface ITree {
   //  with this tree on the left and the given tree on the right... but with a twist, literally.
   ITree combine(int leftLength, int rightLength, double leftTheta, double rightTheta, ITree otherTree);
   ITree combineHelp(int newLength, double newTheta);
+
+  // returns the width of the tree.
+  // Assume that leaves are drawn as circles, and their size is used as their radius.
+  // double getWidth()
 }
  
 class Leaf implements ITree {
@@ -65,7 +69,6 @@ class Leaf implements ITree {
     return this;
   }
 
-  
   public ITree combineHelp(int newLength, double newTheta){
     return this;
   }
@@ -242,7 +245,7 @@ class Branch implements ITree {
   }
   // ASSUME: The old stem has an angle of 90 degrees 
   public ITree combineHelp(int newLength, double newTheta){
-    return new Branch(this.leftLength, this.rightLength, newTheta + (this.leftTheta - 90), newTheta + (this.rightTheta - 90), this.left, this.right);
+    return new Branch(this.leftLength, this.rightLength, newTheta + (this.leftTheta - 90), newTheta + (this.rightTheta - 90), this.left.combineHelp(newLength, newTheta), this.right.combineHelp(newLength, newTheta));
   }
 
 }
