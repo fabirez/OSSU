@@ -76,6 +76,8 @@ class Leaf implements ITree {
   }
 
 
+  // In this program, i'm using the leaf as we use the Mt to the lists.
+  // When we reach a leaf, return the max value founded in the tree.
   public double getWidth(){
     return this.getWidthHelp(0,0);
   }
@@ -86,7 +88,6 @@ class Leaf implements ITree {
       return max;
     }
   }
-
   public double getMostRight(int x, int max){
     if(this.size + x > max){
       return this.size + x;
@@ -94,7 +95,6 @@ class Leaf implements ITree {
       return max;
     }
   }
-
   public double getMostLeft(int x, int max){
     if(this.size + x > max){
       return this.size + x;
@@ -331,6 +331,7 @@ class Branch implements ITree {
   }
 
 
+  // Since the first call is on branch, we can easy sum up the rest of the tree with the extreme found on both branches.
   public double getWidth(){
     return 
       this.left.getWidthHelp(Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)), Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)))
@@ -420,19 +421,16 @@ class MergedTree implements ITree{
     return this;
   }
 
+  // Since we are on stem, we cannot sum anymore the branchs, but the two stems, that's why we call getMostLeft and getMostRight. 
   public double getWidth(){
     return this.getWidthHelp(0,0);
   }
-
   public double getWidthHelp(int x, int max){
     return this.leftStem.getMostLeft(x, max) + this.rightStem.getMostRight(x, max);
   }
-
-
   public double getMostRight(int x, int max){
     return Math.max(this.leftStem.getMostLeft(x, max), this.rightStem.getMostRight(x, max));
   }
-
   public double getMostLeft(int x, int max){
     return Math.max(this.leftStem.getMostLeft(x, max), this.rightStem.getMostRight(x, max));
   }
@@ -542,3 +540,4 @@ class ExamplesITree{
     ;
   }
 }
+
