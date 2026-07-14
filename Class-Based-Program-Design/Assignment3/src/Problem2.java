@@ -26,7 +26,9 @@ interface ITree {
   // returns the width of the tree.
   // ASSUME: that leaves are drawn as circles, and their size is used as their radius.
   double getWidth();
-  double getWidthHelp(int x);
+  double getWidthHelp(int x, int max);
+  double getMostRight(int x, int max);
+  double getMostLeft(int x, int max);
 }
  
 class Leaf implements ITree {
@@ -75,10 +77,30 @@ class Leaf implements ITree {
 
 
   public double getWidth(){
-    return this.getWidthHelp(0);
+    return this.getWidthHelp(0,0);
   }
-  public double getWidthHelp(int x){
-    return this.size + x;
+  public double getWidthHelp(int x, int max){
+    if(this.size + x > max){
+      return this.size + x;
+    }else{
+      return max;
+    }
+  }
+
+  public double getMostRight(int x, int max){
+    if(this.size + x > max){
+      return this.size + x;
+    }else{
+      return max;
+    }
+  }
+
+  public double getMostLeft(int x, int max){
+    if(this.size + x > max){
+      return this.size + x;
+    }else{
+      return max;
+    }
   }
 }
  
@@ -158,10 +180,42 @@ class Stem implements ITree {
   }
 
   public double getWidth(){
-    return this.tree.getWidthHelp(UTILITY.getBranchX(this.length, this.theta));
+    return this.getWidthHelp(0,0);
   }
-  public double getWidthHelp(int x){
-    return this.tree.getWidthHelp(UTILITY.getBranchX(this.length, this.theta) + x);
+  public double getWidthHelp(int x, int max){
+    if(Math.abs(UTILITY.getBranchX(this.length, this.theta) + x) > max){
+      return this.tree.getWidthHelp(
+        Math.abs(UTILITY.getBranchX(this.length, this.theta)) + x,
+        Math.abs(UTILITY.getBranchX(this.length, this.theta)) + x);
+    }else{
+      return this.tree.getWidthHelp(
+        UTILITY.getBranchX(this.length, this.theta) + x,
+        max);
+    }
+  }
+
+  public double getMostRight(int x, int max){
+    if(Math.abs(UTILITY.getBranchX(this.length, this.theta) + x) > max){
+      return this.tree.getMostRight(
+        Math.abs(UTILITY.getBranchX(this.length, this.theta)) + x,
+        Math.abs(UTILITY.getBranchX(this.length, this.theta)) + x);
+    }else{
+      return this.tree.getMostRight(
+        UTILITY.getBranchX(this.length, this.theta) + x,
+        max);
+    }
+  }
+
+  public double getMostLeft(int x, int max){
+    if(Math.abs(UTILITY.getBranchX(this.length, this.theta) + x) > max){
+      return this.tree.getMostLeft(
+        Math.abs(UTILITY.getBranchX(this.length, this.theta)) + x,
+        Math.abs(UTILITY.getBranchX(this.length, this.theta)) + x);
+    }else{
+      return this.tree.getMostLeft(
+        UTILITY.getBranchX(this.length, this.theta) + x,
+        max);
+    }
   }
 
 }
@@ -278,12 +332,31 @@ class Branch implements ITree {
 
 
   public double getWidth(){
-    return Math.max(this.left.getWidthHelp(UTILITY.getBranchX(this.leftLength, this.leftTheta)), this.right.getWidthHelp(UTILITY.getBranchX(this.rightLength, this.rightTheta)));
+    return 
+      this.left.getWidthHelp(Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)), Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)))
+    + this.right.getWidthHelp(Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)), Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)));
   }
-  public double getWidthHelp(int x){
-    return Math.max(this.left.getWidthHelp(UTILITY.getBranchX(this.leftLength, this.leftTheta) + x), this.right.getWidthHelp(UTILITY.getBranchX(this.rightLength, this.rightTheta) + x));
+  public double getWidthHelp(int x, int max){
+    return 
+      this.left.getWidthHelp(Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x, Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x > max ?  Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x : max) 
+    + this.right.getWidthHelp(Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x, Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x > max ?  Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x : max);
   }
 
+  public double getMostRight(int x, int max){
+    return 
+      Math.max(
+      this.left.getWidthHelp(Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x, Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x > max ?  Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x : max),
+      this.right.getWidthHelp(Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x, Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x > max ?  Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x : max)
+    );
+  }
+
+  public double getMostLeft(int x, int max){
+    return 
+      Math.max(
+      this.left.getWidthHelp(Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x, Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x > max ?  Math.abs(UTILITY.getBranchX(this.leftLength, this.leftTheta)) + x : max),
+      this.right.getWidthHelp(Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x, Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x > max ?  Math.abs(UTILITY.getBranchX(this.rightLength, this.rightTheta)) + x : max)
+    );
+  }
 }
 
 
@@ -348,10 +421,20 @@ class MergedTree implements ITree{
   }
 
   public double getWidth(){
-    return Math.max(this.leftStem.getWidthHelp(0), this.rightStem.getWidthHelp(0));
+    return this.getWidthHelp(0,0);
   }
-  public double getWidthHelp(int x){
-    return Math.max(this.leftStem.getWidthHelp(x), this.rightStem.getWidthHelp(x));
+
+  public double getWidthHelp(int x, int max){
+    return this.leftStem.getMostLeft(x, max) + this.rightStem.getMostRight(x, max);
+  }
+
+
+  public double getMostRight(int x, int max){
+    return Math.max(this.leftStem.getMostLeft(x, max), this.rightStem.getMostRight(x, max));
+  }
+
+  public double getMostLeft(int x, int max){
+    return Math.max(this.leftStem.getMostLeft(x, max), this.rightStem.getMostRight(x, max));
   }
 }
 
@@ -422,7 +505,8 @@ class ExamplesITree{
     return 
     // c.drawScene(s.placeImageXY(this.stem1.draw(), 250, 250)) 
     // c.drawScene(s.placeImageXY(this.tree1.combine(40, 50, 150, 30, this.tree2).draw(), 250, 250)) 
-    c.drawScene(s.placeImageXY(this.tree1.combine(40, 50, 150, 30, this.tree2).draw(), 250, 250)) 
+    // c.drawScene(s.placeImageXY(this.tree1.combine(40, 50, 150, 30, this.tree2).draw(), 250, 250)) 
+    c.drawScene(s.placeImageXY(this.mt0.draw(), 250, 250)) 
     && c.show();
   } 
 
@@ -448,9 +532,13 @@ class ExamplesITree{
   } 
 
   // test the method getWidth for ITree
-  // !!!
-  // boolean testGetWidth(Tester t){
-  //   return
-  //   t.checkExpect(this.tree1.getWidth(), 10);
-  // }
+  boolean testGetWidth(Tester t){
+    return
+    t.checkExpect(this.tree1.getWidth(), 68.0) &&
+    t.checkExpect(this.tree2.getWidth(), 47.0) &&
+    t.checkExpect(this.stem1.getWidth(), 68.0) &&
+    t.checkExpect(this.stem2.getWidth(), 47.0) &&
+    t.checkExpect(this.mt0.getWidth(),  152.0) 
+    ;
+  }
 }
