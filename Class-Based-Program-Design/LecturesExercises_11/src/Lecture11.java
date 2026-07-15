@@ -2,7 +2,7 @@
 *Convince yourself that == for integers and booleans and equals on Strings obey the four properties above.
 */
 
-// >  Let list them:
+// >  Let's list them:
 // -  Reflexivity: x == x
 //                 1 == 1
 //                 true == true
@@ -49,7 +49,7 @@
 *Define the method samePoint for the CartPt class.
 */
 
-class CartPt {
+/*class CartPt {
     int x;
     int y;
     
@@ -62,6 +62,7 @@ class CartPt {
       return this.x == other.x && this.y == other.y;
   }
 }
+*/
 
 /*Do Now!
 *
@@ -70,6 +71,7 @@ class CartPt {
 *Revise the sameBook method. What methods must it delegate to?
 */
 
+/*
 class Author {
   String firstName;
   String lastName;
@@ -106,10 +108,100 @@ class Book {
      * Fields of parameters:
      * that.title
      * that.author
-     */
+     * /
     return this.title.equals(that.title) &&
            this.author.sameAuthor(that.author);
   }
 }
+*/
 
+/*Do Now!
+*
+*What could go wrong with taking this position?
+*/
+
+//>  Some properties that exist on a Circle are not guaranteed to exist on every IShape implementation.
+//    That will throw an error.
+//
+//    Even if two shapes expose the same properties, they can still represent different types.
+//    At that point, the comparison becomes misleading.
+//
+//    Having the same size does not imply that two shapes are equal.
+//    For example, a Circle with a size of 10 and a Rectangle with a size of 10 would compare as equal,
+//    even though they are fundamentally different shapes.
+
+/*Do Now!
+*
+*Which of our properties for sameness have we violated here?
+*/
+
+// > Totality:    We can compare any two objects of the same type, and obtain a correct answer.
+
+
+/*Do Now!
+*
+*Implement sameShape for the Rect class, following the same pattern as for Circle. What test should you write to confirm that it works?
+*/
+
+/*public boolean sameShape(IShape that) {
+  if (that instanceof Rect) {
+    // that is-a Rect -- we can safely cast!
+    return this.sameRect((Rect)that);
+  }
+  else {
+    // that is not a Rect
+    return false;
+  }
+}
+*/
+
+/*
+  public boolean sameShape(IShape that) {
+    if (that instanceof Square) {
+      // that is-a Square -- we can safely cast!
+      return this.sameSquare((Square)that);
+    }
+    else {
+      // that is not a Square
+      return false;
+    }
+  }
+*/
+
+/*
+  public boolean sameSquare(Square that) {
+    /* Template:
+     * Fields:
+     * this.x, this.y, this.size
+     *
+     * Fields of parameters:
+     * that.x, that.y, that.size
+     * /
+    return this.x == that.x &&
+           this.y == that.y &&
+           this.w == that.w;
+  } 
+*/
+
+// > It's not working, anytime i got a Rect in the condition with `instanceof`, it evaluates to true.
+
+/*Do Now!
+
+Which property of sameness have we violated?
+*/ 
+
+// > Symmetry
+
+/*Do Now!
+
+But r1 and s1 both describe rectangles with width and height of 5, at position (3,4). Why are they not equal?
+*/
+
+// > I suppose, because they have not the same type.
+
+/*Do Now!
+*
+*Why must we have Square respond to isRect with false — surely all Squares are Rects?
+*/
+// > Type.
 
