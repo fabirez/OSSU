@@ -1,4 +1,5 @@
-/* Problem1: Books and Abstraction 
+/* # Lab 4: Working with Abstract Classes, Problem Solving
+## Problem1: Books and Abstraction 
 ## 4.1 Abstract Classes
 
 The following class diagram represents a library system that records the books that have been borrowed. There are three kinds of books: regular books, reference books, and audio books.
