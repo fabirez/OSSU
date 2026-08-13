@@ -23,6 +23,13 @@ import tester.*;
 
 interface ILoPre{ 
   ILoPre getPre();
+  boolean solvable(Task task, ILoPre solvedPre);
+  boolean solvableHelp(ILoPre solvedPre);
+  // produce true if given pre is inside the given listof pre 
+  boolean solvableList(int pre);
+
+  // produce the merged given listof pre with the current one
+  ILoPre append(ILoPre other);
 }
 
 class ConsLoPre implements ILoPre{ 
@@ -42,6 +49,39 @@ class ConsLoPre implements ILoPre{
     return this;
   }
 
+
+  public boolean solvable(Task task, ILoPre solvedPre){
+    return task.getPre().solvableHelp(solvedPre);
+  }
+
+
+  public boolean solvableHelp(ILoPre solvedPre){
+    /*
+    FIELDS
+    this.first  -- int
+    this.rest   -- ILoPre
+    METHODS
+    this.getPre -- ILoPre
+    */
+    if(solvedPre.solvableList(this.first)){
+      return this.rest.solvableHelp(solvedPre);
+    }else{
+      return false;
+    }
+  }
+
+
+  public boolean solvableList(int pre){
+    if(this.first == pre){
+      return true;
+    }else{
+      return this.rest.solvableList(pre);
+    }
+  }
+  public ILoPre append(ILoPre other){
+    return new ConsLoPre(this.first, this.rest.append(other));
+  }
+
 }
 
 class MtLoPre implements ILoPre{
@@ -50,16 +90,32 @@ class MtLoPre implements ILoPre{
   public ILoPre getPre(){
     return this;
   }
+
+  public boolean solvable(Task task, ILoPre solvedPre){
+    return true;
+  }
+
+  public boolean solvableHelp(ILoPre solvedPre){
+    return true;
+  }
+
+  public boolean solvableList(int pre){
+    return false;
+  }
+
+  public ILoPre append(ILoPre other){
+    return other;
+  }
 }
 
 
 interface ILoTask{ 
   // produces the list of the tasks one can complete from these tasks. You can assume all task ids are unique.
-  // ILoPre completeTask();
-  // prduce the list containing all the IDS by all the tasks in the list
-  ILoPre getAllId();
-  // produce true if a task has all the pre solvable (the task in pre are prensents in the lisk of tasks) otherwise false;
-  // boolean isSolvable(); 
+  ILoTask completeTask();
+  ILoTask solvePre(ILoPre solvedPre, ILoPre solvingPre, ILoTask currentTasks, ILoTask solvedTask); 
+
+  // produce the a new list, with the given list at the end and the current at first (this)
+  ILoTask appendTask(Task that);
 }
 
 class Task{
@@ -84,6 +140,10 @@ class Task{
     return this.lop.getPre();
   }
 
+  public boolean solvable(ILoPre solvedPre){
+    return this.lop.solvableHelp(solvedPre);
+  }
+
 }
 
 class ConsLoTask implements ILoTask{ 
@@ -93,58 +153,42 @@ class ConsLoTask implements ILoTask{
     this.first = first;
     this.rest = rest;
   }
-  
-  // public ILoPre completeTask(){
-  // return this.completeTaskHelp(new MtLoInt());
 
-    // if(this.first.isSolvable()){
-    //  return new ConsLoPre(this.first, this.rest.completeTask());
-    // }else{
-    //  return this.rest.completeTask();
-    // }
-  // }
-
-  // public ILoPre completeTaskHelp(ILoPre acc){
-  // if(this.first.isSolvable(ILoPre acc)){
-  //  return new ConsLoPre(this.first, this.rest.completeTask());
-  // }else{
-  //  return this.rest.completeTask();
-  // }
-  // }
-
-  public ILoPre getAllId(){
-    return new ConsLoPre(this.first.getId(), this.rest.getAllId());
+  public ILoTask completeTask(){
+    return this.solvePre(new MtLoPre(), new MtLoPre(), new MtLoTask(), new MtLoTask());
   }
 
-  // public boolean isSolvable(ILoPre acc){
-  //  return this.rest.isSolvableHelp(this.first.getPre());
-  // }
+  public ILoTask solvePre(ILoPre solvedPre, ILoPre solvingPre, ILoTask currentTasks, ILoTask solvedTask){
+    if(this.first.solvable(solvedPre)){
+      return this.rest.solvePre(solvedPre, new ConsLoPre(this.first.getId(), solvingPre), currentTasks, solvedTask.appendTask(this.first));
+    }else{
+      return this.rest.solvePre(solvedPre, solvingPre, new ConsLoTask(this.first, currentTasks), solvedTask);
+    }
+  }
 
-  // Check if pre exist in the list.
-  //  1. Get the id
-  //  2. Compare it with the task id we got in the list, if there is one return true, false otherwise.
-  
-  // public boolean isSolvableHelp(ILoPre acc){
-  //  return this.checkId(acc);
-  // }
+  public ILoTask appendTask(Task that){
+    return new ConsLoTask(this.first, this.rest.appendTask(that));
+  }
 }
 
 class MtLoTask implements ILoTask{
   MtLoTask(){ }
 
-  // public ILoPre completeTask(){
-  //   return new MtLoPre();
-  // }
-
-  public ILoPre getAllId(){
-    return new MtLoPre();
+  public ILoTask completeTask(){
+    return new MtLoTask();
   }
 
-  public boolean isSolvable(){
-    return true;
+  public ILoTask solvePre(ILoPre solvedPre, ILoPre solvingPre, ILoTask currentTasks, ILoTask solvedTask){
+    if(solvingPre instanceof MtLoPre){
+      // Break, Stop the recursion
+      return solvedTask; 
+    }else{
+      return currentTasks.solvePre(solvedPre.append(solvingPre), new MtLoPre(), new MtLoTask(), solvedTask);
+    }
   }
-  public boolean isSolvableHelp(ILoPre preList){
-    return true;
+
+  public ILoTask appendTask(Task that){
+    return new ConsLoTask(that, this);
   }
 }
 
@@ -196,6 +240,12 @@ class ExamplesILoTask{
           new ConsLoTask(this.t5,
         this.mtTsk)))));
 
+  // Every task can be solved without any other tasks
+  ILoTask lot3 = new ConsLoTask(this.t0, new ConsLoTask(this.t0, new ConsLoTask(this.t0, this.mtTsk)));
+
+  // All the tasks cannot be solvable by the other tasks
+  ILoTask lot4 = new ConsLoTask(this.t1, new ConsLoTask(this.t2, new ConsLoTask(this.t3, this.mtTsk)));
+
   // Test getId method
   boolean testGetId(Tester t){
     return 
@@ -203,7 +253,6 @@ class ExamplesILoTask{
     t.checkExpect(this.t1.getId(), 1) && 
     t.checkExpect(this.t2.getId(), 2);
   }
-
 
   // Test getPre method
   boolean testGetPre(Tester t){
@@ -213,25 +262,57 @@ class ExamplesILoTask{
     t.checkExpect(this.t2.getPre(), this.p2);
   }
 
-  // Test getAllId method
-  boolean testGetAllId(Tester t){
+  // Test solvable method
+  boolean testSolvable(Tester t){
     return 
-    t.checkExpect(this.lot0.getAllId(), this.lop0) &&
-    t.checkExpect(this.lot1.getAllId(), this.lop1) && 
-    t.checkExpect(this.lot2.getAllId(), this.lop2);
+    t.checkExpect(this.lop1.solvable(this.t0, new MtLoPre()),      true) && 
+    t.checkExpect(this.lop1.solvable(this.t0, this.t0.getPre()),   true) && 
+    t.checkExpect(this.lop1.solvable(this.t1, this.t1.getPre()),   true) && 
+    t.checkExpect(this.lop1.solvable(this.t2, this.t2.getPre()),   true) &&
+    t.checkExpect(this.lop1.solvable(this.t1, this.t4.getPre()),  false) &&
+    t.checkExpect(this.lop1.solvable(this.t2, this.t1.getPre()),  false)
+    ;
   }
-  
 
-  // boolean testCompleteTask(Tester t){
-  //   return 
-  //   t.checkExpect(this.lot0.completeTask(), 
-  //     new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, this.mtTsk)));
-  //   t.checkExpect(this.lot1.completeTask(), 
-  //     new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, this.mtTsk)));
-  //   t.checkExpect(this.lot2.completeTask(), 
-  //     new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, this.mtTsk)));
-  // }
+  // Test solvableHelp method
+  boolean testSolvableHelp(Tester t){
+    return 
+    t.checkExpect(this.p1.solvableHelp(this.p1),  true) && 
+    t.checkExpect(this.p2.solvableHelp(this.p2),  true) && 
+    t.checkExpect(this.p3.solvableHelp(this.p4), false) && 
+    t.checkExpect(this.p4.solvableHelp(this.p2), false);
+  }
+
+  // Test append method
+  boolean testAppend(Tester t){
+    return 
+    t.checkExpect(this.p1.append(this.p2),  new ConsLoPre(this.t0.getId(), this.p2)) && 
+    t.checkExpect(this.p2.append(this.p3),  new ConsLoPre(this.t1.getId(), new ConsLoPre(this.t0.getId(), this.p3))) && 
+    t.checkExpect(this.p3.append(this.p4),  new ConsLoPre(this.t0.getId(), this.p4)) && 
+    t.checkExpect(this.p4.append(this.p5),  new ConsLoPre(this.t3.getId(), this.p5));
+  }
+
+  // Test append method
+  boolean testAppendTask(Tester t){
+    return 
+    t.checkExpect(this.lot0.appendTask(this.t3),  new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, new ConsLoTask(this.t3, this.mtTsk))))) &&
+    t.checkExpect(this.lot1.appendTask(this.t3),  new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, new ConsLoTask(this.t4, new ConsLoTask(this.t3, this.mtTsk)))))) &&
+    t.checkExpect(this.lot2.appendTask(this.t4),  new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, new ConsLoTask(this.t4, new ConsLoTask(this.t5, new ConsLoTask(this.t4, this.mtTsk))))))) && 
+    t.checkExpect(this.lot3.appendTask(this.t5),  new ConsLoTask(this.t0, new ConsLoTask(this.t0, new ConsLoTask(this.t0, new ConsLoTask(this.t5, this.mtTsk)))));
+  }
+
+
+  boolean testCompleteTask(Tester t){
+    return 
+    t.checkExpect(this.lot0.completeTask(), 
+      new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, this.mtTsk)))) &&
+    t.checkExpect(this.lot1.completeTask(), 
+      new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, this.mtTsk)))) &&
+    t.checkExpect(this.lot2.completeTask(), 
+      new ConsLoTask(this.t0, new ConsLoTask(this.t1, new ConsLoTask(this.t2, this.mtTsk)))) &&
+    t.checkExpect(this.lot3.completeTask(), this.lot3) &&
+    t.checkExpect(this.lot4.completeTask(), new MtLoTask());
+      
+  }
 
 }
-
-
