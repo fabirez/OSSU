@@ -27,8 +27,31 @@
       | int time       |
       +----------------+
 */
-import tester.Tester;
+import tester.*;
 
+interface IRunnerComparator {
+  // Returns a negative number if r1 comes before r2 in this order
+  // Returns zero              if r1 is tied with r2 in this order
+  // Returns a positive number if r1 comes after  r2 in this order
+  int compare(Runner r1, Runner r2);
+}
+
+class CompareByTime implements IRunnerComparator {
+  public int compare(Runner r1, Runner r2) {
+    return r1.time - r2.time;
+  }
+}
+
+interface ICompareRunners {
+  // Returns true if r1 comes before r2 according to this ordering
+  boolean comesBefore(Runner r1, Runner r2);
+}
+
+class ComesBefore implements ICompareRunners{
+  public boolean comesBefore(Runner r1, Runner r2){
+    return r1.time < r2.time;
+  }
+}
 
 
 interface IRunnerPredicate{
@@ -99,6 +122,15 @@ class Runner {
 
 interface ILoRunner{
   ILoRunner find(IRunnerPredicate pred);
+  ILoRunner sortBy(ICompareRunners cond);
+  ILoRunner insert(ICompareRunners cond, Runner r);
+  // // Finds the fastest Runner in this list of Runners
+  // Runner findWinner();
+  // // Finds the first Runner in this list of Runners
+  // Runner getFirst();
+
+  Runner findMin(IRunnerComparator comp);
+  Runner findMinHelp(IRunnerComparator comp, Runner acc);
 }
 
 class ConsLoRunner implements ILoRunner{
@@ -119,13 +151,72 @@ class ConsLoRunner implements ILoRunner{
     }
   }
 
+
+  public ILoRunner sortBy(ICompareRunners cond){
+    return this.rest.sortBy(cond).insert(cond, this.first); 
+  }
+
+  public ILoRunner insert(ICompareRunners cond, Runner r){
+    if(cond.comesBefore(this.first, r)){
+      return new ConsLoRunner(this.first, this.rest.insert(cond, r));
+    }else{
+      return new ConsLoRunner(r, this);
+    }
+  }
+
+  // public Runner findWinner(){ return this.rest.sortBy(new ComesBefore()).getFirst(); }
+
+
+  public Runner findMin(IRunnerComparator comp) {
+    return this.rest.findMinHelp(comp, this.first);
+  }
+
+  // public Runner findWinner() { return this.rest.findMin(new CompareByTime()); }
+
+  public Runner findMinHelp(IRunnerComparator comp, Runner acc){
+    if(comp.compare(this.first, acc) > 0){
+      return this.rest.findMinHelp(comp, this.first);
+    }else{
+      return this.rest.findMinHelp(comp, acc);
+    }
+  }
+
+  // public Runner getFirst(){
+  //   return this.first;
+  // }
+
+
 }
 
 class MtLoRunner implements ILoRunner{
   MtLoRunner(){}
 
+  public Runner findMinHelp(IRunnerComparator comp, Runner acc){
+    return acc;
+  }
+
+  public Runner findMin(IRunnerComparator comp) {
+    throw new RuntimeException("No minimum runner available in this list!");
+  }
+
+  // public Runner findWinner(){
+  //   throw new RuntimeException("There is no winner in a empty list of runner!");
+  // }
+  //
+  // public Runner getFirst(){
+  //   throw new RuntimeException("There is no Runner in a empty list of runner!");
+  // }
+
   public ILoRunner find(IRunnerPredicate pred){
     return this;
+  }
+
+  public ILoRunner sortBy(ICompareRunners cond){
+    return this;
+  }
+
+  public ILoRunner insert(ICompareRunners cond, Runner r){
+    return new ConsLoRunner(r, this);
   }
 }
 
@@ -164,6 +255,11 @@ class ExamplesRunner{
   // Find all runners who are female or who finish in less than 4 hours.”
   IRunnerPredicate isAllFemaleOrUnderThan4Hours = new OrPredicate(isFemale, isUnder4Hours);
 
+  ICompareRunners beforeTime = new ComesBefore();
+
+  IRunnerComparator compareByTime = new CompareByTime();
+
+
   boolean testFind(Tester t){
     return
     // OnlyMaleRunner
@@ -187,6 +283,34 @@ class ExamplesRunner{
     // isAllFemaleOrUnderThan4Hours
     t.checkExpect(this.list1.find(isAllFemaleOrUnderThan4Hours), new ConsLoRunner(joan, mtlist)) &&
     t.checkExpect(this.list2.find(isAllFemaleOrUnderThan4Hours), new ConsLoRunner(frank, new ConsLoRunner(bill, new ConsLoRunner(joan, mtlist))));
+  }
+
+  boolean testSort(Tester t){
+    return 
+    t.checkExpect(this.list1.sortBy(beforeTime), new ConsLoRunner(joan, new ConsLoRunner(johnny, mtlist))) &&
+    t.checkExpect(this.list2.sortBy(beforeTime), new ConsLoRunner(bill, new ConsLoRunner(frank, new ConsLoRunner(joan, new ConsLoRunner(johnny, mtlist)))));
+  }
+
+
+  // boolean testFindWinner(Tester t){
+  //   return
+  //   t.checkExpect(this.list1.findWinner(), joan) &&
+  //   t.checkExpect(this.list2.findWinner(), bill) &&
+  //   t.checkException(new RuntimeException("There is no winner in a empty list of runner!"), new MtLoRunner(), "findWinner");
+  // }
+  //
+  //  boolean testGetFirst(Tester t){
+  //   return
+  //   t.checkExpect(this.list1.getFirst(), johnny) &&
+  //   t.checkExpect(this.list2.getFirst(), frank) &&
+  //   t.checkException(new RuntimeException("There is no Runner in a empty list of runner!"), new MtLoRunner(), "getFirst");
+  // }
+  //
+  
+  boolean testFindMin(Tester t){
+    return
+    t.checkExpect(this.list1.findMin(compareByTime), joan) &&
+    t.checkExpect(this.list2.findMin(compareByTime), bill);
   }
 }
 
