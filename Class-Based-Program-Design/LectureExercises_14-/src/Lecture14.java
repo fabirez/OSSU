@@ -1,47 +1,72 @@
-/*
-       +-----------+
-       | ILoRunner |<-------------------+
-       +-----------+                    |
-       +-----------+                    |
-             / \                        |
-             ---                        |
-              |                         |
-    ----------------------              |
-    |                    |              |
-+------------+    +----------------+    |
-| MtLoRunner |    | ConsLoR        |    |
-+------------+    +----------------+    |
-+------------+  +-| Runner first   |    |
-                | | ILoRunner rest |----+
-                | +----------------+
-                |
-                v
-      +----------------+
-      | Runner         |
-      +----------------+
-      | String name    |
-      | int age        |
-      | int bib        |
-      | boolean isMale |
-      | int pos        |
-      | int time       |
-      +----------------+
-*/
-import tester.*;
+//=========================
+//Do Now
+//=========================
 
-interface IRunnerComparator {
-  // Returns a negative number if r1 comes before r2 in this order
-  // Returns zero              if r1 is tied with r2 in this order
-  // Returns a positive number if r1 comes after  r2 in this order
-  int compare(Runner r1, Runner r2);
+/*Do Now!
+
+What kinds of questions will we need to ask about Runners to solve these problems?
+*/
+
+
+// > Who are the final standing (if for final standing it means the podium, then we can take the 3 runner with less time)
+// > We can take the runner with less time
+// > Check-in, we have the field name
+
+
+/* Do Now!
+ Reconstruct the insertion-sort algorithm, for a list of Runners as sorted by their times in increasing order.
+*/
+
+
+/*
+interface ILoRunner{
+  ILoRunner find(IRunnerPredicate pred);
+  ILoRunner sortByTime();
+  ILoRunner insert(Runner r);
 }
 
-class CompareByTime implements IRunnerComparator {
-  public int compare(Runner r1, Runner r2) {
-    return r1.time - r2.time;
+// In Runner
+public boolean lessTime(Runner that){
+  return this.time < that.time;
+}
+// In ConsLoRunner
+public ILoRunner sortByTime(){
+  return this.rest.sortByTime().insert(this.first); 
+}
+
+public ILoRunner insert(Runner r){
+  if(this.first.lessTime(r)){
+    return new ConsLoRunner(this.first, this.rest.insert(r));
+  }else{
+    return new ConsLoRunner(r, this);
   }
 }
 
+// In MtLoRunner
+public ILoRunner sortByTime(){
+  return this;
+}
+
+public ILoRunner insert(Runner r){
+  return new ConsLoRunner(r, this);
+}
+
+*/
+
+/*Do Now!
+
+What signature should this interface define?
+*/
+
+// > ILoRunner ...(IRunnerPredicate r)
+//   Runner -> ILoRunner
+
+/*Do Now!
+
+Design this class.
+*/
+
+/*
 interface ICompareRunners {
   // Returns true if r1 comes before r2 according to this ordering
   boolean comesBefore(Runner r1, Runner r2);
@@ -52,265 +77,113 @@ class ComesBefore implements ICompareRunners{
     return r1.time < r2.time;
   }
 }
+*/
+
+/*Do Now!
+
+Revise the sorting methods above to use this new abstraction.
+*/
 
 
-interface IRunnerPredicate{
-  boolean apply(Runner r);
-}
-
-class AndPredicate implements IRunnerPredicate{
-  IRunnerPredicate left;
-  IRunnerPredicate right;
-
-  AndPredicate(IRunnerPredicate left, IRunnerPredicate right){
-    this.left=left;
-    this.right=right;
-  }
-
-  public boolean apply(Runner r){
-    return this.left.apply(r) && this.right.apply(r);
-  }
-}
-
-class OrPredicate implements IRunnerPredicate{
-  IRunnerPredicate left;
-  IRunnerPredicate right;
-
-  OrPredicate(IRunnerPredicate left, IRunnerPredicate right){
-    this.left=left;
-    this.right=right;
-  }
-
-  public boolean apply(Runner r){
-    return this.left.apply(r) || this.right.apply(r);
-  }
-}
-
-class RunnerIsMale implements IRunnerPredicate{ 
-  public boolean apply(Runner r){ return r.isMale; } 
-}
-
-class RunnerIsFemale implements IRunnerPredicate {
-  public boolean apply(Runner r){ return !r.isMale; } 
-}
-
-class RunnerIsPosLessThan50 implements IRunnerPredicate { 
-  public boolean apply(Runner r){ return r.pos <= 50; } 
-}
-
-class RunnerIsUnder4Hours implements IRunnerPredicate { 
-  public boolean apply(Runner r){ return r.time <= 240; } 
-}
-
-class RunnerIsYoungerThan40 implements IRunnerPredicate { 
-  public boolean apply(Runner r){ return r.age < 40; } 
-}
-
-
-class Runner {
- String name; int age;   int bib;  boolean isMale; int pos; int time;
-
-  Runner(String name, int age,   int bib,  boolean isMale, int pos, int time){
-    this.name=name;
-    this.age=age;
-    this.bib=bib;
-    this.isMale=isMale;
-    this.pos=pos;
-    this.time=time;
-  }
-}
-
+/*
 interface ILoRunner{
-  ILoRunner find(IRunnerPredicate pred);
-  ILoRunner sortBy(ICompareRunners cond);
-  ILoRunner insert(ICompareRunners cond, Runner r);
-  // // Finds the fastest Runner in this list of Runners
-  // Runner findWinner();
-  // // Finds the first Runner in this list of Runners
-  // Runner getFirst();
-
-  Runner findMin(IRunnerComparator comp);
-  Runner findMinHelp(IRunnerComparator comp, Runner acc);
+  ILoRunner sortByTime(ICompareRunners pred);
+  ILoRunner insert(ICompareRunners pred, Runner r);
 }
 
-class ConsLoRunner implements ILoRunner{
-  Runner first;
-  ILoRunner rest;
-
-  ConsLoRunner(Runner first, ILoRunner rest){
-    this.first = first;
-    this.rest = rest;
-  }
-
-
-  public ILoRunner find(IRunnerPredicate pred){
-    if(pred.apply(this.first)){
-        return new ConsLoRunner(this.first, this.rest.find(pred));
-    }else{
-        return this.rest.find(pred);
-    }
-  }
-
-
-  public ILoRunner sortBy(ICompareRunners cond){
-    return this.rest.sortBy(cond).insert(cond, this.first); 
-  }
-
-  public ILoRunner insert(ICompareRunners cond, Runner r){
-    if(cond.comesBefore(this.first, r)){
-      return new ConsLoRunner(this.first, this.rest.insert(cond, r));
-    }else{
-      return new ConsLoRunner(r, this);
-    }
-  }
-
-  // public Runner findWinner(){ return this.rest.sortBy(new ComesBefore()).getFirst(); }
-
-
-  public Runner findMin(IRunnerComparator comp) {
-    return this.rest.findMinHelp(comp, this.first);
-  }
-
-  // public Runner findWinner() { return this.rest.findMin(new CompareByTime()); }
-
-  public Runner findMinHelp(IRunnerComparator comp, Runner acc){
-    if(comp.compare(this.first, acc) > 0){
-      return this.rest.findMinHelp(comp, this.first);
-    }else{
-      return this.rest.findMinHelp(comp, acc);
-    }
-  }
-
-  // public Runner getFirst(){
-  //   return this.first;
-  // }
-
-
+// In ConsLoRunner
+public ILoRunner sortByTime(ICompareRunners pred){
+  return this.rest.sortByTime(pred).insert(pred, this.first); 
 }
 
-class MtLoRunner implements ILoRunner{
-  MtLoRunner(){}
-
-  public Runner findMinHelp(IRunnerComparator comp, Runner acc){
-    return acc;
-  }
-
-  public Runner findMin(IRunnerComparator comp) {
-    throw new RuntimeException("No minimum runner available in this list!");
-  }
-
-  // public Runner findWinner(){
-  //   throw new RuntimeException("There is no winner in a empty list of runner!");
-  // }
-  //
-  // public Runner getFirst(){
-  //   throw new RuntimeException("There is no Runner in a empty list of runner!");
-  // }
-
-  public ILoRunner find(IRunnerPredicate pred){
-    return this;
-  }
-
-  public ILoRunner sortBy(ICompareRunners cond){
-    return this;
-  }
-
-  public ILoRunner insert(ICompareRunners cond, Runner r){
+public ILoRunner insert(ICompareRunners pred, Runner r){
+  if(pred.comesBefore(this.first, r)){
+    return new ConsLoRunner(this.first, this.rest.insert(pred, r));
+  }else{
     return new ConsLoRunner(r, this);
   }
 }
 
+// In MtLoRunner
+public ILoRunner sortByTime(ICompareRunners pred){
+  return this;
+}
 
-class ExamplesRunner{
-  ExamplesRunner(){}
+public ILoRunner insert(ICompareRunners pred, Runner r){
+  return new ConsLoRunner(r, this);
+}
 
-  Runner johnny = new Runner("Kelly", 97, 999, true, 30, 360);
-  Runner frank  = new Runner("Shorter", 32, 888, true, 245, 130);
-  Runner bill = new Runner("Rogers", 36, 777, true, 119, 129);
-  Runner joan = new Runner("Benoit", 29, 444, false, 18, 155);
-   
-  ILoRunner mtlist = new MtLoRunner();
-  ILoRunner list1 = new ConsLoRunner(johnny, new ConsLoRunner(joan, mtlist));
-  ILoRunner list2 = new ConsLoRunner(frank, new ConsLoRunner(bill, list1));
-
-  ILoRunner list50Pos = new ConsLoRunner(johnny, new ConsLoRunner(joan, this.mtlist));
-  ILoRunner list4Hours_1 = new ConsLoRunner(joan, mtlist);
-  ILoRunner list4Hours_2 = new ConsLoRunner(frank, new ConsLoRunner(bill, new ConsLoRunner(joan, mtlist)));
-
-  ILoRunner list4HoursAndMale = new ConsLoRunner(frank, new ConsLoRunner(bill, mtlist));
+*/
 
 
-  IRunnerPredicate isMale = new RunnerIsMale();
-  IRunnerPredicate isFemale = new RunnerIsFemale();
-  IRunnerPredicate isLessThan50 = new RunnerIsPosLessThan50();
-  IRunnerPredicate isUnder4Hours = new RunnerIsUnder4Hours();
-  IRunnerPredicate isYoungerThan40 = new RunnerIsYoungerThan40();
+/*Do Now!
 
-  IRunnerPredicate isAllMaleAndUnder4Hours = new AndPredicate(isMale, isUnder4Hours);
-  IRunnerPredicate isAllFemaleAndYoungerThan40 = new AndPredicate(isFemale, isYoungerThan40);
+Can you simplify the method above, given this flexibility and given that here we’re essentially comparing two numbers?
+*/
 
-  // isAllFemaleAndYoungerThan40AndLesttThan50
-  IRunnerPredicate isAllF = new AndPredicate(isAllFemaleAndYoungerThan40, isLessThan50);
+// > r1.time - r2.time 
 
-  // Find all runners who are female or who finish in less than 4 hours.”
-  IRunnerPredicate isAllFemaleOrUnderThan4Hours = new OrPredicate(isFemale, isUnder4Hours);
+/*Do Now!
+How much of our code above can we reuse to solve this new question?
+*/
 
-  ICompareRunners beforeTime = new ComesBefore();
+// > Sort by time, and return only the first runner 
+/*
+interface ILoRunner{
+  // Finds the fastest Runner in this list of Runners
+  Runner findWinner();
+  // Finds the first Runner in this list of Runners
+  Runner getFirst();
+}
 
-  IRunnerComparator compareByTime = new CompareByTime();
-
-
-  boolean testFind(Tester t){
-    return
-    // OnlyMaleRunner
-    t.checkExpect(this.list1.find(isMale), new ConsLoRunner(johnny, mtlist)) &&
-    t.checkExpect(this.list2.find(isMale), new ConsLoRunner(frank, new ConsLoRunner(bill, new ConsLoRunner(johnny, mtlist)))) &&
-    // OnlyFemaleRunner
-    t.checkExpect(this.list1.find(isFemale), new ConsLoRunner(joan, mtlist)) &&
-    t.checkExpect(this.list2.find(isFemale), new ConsLoRunner(joan, mtlist)) &&
-    // OnlyRunnerIn50Pos
-    t.checkExpect(this.list1.find(isLessThan50), list50Pos) &&
-    t.checkExpect(this.list2.find(isLessThan50), list50Pos) &&
-    // OnlyRunnerUnder4Hours
-    t.checkExpect(this.list1.find(isUnder4Hours), list4Hours_1) &&
-    t.checkExpect(this.list2.find(isUnder4Hours), list4Hours_2) &&
-    // isAllMaleAndUnder4Hours
-    t.checkExpect(this.list1.find(isAllMaleAndUnder4Hours), mtlist) &&
-    t.checkExpect(this.list2.find(isAllMaleAndUnder4Hours), list4HoursAndMale) &&
-    //  isAllFemaleAndYoungerThan40AndLesttThan50
-    t.checkExpect(this.list1.find(isAllF), new ConsLoRunner(joan, mtlist)) &&
-    t.checkExpect(this.list2.find(isAllF), new ConsLoRunner(joan, mtlist)) &&
-    // isAllFemaleOrUnderThan4Hours
-    t.checkExpect(this.list1.find(isAllFemaleOrUnderThan4Hours), new ConsLoRunner(joan, mtlist)) &&
-    t.checkExpect(this.list2.find(isAllFemaleOrUnderThan4Hours), new ConsLoRunner(frank, new ConsLoRunner(bill, new ConsLoRunner(joan, mtlist))));
+// In ConsLoRunner
+  public Runner findWinner(){
+    return this.rest.sortBy(new ComesBefore()).getFirst(); 
   }
 
-  boolean testSort(Tester t){
-    return 
-    t.checkExpect(this.list1.sortBy(beforeTime), new ConsLoRunner(joan, new ConsLoRunner(johnny, mtlist))) &&
-    t.checkExpect(this.list2.sortBy(beforeTime), new ConsLoRunner(bill, new ConsLoRunner(frank, new ConsLoRunner(joan, new ConsLoRunner(johnny, mtlist)))));
-  }
-
-
-  // boolean testFindWinner(Tester t){
-  //   return
-  //   t.checkExpect(this.list1.findWinner(), joan) &&
-  //   t.checkExpect(this.list2.findWinner(), bill) &&
-  //   t.checkException(new RuntimeException("There is no winner in a empty list of runner!"), new MtLoRunner(), "findWinner");
-  // }
-  //
-  //  boolean testGetFirst(Tester t){
-  //   return
-  //   t.checkExpect(this.list1.getFirst(), johnny) &&
-  //   t.checkExpect(this.list2.getFirst(), frank) &&
-  //   t.checkException(new RuntimeException("There is no Runner in a empty list of runner!"), new MtLoRunner(), "getFirst");
-  // }
-  //
-  
-  boolean testFindMin(Tester t){
-    return
-    t.checkExpect(this.list1.findMin(compareByTime), joan) &&
-    t.checkExpect(this.list2.findMin(compareByTime), bill);
+  public Runner getFirst(){
+    return this.first;
   }
 }
 
+// In MtLoRunner
+  public Runner findWinner(){
+    throw new RuntimeException("There is no winner in a empty list of runner!");
+  }
+
+  public Runner getFirst(){
+    throw new RuntimeException("There is no Runner in a empty list of runner!");
+  }
+*/
+
+
+/*Do Now!
+
+Try to implement this method on the ConsLoRunner class. Where does it get stuck?
+*/
+
+// I do no thave the first runner to compare with the other ones in the recursion. (need 2 runner)
+
+/*Do Now!
+  Implement findMinHelp for MtLoRunner and ConsLoRunner.
+*/
+
+
+/*
+  // In ConsLoRunner 
+  public Runner findMinHelp(IRunnerComparator comp, Runner acc){
+    if(comp.compareByTime(this.first, acc) > 0){
+      return this.rest.findMyHelp(comp, this.first);
+    }else{
+      return this.rest.findMyHelp(comp, acc);
+    }
+  }
+  // In MtLoRunner
+  public Runner findMinHelp(IRunnerComparator comp, Runner acc){
+    return acc;
+  }
+*/
+
+/*Do Now!
+  Design a CompareByName comparator that compares two Runners by their names.
+*/
