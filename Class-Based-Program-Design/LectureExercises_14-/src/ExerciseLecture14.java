@@ -40,19 +40,6 @@ and whose behavior is the reverse of that parameter.
 I.e., if the given comparator says one Runner is less than the other, then the ReverseComparator will say that it is greater.
 */
 
-interface IReverseComparator{
-  int reverseComparator(IRunnerComparator comparator, Runner r1, Runner r2);
-}
-
-class ReverseComparator implements IReverseComparator{
-  public int reverseComparator(IRunnerComparator comparator, Runner r1, Runner r2){
-  if(comparator.compare(r1,r2) == 0){
-    return 1;
-   }else{
-    return -(comparator.compare(r1,r2));
-   }
-  }
-}
 
 interface IRunnerComparator {
   // Returns a negative number if r1 comes before r2 in this order
@@ -70,6 +57,22 @@ class CompareByTime implements IRunnerComparator {
 class CompareByName implements IRunnerComparator{
   public int compare(Runner r1, Runner r2){
     return r1.name.compareTo(r2.name); 
+  }
+}
+
+class ReverseComparator implements IRunnerComparator{
+  IRunnerComparator comp;
+
+  ReverseComparator(IRunnerComparator comp){
+    this.comp=comp;
+  }
+
+  public int compare(Runner r1, Runner r2){
+    if(comp.compare(r1,r2) == 0){
+      return 1;
+     }else{
+      return -(comp.compare(r1,r2));
+     }
   }
 }
 
@@ -165,7 +168,6 @@ interface ILoRunner{
   Runner findMinHelp(IRunnerComparator comp, Runner acc);
 
   Runner findMax(IRunnerComparator comp);
-  Runner findMaxHelp(IRunnerComparator comp, Runner acc);
 }
 
 class ConsLoRunner implements ILoRunner{
@@ -211,25 +213,8 @@ class ConsLoRunner implements ILoRunner{
   }
 
   public Runner findMax(IRunnerComparator comp) {
-    return this.rest.findMaxHelp(comp, this.first);
+    return this.rest.findMinHelp(new ReverseComparator(comp), this.first);
   }
-
-  public Runner findMaxHelp(IRunnerComparator comp, Runner acc){
-    if(comp.compare(acc, this.first) > 0){
-      return this.rest.findMaxHelp(comp, acc);
-    }else{
-      return this.rest.findMaxHelp(comp, this.first);
-    }
-  }
-
-  // Or if we want to use the new ReverseComparator
-  // public Runner findMaxHelp(IRunnerComparator comp, Runner acc){
-  //   if(new ReverseComparator(comp, this.first, acc) > 0){
-  //     return this.rest.findMaxHelp(comp, this.first);
-  //   }else{
-  //     return this.rest.findMaxHelp(comp, acc);
-  //   }
-  // }
 
 }
 
@@ -242,10 +227,6 @@ class MtLoRunner implements ILoRunner{
 
   public Runner findMin(IRunnerComparator comp) {
     throw new RuntimeException("No minimum runner available in this list!");
-  }
-
-  public Runner findMaxHelp(IRunnerComparator comp, Runner acc){
-    return acc;
   }
 
   public Runner findMax(IRunnerComparator comp) {
@@ -304,8 +285,6 @@ class ExamplesRunner{
 
   IRunnerComparator compareByTime = new CompareByTime();
   IRunnerComparator compareByName = new CompareByName();
-
-  IReverseComparator  rC = new ReverseComparator();
 
   boolean testFind(Tester t){
     return

@@ -187,3 +187,11 @@ Try to implement this method on the ConsLoRunner class. Where does it get stuck?
 /*Do Now!
   Design a CompareByName comparator that compares two Runners by their names.
 */
+
+/*
+class CompareByName implements IRunnerComparator{
+  public int compare(Runner r1, Runner r2){
+    return r1.name.compareTo(r2.name); 
+  }
+}
+*/
