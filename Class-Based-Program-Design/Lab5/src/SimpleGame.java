@@ -182,7 +182,7 @@ class MyGame extends World{
 			this.currentTick,
 			this.endTick+10,
 			this.limitCircle,
-			new ConsLoCircle(new Circle(new MyPosn(pos.x, pos.y), new MyPosn(1,1)), this.currentCircles));
+			new ConsLoCircle(new Circle(new MyPosn(pos.x, pos.y), new MyPosn(0, -3)), this.currentCircles));
 	}
 
 	//  move the circles on screen, remove the ones off screen, and decrement the count of circles that are left to move offscreen.
