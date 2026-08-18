@@ -4,6 +4,7 @@ import javalib.funworld.*;      // the abstract World class and the big-bang lib
 import java.awt.Color;          // general colors (as triples of red,green,blue values)
                                 // and predefined colors (Color.RED, Color.GRAY, etc.)
 import javalib.worldcanvas.*;
+import java.util.Random;
 
 
 class MyPosn extends Posn {
@@ -182,7 +183,7 @@ class MyGame extends World{
 			this.currentTick,
 			this.endTick+10,
 			this.limitCircle,
-			new ConsLoCircle(new Circle(new MyPosn(pos.x, pos.y), new MyPosn(0, -3)), this.currentCircles));
+			new ConsLoCircle(new Circle(new MyPosn(pos.x, pos.y), new MyPosn(new Utility().allDirection(10), new Utility().allDirection(10))), this.currentCircles));
 	}
 
 	//  move the circles on screen, remove the ones off screen, and decrement the count of circles that are left to move offscreen.
@@ -201,6 +202,21 @@ class MyGame extends World{
 	public MyGame removeCircleOffScreenAndDecrementCount(){
 		return new MyGame(this.WIDTH, this.HEIGHT, this.currentTick, this.endTick+10, this.limitCircle - this.currentCircles.howManyOffScreen(this.WIDTH, this.HEIGHT), this.currentCircles.removeOffscreen(this.WIDTH, this.HEIGHT));
 	}
+}
+
+class Utility{
+	// returns an positive or a negative integer
+	// based on what random.nextInt(1) returns.
+	// if 0 returns a positive int
+	// if 1 returns a negative int
+	int allDirection(int maxVelocity){
+		if(new Random().nextInt(2) == 0){
+			return new Random().nextInt(maxVelocity);
+		}else{
+			return -(new Random().nextInt(maxVelocity));
+		}
+	}
+
 }
 
 
@@ -349,38 +365,35 @@ class ExamplesSimpleGame{
 		;
 	}
 
-
-
-
-
  // testing draw circle method
-	boolean testDrawCircle(Tester t){
-		WorldCanvas c = new WorldCanvas(500, 500);
-		WorldScene s = new WorldScene(500, 500);
-		return c.drawScene(
-			s
-			.placeImageXY(c1.draw(), 250, 250)
-			.placeImageXY(c2.draw(), 50, 50)
-		)
-				&& c.show();
-	}
+ boolean testDrawCircle(Tester t){
+ 	WorldCanvas c = new WorldCanvas(500, 500);
+ 	WorldScene s = new WorldScene(500, 500);
+ 	return c.drawScene(
+ 		s
+ 		.placeImageXY(c1.draw(), 250, 250)
+ 		.placeImageXY(c2.draw(), 50, 50)
+ 	)
+ 			&& c.show();
+ }
 
  // testing place circle method
-	boolean testPlaceCircle(Tester t){
-		WorldCanvas c = new WorldCanvas(500, 500);
-		WorldScene s = new WorldScene(500, 500);
-		return c.drawScene(c1.place(s))
-				&& c.show();
-	}
+ boolean testPlaceCircle(Tester t){
+ 	WorldCanvas c = new WorldCanvas(500, 500);
+ 	WorldScene s = new WorldScene(500, 500);
+ 	return c.drawScene(c1.place(s))
+ 			&& c.show();
+ }
 
  // testing placeAll circle method
-	boolean testPlaceAll(Tester t){
-		WorldCanvas c = new WorldCanvas(500, 500);
-		WorldScene s = new WorldScene(500, 500);
-		return c.drawScene(loc1.placeAll(s))
-				&& c.show();
-	}
+ boolean testPlaceAll(Tester t){
+ 	WorldCanvas c = new WorldCanvas(500, 500);
+ 	WorldScene s = new WorldScene(500, 500);
+ 	return c.drawScene(loc1.placeAll(s))
+ 			&& c.show();
+ }
 
+ // testing bigBang circle method
   boolean testBigBang(Tester t) {
 	  int worldWidth = 500;
     int worldHeight = 500;
