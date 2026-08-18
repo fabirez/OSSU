@@ -67,8 +67,11 @@ interface ILoCircle{
 	// removes every circle in a list of circles that is offscreen.
   ILoCircle removeOffscreen(int width, int height);
 
-	// Design the placeAll method that places a list of circles on a given WorldScene.
+	// places a list of circles on a given WorldScene.
   WorldScene placeAll(WorldScene s);
+
+	// count how many circles are off screen
+	int howManyOffScreen(int width, int height);
 }
 
 class ConsLoCircle implements ILoCircle{
@@ -95,15 +98,28 @@ class ConsLoCircle implements ILoCircle{
 		}
 	}
 
-		// TODO: !!!
- 	 // Design the placeAll method that places a list of circles on a given WorldScene.
+ 	 // places a list of circles on a given WorldScene.
 	 public WorldScene placeAll(WorldScene s){
-		return this.first.place(s);
+		return this.rest.placeAll(this.first.place(s));
+	}
+
+	 // count how many circles are off screen
+	public int howManyOffScreen(int width, int height){
+		if(this.first.isOffScreen(width, height)){
+			return 1 + this.rest.howManyOffScreen(width, height);
+		}else{
+			return this.rest.howManyOffScreen(width, height);
+		}
 	}
 }
 
 class MtLoCircle implements ILoCircle{ 
-		// TODO: !!!
+
+	// count how many circles are off screen
+	public int howManyOffScreen(int width, int height){
+		return 0;
+	}
+
 	 public WorldScene placeAll(WorldScene s){
 		return s;
 	}
@@ -117,6 +133,73 @@ class MtLoCircle implements ILoCircle{
 	// removes every circle in a list of circles that is offscreen.
 	public ILoCircle removeOffscreen(int width, int height){
 		return this;
+	}
+}
+
+class MyGame extends World{
+	int WIDTH;
+	int HEIGHT;
+	int currentTick; // ???
+	int endTick;    // ???
+
+	int limitCircle;  // How many circle can go out of the screen, until the game is over
+	ILoCircle currentCircles;  // Initial list of circle, present in the game
+
+	MyGame(int width, int height, int currentTick, int endTick, int limitCircle, ILoCircle currentCircles){
+		if ( width < 0 || height < 0 || endTick < 2) {
+			throw new IllegalArgumentException("Invalid arguments passed to constructor.");
+		}
+		this.WIDTH = width;
+		this.HEIGHT = height;
+		this.currentTick = currentTick;
+		this.endTick = endTick;
+		this.limitCircle = limitCircle;
+		this.currentCircles = currentCircles;
+	}
+
+	public WorldScene makeScene(){
+		return this.currentCircles.placeAll(new WorldScene(this.WIDTH, this.HEIGHT));
+	}
+
+	public WorldScene makeAFinalScene(){
+		return new WorldScene(this.WIDTH, this.HEIGHT).placeImageXY(new TextImage("Game Over", Color.RED), this.WIDTH / 2, this.HEIGHT / 2);
+	}
+
+	// determine when the game is over, which is when the count of circles to go offscreen is 0 or less.
+	public WorldEnd worldEnds() {
+		if (limitCircle <= 0) {
+			return new WorldEnd(true, this.makeAFinalScene());
+		} else {
+			return new WorldEnd(false, this.makeScene());
+		}
+	}
+
+
+	// which will add a circle to the game where the player clicked. For now, the circle should just move straight up.
+	public MyGame onMouseClicked(Posn pos){
+		 return new MyGame(this.WIDTH,
+			this.HEIGHT,
+			this.currentTick,
+			this.endTick+10,
+			this.limitCircle,
+			new ConsLoCircle(new Circle(new MyPosn(pos.x, pos.y), new MyPosn(1,1)), this.currentCircles));
+	}
+
+	//  move the circles on screen, remove the ones off screen, and decrement the count of circles that are left to move offscreen.
+	public MyGame onTick(){
+		return this.moveAll().removeCircleOffScreenAndDecrementCount();
+	}
+
+
+	// moves every Circle in the game.
+	public MyGame moveAll(){
+		return new MyGame(this.WIDTH, this.HEIGHT, this.currentTick, this.endTick+10, this.limitCircle, this.currentCircles.moveAll());
+	}
+
+	// given two numbers representing the width and height of a screen,
+	// removes every circle in a list of circles that is offscreen.
+	public MyGame removeCircleOffScreenAndDecrementCount(){
+		return new MyGame(this.WIDTH, this.HEIGHT, this.currentTick, this.endTick+10, this.limitCircle - this.currentCircles.howManyOffScreen(this.WIDTH, this.HEIGHT), this.currentCircles.removeOffscreen(this.WIDTH, this.HEIGHT));
 	}
 }
 
@@ -249,6 +332,25 @@ class ExamplesSimpleGame{
 		;
 	}
 
+ // testing remove off screen method
+	boolean testHowManyOffScreen(Tester t){
+		int WIDTH=500;
+		int HEIGHT=500;
+		return
+		t.checkExpect(loc1.howManyOffScreen(WIDTH, HEIGHT), 0)
+		&&
+		t.checkExpect(loc2.howManyOffScreen(WIDTH, HEIGHT), 0)
+		&&
+		t.checkExpect(loc3.howManyOffScreen(WIDTH, HEIGHT), 1)
+		&&
+		t.checkExpect(loc4.howManyOffScreen(WIDTH, HEIGHT), 1)
+		&&
+		t.checkExpect(loc5.howManyOffScreen(WIDTH, HEIGHT), 3)
+		;
+	}
+
+
+
 
 
  // testing draw circle method
@@ -263,7 +365,7 @@ class ExamplesSimpleGame{
 				&& c.show();
 	}
 
- testing place circle method
+ // testing place circle method
 	boolean testPlaceCircle(Tester t){
 		WorldCanvas c = new WorldCanvas(500, 500);
 		WorldScene s = new WorldScene(500, 500);
@@ -271,12 +373,19 @@ class ExamplesSimpleGame{
 				&& c.show();
 	}
 
-	// TODO: !!!
-	// boolean testPlaceAll(Tester t){
-	// 	WorldCanvas c = new WorldCanvas(500, 500);
-	// 	WorldScene s = new WorldScene(500, 500);
-	// 	return c.drawScene(loc1.placeAll(s))
-	// 			&& c.show();
-	// }
+ // testing placeAll circle method
+	boolean testPlaceAll(Tester t){
+		WorldCanvas c = new WorldCanvas(500, 500);
+		WorldScene s = new WorldScene(500, 500);
+		return c.drawScene(loc1.placeAll(s))
+				&& c.show();
+	}
 
+  boolean testBigBang(Tester t) {
+	  int worldWidth = 500;
+    int worldHeight = 500;
+		double tickRate = 7.0/28.0;
+		MyGame w = new MyGame(worldWidth, worldHeight, 1, 20, 5, this.mtCircle);
+    return w.bigBang(worldWidth, worldHeight, tickRate);
+  }
 }
