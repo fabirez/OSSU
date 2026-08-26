@@ -376,9 +376,10 @@ class ConsLoShip implements ILoShip{
 	}
 	public ILoShip removeShipByIndexHelper(int collisionIndex, int currIndex, Ship prev){
 		if(currIndex == collisionIndex){
-			return new ConsLoShip(prev,  this.rest);
+			return new ConsLoShip(prev, this.rest);
+			// new ConsLoShip(prev,  this.rest);
 		}else{
-			return this.rest.removeShipByIndexHelper(collisionIndex, currIndex + 1, this.first);
+			return new ConsLoShip(prev, this.rest.removeShipByIndexHelper(collisionIndex, currIndex + 1, this.first));
 		}
 	}
 }
@@ -401,7 +402,7 @@ class MtLoShip implements ILoShip{
 
 	// remove the ship from the list based on the given index
 	public ILoShip removeShipByIndex(int collisionIndex){ return this; }
-	public ILoShip removeShipByIndexHelper(int collisionIndex, int currIndex, Ship prev){ return this; }
+	public ILoShip removeShipByIndexHelper(int collisionIndex, int currIndex, Ship prev){ return new ConsLoShip(prev, this); }
 }
 
 
@@ -415,7 +416,7 @@ class IndexUtility{
 
 class Utility{
 	Ship randomShip(int maxWidth, int height){
-		int velocity = 10;
+		int velocity = 5;
 		int edge = 50;
 		if(new Random().nextInt(2) == 0){
 			return new Ship(
@@ -732,8 +733,7 @@ class ExamplesGame{
 		ILoShip los0_ = new ConsLoShip(s1, new ConsLoShip(s2, mtShip));
 		ILoShip los1_ = new ConsLoShip(s3, new ConsLoShip(s5, mtShip));	
 		ILoShip los2_ = new ConsLoShip(s3, mtShip);	
-		ILoShip los3_ = mtShip;
-		ILoShip los4_ = new ConsLoShip(s3, new ConsLoShip(s4, new ConsLoShip(s3, new ConsLoShip(s4, mtShip))));	
+		ILoShip los3_ = new ConsLoShip(s0, new ConsLoShip(s1, new ConsLoShip(s3, new ConsLoShip(s4, new ConsLoShip(s5, mtShip)))));	
 		return
 		t.checkExpect(los0.removeShipByIndex(0), los0_)
 		&&
@@ -741,9 +741,9 @@ class ExamplesGame{
 		&&
 		t.checkExpect(los2.removeShipByIndex(1), los2_)
 		&&
-		t.checkExpect(los3.removeShipByIndex(7), los3_)
+		t.checkExpect(los3.removeShipByIndex(7), los3)
 		&&
-		t.checkExpect(los3.removeShipByIndex(2), los4_)
+		t.checkExpect(los3.removeShipByIndex(2), los3_)
 		;
 	}
 
@@ -756,9 +756,17 @@ class ExamplesGame{
 		;
 	}
 
+	// testing the MyGame constructor
+	// boolean testGenerateShip(Tester t){
+	// 	return
+	// 	// MyGame(int bullets, int destroyedShip, ILoShip currentShips, int currentTick, ILoBullet currentBullets){
+	// 	t.checkExpect(new MyGame(10, 0, los0, 30, mtBullet).generateShips(), mtShip) 
+	// 	;
+	// }
+
 	// testing the big bang method
 	boolean testBigBang(Tester t) {
-		MyGame world = new MyGame(10);
+		MyGame world = new MyGame(10).generateShips();
 	   return world.bigBang(1000, 500, 1.0/28.0);
 	 }
 }
