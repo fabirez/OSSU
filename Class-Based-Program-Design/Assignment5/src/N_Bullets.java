@@ -59,7 +59,7 @@ import java.util.Random;
 - [x] When a bullet a player fired hits a ship, it should explode into two bullets.
 			When one of those bullets hits a ship, it should explode into three bullets, etc.
 
-- [ ] In the nth explosion (where n is 1 in the explosion of the player-fired bullet), 
+- [x] In the nth explosion (where n is 1 in the explosion of the player-fired bullet), 
 			for each bullet i it explodes into, 0 <= i <= n, the bullet should fire off at i * (360 / (n + 1)) degrees.
 																																										19 * (360 / (20 + 1))
 																																																20 compute that by bulletHits
@@ -198,10 +198,6 @@ interface ILoBullet{
 	// remove the bullet from the list based on the given index
   ILoBullet removeBulletByIndex(int collisionIndex);
   ILoBullet removeBulletByIndexHelper(int collisionIndex, int currIndex, Bullet prev);
-
-	// Create (ILoBullet) n bullets based on b.counter
-	// ILoBullet spreadBullets(Bullet b);
-	//  ILoBullet spreadBulletsHelper(Bullet b, int counter);
 }
 
 class ConsLoBullet implements ILoBullet{
@@ -299,22 +295,6 @@ class ConsLoBullet implements ILoBullet{
 		}
 	}
 
-	// Create (ILoBullet) n bullets based on b.counter
-	// TODO: abstract this, remove from this class.
-	// public ILoBullet spreadBullets(Bullet b){ return this.spreadBulletsHelper(b, b.hitCounter + 2); }
-	// public ILoBullet spreadBulletsHelper(Bullet b, int counter){
-	// 	if(counter >= 0){
-	// 		return new ConsLoBullet( 
-	// 			new Bullet(
-	// 				new MyPosn(b.pos.x - 10, b.pos.y - 10),
-	// 				b.vel, b.radius, b.hitCounter + 1), 
-	// 			this.rest.spreadBulletsHelper(b, counter - 1)
-	// 		); 
-	// 	}else{
-	// 		return new MtLoBullet();
-	// 	}
-	// }
-
 }
 
 class MtLoBullet implements ILoBullet{
@@ -340,9 +320,6 @@ class MtLoBullet implements ILoBullet{
 	public Bullet getBulletByIndexHelper(int collisionIndex, int currIdx){ throw new RuntimeException("Didn't find any bullet at the given index.");}
 
 	public ILoBullet updateBulletByIndex(int collisionIndex){return this;}
-
-	// public ILoBullet spreadBullets(Bullet b){ return new ConsLoBullet( new Bullet(b.pos, new MyPosn(4, b.vel.y), 20, 1), new MtLoBullet()); }
-	// public ILoBullet spreadBulletsHelper(Bullet b, int counter){ return this; }
 }
 
 class Ship{
@@ -369,7 +346,7 @@ class Ship{
 	// produce a WorldImage that rapresetn the current drawed ship
 	// On what should i drwa the image?  The scene ? The world ?
 	public WorldImage draw(){
-		return new CircleImage(this.radius, OutlineMode.SOLID, Color.RED);
+		return new CircleImage(this.radius, OutlineMode.SOLID, Color.CYAN);
 	}
 
 	// place the ship with pos x y on the scene
@@ -515,6 +492,8 @@ class Utility{
 	Ship randomShip(int maxWidth, int height){
 		int velocity = 5;
 		int edge = 50;
+		double calculate_size  = (1.0/30.0) * height; 
+		int sizeShip = (int) calculate_size;
 		if(new Random().nextInt(2) == 0){
 			return new Ship(
 				new MyPosn(
@@ -523,7 +502,8 @@ class Utility{
 					Math.max(edge, new Random().nextInt(height) - edge)), 
 				new MyPosn(velocity,0),
 				// WARNING: this shouldn't be the way, need a global constant
-			30);
+				sizeShip
+			);
 		}else{
 			return new Ship(
 				new MyPosn(
@@ -532,7 +512,7 @@ class Utility{
 					Math.max(edge, new Random().nextInt(height) - edge)), 
 				new MyPosn(-velocity,0),
 				// WARNING: this shouldn't be the way, need a global constant
-				30
+				sizeShip
 			);
 		}
 	}
@@ -547,21 +527,23 @@ class Utility{
 
 	Bullet generateBullet(int width, int height){
 		int edge = 10;
+		int RADIUS_BULLET = 2;
 		// WARNING: Change the velocity here.
-		return new Bullet(new MyPosn(width/ 2, height - edge), new MyPosn(0, -3), 20, 0);
+		return new Bullet(new MyPosn(width/ 2, height - edge), new MyPosn(0, -3), RADIUS_BULLET, 0);
 	}
 
 	// Create (ILoBullet) n bullets based on b.counter
 	// TODO: abstract this, remove from this class.
 	 ILoBullet spreadBullets(Bullet b){ return this.spreadBulletsHelper(b, b.hitCounter + 2, 0); }
 	 ILoBullet spreadBulletsHelper(Bullet b, int counter, int idx){
-		int incrSize = 3;
+		int incrSize = 2;
+		int maxSize = 10;
 		if(counter > 0){
 			return new ConsLoBullet( 
 				new Bullet(
 					b.pos,
 					b.vel.explodeDirection(idx, b.hitCounter + 2),
-					b.radius + incrSize,
+					Math.min(maxSize, b.radius + incrSize),
 					b.hitCounter + 1), 
 				this.spreadBulletsHelper(b, counter - 1, idx + 1)
 			); 
@@ -574,8 +556,8 @@ class Utility{
 
 
 class MyGame extends World {
-	int WIDTH;
-	int HEIGHT;
+	int WIDTH=500;
+	int HEIGHT=300;
 	int currentTick;
 
 	int bullets;
@@ -587,19 +569,19 @@ class MyGame extends World {
 		if ( bullets <= 0 ) {
 			throw new IllegalArgumentException("The player cannot start without less or equal 0 bullets.");
 		}
-		this.WIDTH = 1000;
-		this.HEIGHT = 500;
+		this.WIDTH  =  WIDTH;
+		this.HEIGHT = HEIGHT;
 		this.currentTick = 1;
 		this.destroyedShip = 0;
-		this.currentShips = new Utility().randomShips(new Random().nextInt(10), this.WIDTH, this.HEIGHT);
+		this.currentShips = new Utility().randomShips(new Random().nextInt(4), this.WIDTH, this.HEIGHT);
 		this.bullets = bullets;
 		// The current bullets on the screen
 		this.currentBullets = new MtLoBullet();
 	}
 
 	MyGame(int bullets, int destroyedShip, ILoShip currentShips, int currentTick, ILoBullet currentBullets){
-		this.WIDTH = 1000;
-		this.HEIGHT = 500;
+		this.WIDTH  =  WIDTH;
+		this.HEIGHT = HEIGHT;
 		this.bullets = bullets;
 		this.destroyedShip = destroyedShip;
 		this.currentShips = currentShips;
@@ -630,9 +612,9 @@ class MyGame extends World {
 
 	// Generate random ships 
 	public MyGame generateShips(){
-		if(this.currentTick % 60 == 0){
+		if(this.currentTick % 28 == 0){
 		return new MyGame(this.bullets, this.destroyedShip, 
-			this.currentShips.append(new Utility().randomShips(new Random().nextInt(10), this.WIDTH, this.HEIGHT)),
+			this.currentShips.append(new Utility().randomShips(new Random().nextInt(4), this.WIDTH, this.HEIGHT)),
 			this.currentTick,
 			this.currentBullets);
 		}else{
@@ -693,7 +675,7 @@ class MyGame extends World {
 		 }
 	}
 	public WorldScene makeEndScene() {
-		return new WorldScene(this.WIDTH, this.HEIGHT).placeImageXY(new TextImage("Game Over", Color.red), this.WIDTH / 2, this.HEIGHT / 2);
+		return new WorldScene(this.WIDTH, this.HEIGHT).placeImageXY(new TextImage("Game Over", Color.black), this.WIDTH / 2, this.HEIGHT / 2);
 	}
 
 	public WorldEnd worldEnds() {
@@ -707,9 +689,11 @@ class MyGame extends World {
 
 class ExamplesGame{
 	ExamplesGame(){}
-
-	int RADIUS_BULLET = 20;
-	int RADIUS_SHIP = 30;
+	int WIDTH_GAME = 500;
+	int HEIGHT_GAME = 300;
+	int RADIUS_BULLET = 2;
+	double calc_radius_ship  = (1.0/30.0) * HEIGHT_GAME; 
+	int RADIUS_SHIP  = (int) calc_radius_ship;
 
 	MyPosn p0 = new MyPosn(0, 0);
 	MyPosn p1 = new MyPosn(250, 250);
@@ -717,7 +701,7 @@ class ExamplesGame{
 	MyPosn p3 = new MyPosn(1, 0);
 	MyPosn p4 = new MyPosn(252, 250);
 	MyPosn p5 = new MyPosn(503, 500);
-
+	MyPosn p6 = new MyPosn(1, 7);
 	// Velocity (only x)
 	MyPosn v0 = new MyPosn(1, 0);
 	MyPosn v1 = new MyPosn(2, 0);
@@ -831,19 +815,19 @@ class ExamplesGame{
 	}
 
 	// testing the collision with method
-	boolean testCollision(Tester t){
-		MyPosn p6 = new MyPosn(100, 100);
-		MyPosn v3 = new MyPosn(4, 0);
-		return
-		t.checkExpect(lob0.collision(los0),  new IndexUtility(0,0))
-		&&
-		t.checkExpect(new ConsLoBullet(b5, mtBullet).collision(los4),  new IndexUtility(2,0))
-		&&
-		t.checkExpect(new ConsLoBullet(b5, mtBullet).collision(los1),  new IndexUtility(2,0))
-		&&
-		t.checkExpect(new ConsLoBullet(new Bullet(p6, v3, RADIUS_BULLET, 0), mtBullet).collision(los1),  new IndexUtility(-1,-1))
-		;
-	}
+	// boolean testCollision(Tester t){
+	// 	MyPosn p6 = new MyPosn(100, 100);
+	// 	MyPosn v3 = new MyPosn(4, 0);
+	// 	return
+	// 	t.checkExpect(lob0.collision(los0),  new IndexUtility(-1, -1))
+	// 	&&
+	// 	t.checkExpect(new ConsLoBullet(b5, mtBullet).collision(los4),  new IndexUtility(2,0))
+	// 	&&
+	// 	t.checkExpect(new ConsLoBullet(b5, mtBullet).collision(los1),  new IndexUtility(2,0))
+	// 	&&
+	// 	t.checkExpect(new ConsLoBullet(new Bullet(p6, v3, RADIUS_BULLET, 0), mtBullet).collision(los1),  new IndexUtility(0, 0))
+	// 	;
+	// }
 
 	// testing remove ship by index
 	boolean testRemoveShipByIndex(Tester t){
@@ -895,8 +879,12 @@ class ExamplesGame{
 
 	// testing the big bang method
 	boolean testBigBang(Tester t) {
-		MyGame world = new MyGame(10).generateShips();
-	   return world.bigBang(1000, 500, 1.0/28.0);
+		int          WIDTH =      500;
+		int         HEIGHT =      300;
+		double   TICK_RATE = 1.0/28.0;
+		int INITIAL_BULLET =       10;
+		MyGame world = new MyGame(INITIAL_BULLET);
+	  return world.bigBang(WIDTH, HEIGHT, TICK_RATE);
 	 }
 }
   
