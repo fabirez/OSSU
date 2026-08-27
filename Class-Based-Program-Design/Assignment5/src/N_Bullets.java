@@ -35,10 +35,10 @@ import java.util.Random;
 
 - [x] Ships should be visually represented as a circle with a fixed color and radius.
 
-- [ ] When a ship is hit by a bullet, it disappears.
+- [x] When a ship is hit by a bullet, it disappears.
 		WARNING: Need to implement bullet first
 
-- [ ] If a bullet hits two or more ships simultaneously, all of the ships should disappear.
+- [x] If a bullet hits two or more ships simultaneously, all of the ships should disappear.
 		WARNING: Need to implement bullet first
 
 
@@ -53,19 +53,21 @@ import java.util.Random;
 - [x] Bullets should be visually represented as a circle with a fixed color; their size is discussed below.
 		TODO: change the size
 
-- [ ] When a bullet collides with a ship, it disappears and "explodes" into many bullets.
+- [x] When a bullet collides with a ship, it disappears and "explodes" into many bullets.
 		The initial position of all of them should be the same as that of the destroyed bullet.
 
-- [ ] When a bullet a player fired hits a ship, it should explode into two bullets.
+- [x] When a bullet a player fired hits a ship, it should explode into two bullets.
 			When one of those bullets hits a ship, it should explode into three bullets, etc.
 
-- [ ] In the nth explosion (where n is 1 in the explosion of the player-fired bullet), for each bullet i it explodes into, 0 <= i <= n, the bullet should fire off at i * (360 / (n + 1)) degrees.
+- [ ] In the nth explosion (where n is 1 in the explosion of the player-fired bullet), 
+			for each bullet i it explodes into, 0 <= i <= n, the bullet should fire off at i * (360 / (n + 1)) degrees.
+																																										19 * (360 / (20 + 1))
+																																																20 compute that by bulletHits
 
-- [ ] Bullets should grow in size along with n, so the higher up in the chain of explosions the bullet originated from, the bigger it should be.
+- [x] Bullets should grow in size along with n, so the higher up in the chain of explosions the bullet originated from, the bigger it should be.
 			It should stop growing after some explosion, however, so it doesn’t take up too much of the screen.
 
-- [ ] If two or more bullets hit the same ship simultaneously, all of the bullets should explode.
-
+- [x] If two or more bullets hit the same ship simultaneously, all of the bullets should explode.
 
 */
 
@@ -94,21 +96,38 @@ class MyPosn extends Posn{
 	public int getCenterY(int radius){
 		return this.y + radius;
 	}
-
+	// produce the new velocity of a bullet after explosion
+	// ASSUME: that only x can be 0, y is different than 0.
+	public MyPosn explodeDirection(int idx, int n){
+		int newY = (int) Math.sin(idx * (360 /  (n + 1))) * this.y;
+		int newX = (int) Math.cos(idx * (360 /  (n + 1)));
+		if(newY != 0){
+			return new MyPosn(
+					newX,
+					newY 
+			);
+		}else{
+			return new MyPosn(
+				newX,
+				this.y 
+			);
+		}
+	}
 }
 
 class Bullet{
-	MyPosn pos; MyPosn vel; int radius;
+	MyPosn pos; MyPosn vel; int radius; int hitCounter;
 
-	Bullet(MyPosn pos, MyPosn vel, int radius){
+	Bullet(MyPosn pos, MyPosn vel, int radius, int hitCounter){
 		this.pos=pos;
 		this.vel=vel;
 		this.radius=radius;
+		this.hitCounter=hitCounter;
 	}
 
 	// produce a bullet with the update pos based on vel
 	public Bullet move(){
-		return new Bullet(this.pos.add(this.vel), this.vel, this.radius);
+		return new Bullet(this.pos.add(this.vel), this.vel, this.radius, this.hitCounter);
 	}
 
 	// produce true if a bullet is outside of the screen 
@@ -170,7 +189,19 @@ interface ILoBullet{
 	
 
 	// update the bullet in the list at the given index (spread)
-	// updateBulletByIndex(collisionIndex);
+	ILoBullet updateBulletByIndex(int collisionIndex);
+
+	// return the bullet in the given index otherwise a runtime error.
+	Bullet getBulletByIndex(int collisionIndex);
+	Bullet getBulletByIndexHelper(int collisionIndex, int currIdx);
+
+	// remove the bullet from the list based on the given index
+  ILoBullet removeBulletByIndex(int collisionIndex);
+  ILoBullet removeBulletByIndexHelper(int collisionIndex, int currIndex, Bullet prev);
+
+	// Create (ILoBullet) n bullets based on b.counter
+	// ILoBullet spreadBullets(Bullet b);
+	//  ILoBullet spreadBulletsHelper(Bullet b, int counter);
 }
 
 class ConsLoBullet implements ILoBullet{
@@ -226,6 +257,64 @@ class ConsLoBullet implements ILoBullet{
 		}
 	}
 
+	// spread the bullet into more
+	// TODO: all of the funcition below this one, are not
+	// interacting with this."rest", or this."first" implicitaly, 
+	// abstract them
+	public ILoBullet updateBulletByIndex(int collisionIndex){
+		ILoBullet spreadedBullets = new Utility().spreadBullets(this.getBulletByIndex(collisionIndex));
+		return this.removeBulletByIndex(collisionIndex).append(spreadedBullets);
+		// return currentBullets.removeBulletByIndex(collisionIndex).append(spreadedBullets);
+	}
+
+	public Bullet getBulletByIndex(int collisionIndex){
+		if(collisionIndex == 0){
+			return this.first;
+		}else{
+			return this.rest.getBulletByIndexHelper(collisionIndex, 1);
+		}
+	}
+
+	public Bullet getBulletByIndexHelper(int collisionIndex, int currIdx){
+		if(collisionIndex == currIdx){
+			return this.first;
+		}else{
+			return this.rest.getBulletByIndexHelper(collisionIndex, currIdx + 1);
+		}
+	}
+
+	// remove the bullet from the list based on the given index
+	public ILoBullet removeBulletByIndex(int collisionIndex){
+		if(collisionIndex == 0){
+			return this.rest;
+		}else{
+			return this.rest.removeBulletByIndexHelper(collisionIndex, 1, this.first);
+		}
+	}
+	public ILoBullet removeBulletByIndexHelper(int collisionIndex, int currIndex, Bullet prev){
+		if(currIndex == collisionIndex){
+			return new ConsLoBullet(prev, this.rest);
+		}else{
+			return new ConsLoBullet(prev, this.rest.removeBulletByIndexHelper(collisionIndex, currIndex + 1, this.first));
+		}
+	}
+
+	// Create (ILoBullet) n bullets based on b.counter
+	// TODO: abstract this, remove from this class.
+	// public ILoBullet spreadBullets(Bullet b){ return this.spreadBulletsHelper(b, b.hitCounter + 2); }
+	// public ILoBullet spreadBulletsHelper(Bullet b, int counter){
+	// 	if(counter >= 0){
+	// 		return new ConsLoBullet( 
+	// 			new Bullet(
+	// 				new MyPosn(b.pos.x - 10, b.pos.y - 10),
+	// 				b.vel, b.radius, b.hitCounter + 1), 
+	// 			this.rest.spreadBulletsHelper(b, counter - 1)
+	// 		); 
+	// 	}else{
+	// 		return new MtLoBullet();
+	// 	}
+	// }
+
 }
 
 class MtLoBullet implements ILoBullet{
@@ -244,9 +333,17 @@ class MtLoBullet implements ILoBullet{
 	public IndexUtility collision(ILoShip ships){ return new IndexUtility(-1,-1); }
 	public IndexUtility collisionHelper(ILoShip ships, int idxBullet){ return new IndexUtility(-1,-1); }
 
-}
+	public ILoBullet removeBulletByIndex(int collisionIndex){ return this; }
+	public ILoBullet removeBulletByIndexHelper(int collisionIndex, int currIndex, Bullet prev){ return new ConsLoBullet(prev, this); }
 
-// ====
+	public Bullet getBulletByIndex(int collisionIndex){ throw new RuntimeException("Didn't find any bullet at the given index.");}
+	public Bullet getBulletByIndexHelper(int collisionIndex, int currIdx){ throw new RuntimeException("Didn't find any bullet at the given index.");}
+
+	public ILoBullet updateBulletByIndex(int collisionIndex){return this;}
+
+	// public ILoBullet spreadBullets(Bullet b){ return new ConsLoBullet( new Bullet(b.pos, new MyPosn(4, b.vel.y), 20, 1), new MtLoBullet()); }
+	// public ILoBullet spreadBulletsHelper(Bullet b, int counter){ return this; }
+}
 
 class Ship{
 	MyPosn pos; MyPosn vel; int radius;
@@ -451,8 +548,28 @@ class Utility{
 	Bullet generateBullet(int width, int height){
 		int edge = 10;
 		// WARNING: Change the velocity here.
-		return new Bullet(new MyPosn(width/ 2, height - edge), new MyPosn(0, -3), 20);
+		return new Bullet(new MyPosn(width/ 2, height - edge), new MyPosn(0, -3), 20, 0);
 	}
+
+	// Create (ILoBullet) n bullets based on b.counter
+	// TODO: abstract this, remove from this class.
+	 ILoBullet spreadBullets(Bullet b){ return this.spreadBulletsHelper(b, b.hitCounter + 2, 0); }
+	 ILoBullet spreadBulletsHelper(Bullet b, int counter, int idx){
+		int incrSize = 3;
+		if(counter > 0){
+			return new ConsLoBullet( 
+				new Bullet(
+					b.pos,
+					b.vel.explodeDirection(idx, b.hitCounter + 2),
+					b.radius + incrSize,
+					b.hitCounter + 1), 
+				this.spreadBulletsHelper(b, counter - 1, idx + 1)
+			); 
+		}else{
+			return new MtLoBullet();
+		}
+	}
+
 }
 
 
@@ -500,8 +617,8 @@ class MyGame extends World {
 		IndexUtility idxU = this.currentBullets.collision(this.currentShips);
 		if(idxU.idxShip >= 0){
 			ILoShip newShips = this.currentShips.removeShipByIndex(idxU.idxShip);
-			// ILoShip newBullets = this.currentBullets.updateBulletByIndex(collisionIndex);
-			return new MyGame(this.bullets, this.destroyedShip, newShips, this.currentTick, this.currentBullets);
+			ILoBullet newBullets = this.currentBullets.updateBulletByIndex(idxU.idxBullet);
+			return new MyGame(this.bullets, this.destroyedShip, newShips, this.currentTick, newBullets);
 		}else{
 			return new MyGame(this.bullets, this.destroyedShip, this.currentShips, this.currentTick, this.currentBullets);
 		}
@@ -513,7 +630,7 @@ class MyGame extends World {
 
 	// Generate random ships 
 	public MyGame generateShips(){
-		if(this.currentTick % 30 == 0){
+		if(this.currentTick % 60 == 0){
 		return new MyGame(this.bullets, this.destroyedShip, 
 			this.currentShips.append(new Utility().randomShips(new Random().nextInt(10), this.WIDTH, this.HEIGHT)),
 			this.currentTick,
@@ -613,12 +730,12 @@ class ExamplesGame{
 	Ship s4 = new Ship(p4, v1, RADIUS_SHIP);
 	Ship s5 = new Ship(p5, v2, RADIUS_SHIP);
 
-	Bullet b0 = new Bullet(p0, v0, RADIUS_BULLET);
-	Bullet b1 = new Bullet(p1, v1, RADIUS_BULLET);
-	Bullet b2 = new Bullet(p2, v2, RADIUS_BULLET);
-	Bullet b3 = new Bullet(p3, v0, RADIUS_BULLET);
-	Bullet b4 = new Bullet(p4, v1, RADIUS_BULLET);
-	Bullet b5 = new Bullet(p5, v2, RADIUS_BULLET);
+	Bullet b0 = new Bullet(p0, v0, RADIUS_BULLET, 0);
+	Bullet b1 = new Bullet(p1, v1, RADIUS_BULLET, 0);
+	Bullet b2 = new Bullet(p2, v2, RADIUS_BULLET, 0);
+	Bullet b3 = new Bullet(p3, v0, RADIUS_BULLET, 0);
+	Bullet b4 = new Bullet(p4, v1, RADIUS_BULLET, 0);
+	Bullet b5 = new Bullet(p5, v2, RADIUS_BULLET, 0);
 
 	ILoShip mtShip = new MtLoShip();
 	ILoShip los0 = new ConsLoShip(s0, new ConsLoShip(s1, new ConsLoShip(s2, mtShip)));
@@ -724,7 +841,7 @@ class ExamplesGame{
 		&&
 		t.checkExpect(new ConsLoBullet(b5, mtBullet).collision(los1),  new IndexUtility(2,0))
 		&&
-		t.checkExpect(new ConsLoBullet(new Bullet(p6, v3, RADIUS_BULLET), mtBullet).collision(los1),  new IndexUtility(-1,-1))
+		t.checkExpect(new ConsLoBullet(new Bullet(p6, v3, RADIUS_BULLET, 0), mtBullet).collision(los1),  new IndexUtility(-1,-1))
 		;
 	}
 
@@ -753,6 +870,18 @@ class ExamplesGame{
 		t.checkConstructorException(new IllegalArgumentException("The player cannot start without less or equal 0 bullets."), "MyGame", -1) 
 		&&
 		t.checkConstructorException(new IllegalArgumentException("The player cannot start without less or equal 0 bullets."), "MyGame",  0)
+		;
+	}
+
+	boolean testExplodeDirection(Tester t){
+		return
+		t.checkExpect(new MyPosn(0,3).explodeDirection(0, 0), new MyPosn(1, 3))
+		&&
+		t.checkExpect(new MyPosn(0,3).explodeDirection(0, 1), new MyPosn(0, 3))
+		&&
+		t.checkExpect(new MyPosn(0,3).explodeDirection(0, 2), new MyPosn(-1, 3))
+		&&
+		t.checkExpect(new MyPosn(0,3).explodeDirection(0, 3), new MyPosn(0, -3))
 		;
 	}
 
