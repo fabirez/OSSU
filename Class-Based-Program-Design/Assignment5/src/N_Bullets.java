@@ -36,10 +36,8 @@ import java.util.Random;
 - [x] Ships should be visually represented as a circle with a fixed color and radius.
 
 - [x] When a ship is hit by a bullet, it disappears.
-		WARNING: Need to implement bullet first
 
 - [x] If a bullet hits two or more ships simultaneously, all of the ships should disappear.
-		WARNING: Need to implement bullet first
 
 
 - [~] Bullets should move with what appears to be smooth motion,
@@ -51,7 +49,6 @@ import java.util.Random;
 - [x] Bullets that have flown past the edge of the screen should be removed from the game.
 
 - [x] Bullets should be visually represented as a circle with a fixed color; their size is discussed below.
-		TODO: change the size
 
 - [x] When a bullet collides with a ship, it disappears and "explodes" into many bullets.
 		The initial position of all of them should be the same as that of the destroyed bullet.
@@ -70,6 +67,7 @@ import java.util.Random;
 - [x] If two or more bullets hit the same ship simultaneously, all of the bullets should explode.
 
 */
+
 
 
 class MyPosn extends Posn{
@@ -701,7 +699,7 @@ class ExamplesGame{
 	MyPosn p3 = new MyPosn(1, 0);
 	MyPosn p4 = new MyPosn(252, 250);
 	MyPosn p5 = new MyPosn(503, 500);
-	MyPosn p6 = new MyPosn(1, 7);
+
 	// Velocity (only x)
 	MyPosn v0 = new MyPosn(1, 0);
 	MyPosn v1 = new MyPosn(2, 0);
@@ -878,13 +876,13 @@ class ExamplesGame{
 	// }
 
 	// testing the big bang method
-	boolean testBigBang(Tester t) {
-		int          WIDTH =      500;
-		int         HEIGHT =      300;
-		double   TICK_RATE = 1.0/28.0;
-		int INITIAL_BULLET =       10;
-		MyGame world = new MyGame(INITIAL_BULLET);
-	  return world.bigBang(WIDTH, HEIGHT, TICK_RATE);
-	 }
+	// boolean testBigBang(Tester t) {
+	// 	int          WIDTH =      500;
+	// 	int         HEIGHT =      300;
+	// 	double   TICK_RATE = 1.0/28.0;
+	// 	int INITIAL_BULLET =       10;
+	// 	MyGame world = new MyGame(INITIAL_BULLET);
+	//   return world.bigBang(WIDTH, HEIGHT, TICK_RATE);
+	//  }
 }
   
