@@ -29,21 +29,21 @@ interface IPred<T> {
   boolean apply(T t);
 }
 
-class MyPosn extends Posn {
+class MyPosn2 extends Posn {
 
   // standard constructor
-  MyPosn(int x, int y) {
+  MyPosn2(int x, int y) {
     super(x, y);
   }
 
-  // constructor to convert from a Posn to a MyPosn
-  MyPosn(Posn p) {
+  // constructor to convert from a Posn to a MyPosn2
+  MyPosn2(Posn p) {
     this(p.x, p.y);
   }
 
   // add the given posn to the current posn
-  MyPosn add(MyPosn vel) {
-    return new MyPosn(this.x + vel.x, this.y + vel.y);
+  MyPosn2 add(MyPosn2 vel) {
+    return new MyPosn2(this.x + vel.x, this.y + vel.y);
   }
 
   public int getCenterX(int radius) {
@@ -56,14 +56,14 @@ class MyPosn extends Posn {
 
   // produce the new velocity of a bullet after explosion
   // ASSUME: that only x can be 0, y is different than 0.
-  public MyPosn explodeDirection(int idx, int n) {
+  public MyPosn2 explodeDirection(int idx, int n) {
     int newY = (int) Math.sin(idx * (360 / (n + 1))) * this.y;
     int newX = (int) Math.cos(idx * (360 / (n + 1)));
     if (newY != 0) {
-      return new MyPosn(newX, newY);
+      return new MyPosn2(newX, newY);
     }
     else {
-      return new MyPosn(newX, this.y);
+      return new MyPosn2(newX, this.y);
     }
   }
 
@@ -115,18 +115,18 @@ interface IGameItem {
   public int getRadius();
 
   // get pos
-  public MyPosn getPos();
+  public MyPosn2 getPos();
 
   // get vel
-  public MyPosn getVel();
+  public MyPosn2 getVel();
 }
 
 abstract class AGameItem implements IGameItem {
-  MyPosn pos;
-  MyPosn vel;
+  MyPosn2 pos;
+  MyPosn2 vel;
   int radius;
 
-  AGameItem(MyPosn pos, MyPosn vel, int radius) {
+  AGameItem(MyPosn2 pos, MyPosn2 vel, int radius) {
     this.pos = pos;
     this.vel = vel;
     this.radius = radius;
@@ -187,24 +187,24 @@ abstract class AGameItem implements IGameItem {
   }
 
   // get pos
-  public MyPosn getPos() {
+  public MyPosn2 getPos() {
     return this.pos;
   }
 
   // get vel
-  public MyPosn getVel() {
+  public MyPosn2 getVel() {
     return this.vel;
   }
 }
 
-class Ship extends AGameItem {
-  Ship(MyPosn pos, MyPosn vel, int radius) {
+class Ship2 extends AGameItem {
+  Ship2(MyPosn2 pos, MyPosn2 vel, int radius) {
     super(pos, vel, radius);
   }
 
   // produce a ship with the update pos based on vel
-  public Ship move() {
-    return new Ship(this.pos.add(this.vel), this.vel, this.radius);
+  public Ship2 move() {
+    return new Ship2(this.pos.add(this.vel), this.vel, this.radius);
   }
 
   // produce a worldimage that rapresetn the current drawed ship
@@ -214,21 +214,21 @@ class Ship extends AGameItem {
   }
 
   public int getHitCounter() {
-    throw new RuntimeException("Ship doesn't have hit counter field");
+    throw new RuntimeException("Ship2 doesn't have hit counter field");
   }
 }
 
-class Bullet extends AGameItem {
+class Bullet2 extends AGameItem {
   int hitCounter;
 
-  Bullet(MyPosn pos, MyPosn vel, int radius, int hitCounter) {
+  Bullet2(MyPosn2 pos, MyPosn2 vel, int radius, int hitCounter) {
     super(pos, vel, radius);
     this.hitCounter = hitCounter;
   }
 
   // produce a bullet with the update pos based on vel
-  public Bullet move() {
-    return new Bullet(this.pos.add(this.vel), this.vel, this.radius, this.hitCounter);
+  public Bullet2 move() {
+    return new Bullet2(this.pos.add(this.vel), this.vel, this.radius, this.hitCounter);
   }
 
   // produce a WorldImage that rapresetn the current drawed bullet
@@ -380,40 +380,40 @@ class MtLo<T> implements ILo<T> {
 }
 
 class UtilityCollision {
-  ILo<IGameItem> updatedShips;
-  ILo<IGameItem> updatedBullets;
+  ILo<IGameItem> updatedShip2s;
+  ILo<IGameItem> updatedBullet2s;
 
   UtilityCollision() {
-    this.updatedShips = new MtLo<IGameItem>();
-    this.updatedBullets = new MtLo<IGameItem>();
+    this.updatedShip2s = new MtLo<IGameItem>();
+    this.updatedBullet2s = new MtLo<IGameItem>();
   }
 
-  UtilityCollision(ILo<IGameItem> updatedShips, ILo<IGameItem> updatedBullets) {
-    this.updatedShips = updatedShips;
-    this.updatedBullets = updatedBullets;
+  UtilityCollision(ILo<IGameItem> updatedShip2s, ILo<IGameItem> updatedBullet2s) {
+    this.updatedShip2s = updatedShip2s;
+    this.updatedBullet2s = updatedBullet2s;
   }
 
-  public UtilityCollision setUpdatedShips(ILo<IGameItem> ships) {
-    return new UtilityCollision(ships, this.updatedBullets);
+  public UtilityCollision setUpdatedShip2s(ILo<IGameItem> ships) {
+    return new UtilityCollision(ships, this.updatedBullet2s);
   }
 
-  public UtilityCollision setUpdatedBullet(ILo<IGameItem> bullets) {
-    return new UtilityCollision(this.updatedShips, bullets);
+  public UtilityCollision setUpdatedBullet2(ILo<IGameItem> bullets) {
+    return new UtilityCollision(this.updatedShip2s, bullets);
   }
 
-  public UtilityCollision addBullet(IGameItem bullet) {
-    return new UtilityCollision(this.updatedShips, this.updatedBullets.appendEl(bullet));
+  public UtilityCollision addBullet2(IGameItem bullet) {
+    return new UtilityCollision(this.updatedShip2s, this.updatedBullet2s.appendEl(bullet));
   }
 
-  public UtilityCollision addBullets(ILo<IGameItem> bullets) {
-    return new UtilityCollision(this.updatedShips, this.updatedBullets.append(bullets));
+  public UtilityCollision addBullet2s(ILo<IGameItem> bullets) {
+    return new UtilityCollision(this.updatedShip2s, this.updatedBullet2s.append(bullets));
   }
 }
 
-class CollisionWithBullet implements IPred<IGameItem> {
+class CollisionWithBullet2 implements IPred<IGameItem> {
   IGameItem b;
 
-  CollisionWithBullet(IGameItem b) {
+  CollisionWithBullet2(IGameItem b) {
     this.b = b;
   }
 
@@ -423,11 +423,11 @@ class CollisionWithBullet implements IPred<IGameItem> {
 }
 
 // Increase the size of the bullet and increase the hitCounter
-class SpreadBullets implements IFuncWA<IGameItem> {
+class SpreadBullet2s implements IFuncWA<IGameItem> {
   IGameItem b;
   int counter;
 
-  SpreadBullets(IGameItem b, int counter) {
+  SpreadBullet2s(IGameItem b, int counter) {
     this.b = b;
     this.counter = counter;
   }
@@ -437,22 +437,22 @@ class SpreadBullets implements IFuncWA<IGameItem> {
     int incrSize = 2;
     int maxSize = 10;
 
-    return new Bullet(b.getPos(), b.getVel(), Math.min(maxSize, b.getRadius() + incrSize),
+    return new Bullet2(b.getPos(), b.getVel(), Math.min(maxSize, b.getRadius() + incrSize),
         b.getHitCounter() + 1);
   }
 }
 
 // ref can be anything, here in this function object, 
 // the ref is a IGameItem
-class GenerateBulletWithRef implements IFuncWAIndex<IGameItem> {
+class GenerateBullet2WithRef implements IFuncWAIndex<IGameItem> {
   IGameItem ref;
 
-  GenerateBulletWithRef(IGameItem ref) {
+  GenerateBullet2WithRef(IGameItem ref) {
     this.ref = ref;
   }
 
   public IGameItem apply(int idx) {
-    return new Bullet(this.ref.getPos(),
+    return new Bullet2(this.ref.getPos(),
         this.ref.getVel().explodeDirection(idx, this.ref.getHitCounter() + 2), this.ref.getRadius(),
         this.ref.getHitCounter());
   }
@@ -466,17 +466,17 @@ class Collision implements IFunc2<IGameItem, UtilityCollision, UtilityCollision>
   }
 
   public UtilityCollision apply(IGameItem b, UtilityCollision u) {
-    ILo<IGameItem> updatedShips = los.filter(new CollisionWithBullet(b));
+    ILo<IGameItem> updatedShip2s = los.filter(new CollisionWithBullet2(b));
 
-    if (updatedShips.length() != los.length()) {
-      int howManyBullets = b.getHitCounter() + 2;
-      ILo<IGameItem> spreadBullets = new MtLo<IGameItem>().buildListWithIndex(
-          new GenerateBulletWithRef(new SpreadBullets(b, howManyBullets).apply()), howManyBullets,
+    if (updatedShip2s.length() != los.length()) {
+      int howManyBullet2s = b.getHitCounter() + 2;
+      ILo<IGameItem> spreadBullet2s = new MtLo<IGameItem>().buildListWithIndex(
+          new GenerateBullet2WithRef(new SpreadBullet2s(b, howManyBullet2s).apply()), howManyBullet2s,
           0);
-      return u.setUpdatedShips(updatedShips).addBullets(spreadBullets);
+      return u.setUpdatedShip2s(updatedShip2s).addBullet2s(spreadBullet2s);
     }
     else {
-      return u.addBullet(b);
+      return u.addBullet2(b);
     }
   }
 }
@@ -487,11 +487,11 @@ class MoveAll implements IFunc<IGameItem, IGameItem> {
   }
 }
 
-class GenerateShip implements IFuncWA<IGameItem> {
+class GenerateShip2 implements IFuncWA<IGameItem> {
   int width;
   int height;
 
-  GenerateShip(int width, int height) {
+  GenerateShip2(int width, int height) {
     this.width = width;
     this.height = height;
   }
@@ -500,29 +500,29 @@ class GenerateShip implements IFuncWA<IGameItem> {
     int velocity = 5;
     int edge = 50;
     double calculate_size = (1.0 / 30.0) * this.height;
-    int sizeShip = (int) calculate_size;
+    int sizeShip2 = (int) calculate_size;
     if (new Random().nextInt(2) == 0) {
-      return new Ship(new MyPosn(0,
+      return new Ship2(new MyPosn2(0,
           // Preventing the circle to spawn to much near to the top and bottom edge
-          Math.max(edge, new Random().nextInt(this.height) - edge)), new MyPosn(velocity, 0),
+          Math.max(edge, new Random().nextInt(this.height) - edge)), new MyPosn2(velocity, 0),
           // NOTE: this shouldn't be the way, need a global constant
-          sizeShip);
+          sizeShip2);
     }
     else {
-      return new Ship(new MyPosn(this.width,
+      return new Ship2(new MyPosn2(this.width,
           // Preventing the circle to spawn to much near to the top and bottom edge
-          Math.max(edge, new Random().nextInt(this.height) - edge)), new MyPosn(-velocity, 0),
+          Math.max(edge, new Random().nextInt(this.height) - edge)), new MyPosn2(-velocity, 0),
           // NOTE: this shouldn't be the way, need a global constant
-          sizeShip);
+          sizeShip2);
     }
   }
 }
 
-class GenerateBullet implements IFuncWA<IGameItem> {
+class GenerateBullet2 implements IFuncWA<IGameItem> {
   int width;
   int height;
 
-  GenerateBullet(int width, int height) {
+  GenerateBullet2(int width, int height) {
     this.width = width;
     this.height = height;
   }
@@ -531,7 +531,7 @@ class GenerateBullet implements IFuncWA<IGameItem> {
     int edge = 10;
     int RADIUS_BULLET = 2;
     // NOTE: Change the velocity here.
-    return new Bullet(new MyPosn(this.width / 2, this.height - edge), new MyPosn(0, -3),
+    return new Bullet2(new MyPosn2(this.width / 2, this.height - edge), new MyPosn2(0, -3),
         RADIUS_BULLET, 0);
   }
 }
@@ -562,17 +562,17 @@ class RemoveByIndex implements IPred2<Integer, Integer> {
   }
 }
 
-class MyGame extends World {
+class MyGame2 extends World {
   int WIDTH = 500;
   int HEIGHT = 300;
   int currentTick;
 
   int bullets;
-  int destroyedShip;
-  ILo<IGameItem> currentShips;
-  ILo<IGameItem> currentBullets;
+  int destroyedShip2;
+  ILo<IGameItem> currentShip2s;
+  ILo<IGameItem> currentBullet2s;
 
-  MyGame(int bullets) {
+  MyGame2(int bullets) {
     if (bullets <= 0) {
       throw new IllegalArgumentException(
           "The player cannot start without less or equal 0 bullets.");
@@ -580,55 +580,55 @@ class MyGame extends World {
     this.WIDTH = WIDTH;
     this.HEIGHT = HEIGHT;
     this.currentTick = 1;
-    this.destroyedShip = 0;
-    this.currentShips = new MtLo<IGameItem>().buildList(new GenerateShip(this.WIDTH, this.HEIGHT),
+    this.destroyedShip2 = 0;
+    this.currentShip2s = new MtLo<IGameItem>().buildList(new GenerateShip2(this.WIDTH, this.HEIGHT),
         new Random().nextInt(4));
     this.bullets = bullets;
     // The current bullets on the screen
-    this.currentBullets = new MtLo<IGameItem>();
+    this.currentBullet2s = new MtLo<IGameItem>();
   }
 
-  MyGame(int bullets, int destroyedShip, ILo<IGameItem> currentShips, int currentTick,
-      ILo<IGameItem> currentBullets) {
+  MyGame2(int bullets, int destroyedShip2, ILo<IGameItem> currentShip2s, int currentTick,
+      ILo<IGameItem> currentBullet2s) {
     this.WIDTH = WIDTH;
     this.HEIGHT = HEIGHT;
     this.bullets = bullets;
-    this.destroyedShip = destroyedShip;
-    this.currentShips = currentShips;
+    this.destroyedShip2 = destroyedShip2;
+    this.currentShip2s = currentShip2s;
     this.currentTick = currentTick;
-    this.currentBullets = currentBullets;
+    this.currentBullet2s = currentBullet2s;
   }
 
-  public MyGame onTick() {
-    return this.moveAll().removeOffScreen().checkCollision().incrementGameTick().generateShips();
+  public MyGame2 onTick() {
+    return this.moveAll().removeOffScreen().checkCollision().incrementGameTick().generateShip2s();
   }
 
-  public MyGame checkCollision() {
-    UtilityCollision updatedElements = this.currentBullets.foldr(new Collision(this.currentShips),
+  public MyGame2 checkCollision() {
+    UtilityCollision updatedElements = this.currentBullet2s.foldr(new Collision(this.currentShip2s),
         new UtilityCollision());
-    if (updatedElements.updatedShips instanceof ConsLo) {
-      ILo<IGameItem> newShips = updatedElements.updatedShips;
-      ILo<IGameItem> newBullets = updatedElements.updatedBullets;
-      return new MyGame(this.bullets, this.destroyedShip, newShips, this.currentTick, newBullets);
+    if (updatedElements.updatedShip2s instanceof ConsLo) {
+      ILo<IGameItem> newShip2s = updatedElements.updatedShip2s;
+      ILo<IGameItem> newBullet2s = updatedElements.updatedBullet2s;
+      return new MyGame2(this.bullets, this.destroyedShip2, newShip2s, this.currentTick, newBullet2s);
     }
     else {
-      return new MyGame(this.bullets, this.destroyedShip, this.currentShips, this.currentTick,
-          this.currentBullets);
+      return new MyGame2(this.bullets, this.destroyedShip2, this.currentShip2s, this.currentTick,
+          this.currentBullet2s);
     }
   }
 
-  public MyGame incrementGameTick() {
-    return new MyGame(this.bullets, this.destroyedShip, this.currentShips, this.currentTick + 1,
-        this.currentBullets);
+  public MyGame2 incrementGameTick() {
+    return new MyGame2(this.bullets, this.destroyedShip2, this.currentShip2s, this.currentTick + 1,
+        this.currentBullet2s);
   }
 
   // Generate random ships
-  public MyGame generateShips() {
+  public MyGame2 generateShip2s() {
     if (this.currentTick % 28 == 0) {
-      ILo<IGameItem> newShips = new MtLo<IGameItem>()
-          .buildList(new GenerateShip(this.WIDTH, this.HEIGHT), new Random().nextInt(4));
-      return new MyGame(this.bullets, this.destroyedShip, this.currentShips.append(newShips),
-          this.currentTick, this.currentBullets);
+      ILo<IGameItem> newShip2s = new MtLo<IGameItem>()
+          .buildList(new GenerateShip2(this.WIDTH, this.HEIGHT), new Random().nextInt(4));
+      return new MyGame2(this.bullets, this.destroyedShip2, this.currentShip2s.append(newShip2s),
+          this.currentTick, this.currentBullet2s);
     }
     else {
       return this;
@@ -636,44 +636,44 @@ class MyGame extends World {
   }
 
   // Move all the ships and bullets at every tick
-  public MyGame moveAll() {
-    ILo<IGameItem> movingShips = this.currentShips.map(new MoveAll());
-    ILo<IGameItem> movingBullets = this.currentBullets.map(new MoveAll());
-    return new MyGame(this.bullets, this.destroyedShip, movingShips, this.currentTick,
-        movingBullets);
+  public MyGame2 moveAll() {
+    ILo<IGameItem> movingShip2s = this.currentShip2s.map(new MoveAll());
+    ILo<IGameItem> movingBullet2s = this.currentBullet2s.map(new MoveAll());
+    return new MyGame2(this.bullets, this.destroyedShip2, movingShip2s, this.currentTick,
+        movingBullet2s);
   }
 
   // remove all the ships out of the screen at every thick
-  public MyGame removeOffScreen() {
-    ILo<IGameItem> los = this.currentShips.filter(new OffScreen(this.WIDTH, this.HEIGHT));
-    ILo<IGameItem> lob = this.currentBullets.filter(new OffScreen(this.WIDTH, this.HEIGHT));
-    return new MyGame(this.bullets, this.destroyedShip, los, this.currentTick, lob);
+  public MyGame2 removeOffScreen() {
+    ILo<IGameItem> los = this.currentShip2s.filter(new OffScreen(this.WIDTH, this.HEIGHT));
+    ILo<IGameItem> lob = this.currentBullet2s.filter(new OffScreen(this.WIDTH, this.HEIGHT));
+    return new MyGame2(this.bullets, this.destroyedShip2, los, this.currentTick, lob);
   }
 
   public WorldScene makeScene() {
     // Make a new scene.
     WorldScene s = new WorldScene(this.WIDTH, this.HEIGHT);
     // Show the current number of bullets on the scene
-    s = s.placeImageXY(new TextImage("Bullets: " + this.bullets, Color.black), this.WIDTH - 50, 10);
-    // Show the current number of destroyed Ships on the scene
-    s = s.placeImageXY(new TextImage("Ship: " + this.destroyedShip, Color.black), this.WIDTH - 50,
+    s = s.placeImageXY(new TextImage("Bullet2s: " + this.bullets, Color.black), this.WIDTH - 50, 10);
+    // Show the current number of destroyed Ship2s on the scene
+    s = s.placeImageXY(new TextImage("Ship2: " + this.destroyedShip2, Color.black), this.WIDTH - 50,
         30);
     // Place all the ships on the scene
-    s = this.currentShips.foldr(new PlaceAll(), s);
+    s = this.currentShip2s.foldr(new PlaceAll(), s);
     // Place all the bullets on the scene
-    s = this.currentBullets.foldr(new PlaceAll(), s);
+    s = this.currentBullet2s.foldr(new PlaceAll(), s);
     return s;
   }
 
   // Handle the " " space key,
   // if it's pressed then we remove a bullets and shoot.
   // otherwise we return the current world
-  public MyGame onKeyEvent(String key) {
+  public MyGame2 onKeyEvent(String key) {
     if (key.equals(" ") && this.bullets > 0) {
-      ILo<IGameItem> newBullets = new MtLo<IGameItem>()
-          .buildList(new GenerateBullet(this.WIDTH, this.HEIGHT), 1);
-      return new MyGame(this.bullets - 1, this.destroyedShip, this.currentShips, this.currentTick,
-          this.currentBullets.append(newBullets));
+      ILo<IGameItem> newBullet2s = new MtLo<IGameItem>()
+          .buildList(new GenerateBullet2(this.WIDTH, this.HEIGHT), 1);
+      return new MyGame2(this.bullets - 1, this.destroyedShip2, this.currentShip2s, this.currentTick,
+          this.currentBullet2s.append(newBullet2s));
     }
     else {
       return this;
@@ -686,7 +686,7 @@ class MyGame extends World {
   }
 
   public WorldEnd worldEnds() {
-    if (this.bullets <= 0 && this.currentBullets instanceof MtLo) {
+    if (this.bullets <= 0 && this.currentBullet2s instanceof MtLo) {
       return new WorldEnd(true, this.makeEndScene());
     }
     else {
@@ -705,31 +705,31 @@ class Examples {
   double calc_radius_ship = (1.0 / 30.0) * HEIGHT_GAME;
   int RADIUS_SHIP = (int) calc_radius_ship;
 
-  MyPosn p0 = new MyPosn(0, 0);
-  MyPosn p1 = new MyPosn(250, 250);
-  MyPosn p2 = new MyPosn(500, 500);
-  MyPosn p3 = new MyPosn(1, 0);
-  MyPosn p4 = new MyPosn(252, 250);
-  MyPosn p5 = new MyPosn(503, 500);
+  MyPosn2 p0 = new MyPosn2(0, 0);
+  MyPosn2 p1 = new MyPosn2(250, 250);
+  MyPosn2 p2 = new MyPosn2(500, 500);
+  MyPosn2 p3 = new MyPosn2(1, 0);
+  MyPosn2 p4 = new MyPosn2(252, 250);
+  MyPosn2 p5 = new MyPosn2(503, 500);
 
   // Velocity (only x)
-  MyPosn v0 = new MyPosn(1, 0);
-  MyPosn v1 = new MyPosn(2, 0);
-  MyPosn v2 = new MyPosn(3, 0);
+  MyPosn2 v0 = new MyPosn2(1, 0);
+  MyPosn2 v1 = new MyPosn2(2, 0);
+  MyPosn2 v2 = new MyPosn2(3, 0);
 
-  IGameItem s0 = new Ship(p0, v0, RADIUS_SHIP);
-  IGameItem s1 = new Ship(p1, v1, RADIUS_SHIP);
-  IGameItem s2 = new Ship(p2, v2, RADIUS_SHIP);
-  IGameItem s3 = new Ship(p3, v0, RADIUS_SHIP);
-  IGameItem s4 = new Ship(p4, v1, RADIUS_SHIP);
-  IGameItem s5 = new Ship(p5, v2, RADIUS_SHIP);
+  IGameItem s0 = new Ship2(p0, v0, RADIUS_SHIP);
+  IGameItem s1 = new Ship2(p1, v1, RADIUS_SHIP);
+  IGameItem s2 = new Ship2(p2, v2, RADIUS_SHIP);
+  IGameItem s3 = new Ship2(p3, v0, RADIUS_SHIP);
+  IGameItem s4 = new Ship2(p4, v1, RADIUS_SHIP);
+  IGameItem s5 = new Ship2(p5, v2, RADIUS_SHIP);
 
-  IGameItem b0 = new Bullet(p0, v0, RADIUS_BULLET, 0);
-  IGameItem b1 = new Bullet(p1, v1, RADIUS_BULLET, 0);
-  IGameItem b2 = new Bullet(p2, v2, RADIUS_BULLET, 0);
-  IGameItem b3 = new Bullet(p3, v0, RADIUS_BULLET, 0);
-  IGameItem b4 = new Bullet(p4, v1, RADIUS_BULLET, 0);
-  IGameItem b5 = new Bullet(p5, v2, RADIUS_BULLET, 0);
+  IGameItem b0 = new Bullet2(p0, v0, RADIUS_BULLET, 0);
+  IGameItem b1 = new Bullet2(p1, v1, RADIUS_BULLET, 0);
+  IGameItem b2 = new Bullet2(p2, v2, RADIUS_BULLET, 0);
+  IGameItem b3 = new Bullet2(p3, v0, RADIUS_BULLET, 0);
+  IGameItem b4 = new Bullet2(p4, v1, RADIUS_BULLET, 0);
+  IGameItem b5 = new Bullet2(p5, v2, RADIUS_BULLET, 0);
 
   ILo<IGameItem> mtIGameItem = new MtLo<IGameItem>();
 
@@ -769,10 +769,10 @@ class Examples {
   IFunc<IGameItem, IGameItem> mvA = new MoveAll();
   IPred<IGameItem> oS = new OffScreen(WIDTH_GAME, HEIGHT_GAME);
   IPred2<Integer, Integer> rBI = new RemoveByIndex();
-  IFuncWA<IGameItem> gS = new GenerateShip(WIDTH_GAME, HEIGHT_GAME);
-  IFuncWA<IGameItem> gB = new GenerateBullet(WIDTH_GAME, HEIGHT_GAME);
+  IFuncWA<IGameItem> gS = new GenerateShip2(WIDTH_GAME, HEIGHT_GAME);
+  IFuncWA<IGameItem> gB = new GenerateBullet2(WIDTH_GAME, HEIGHT_GAME);
 
-  IFuncWAIndex<IGameItem> gBWR = new GenerateBulletWithRef(new Bullet(p0, v0, RADIUS_BULLET, 0));
+  IFuncWAIndex<IGameItem> gBWR = new GenerateBullet2WithRef(new Bullet2(p0, v0, RADIUS_BULLET, 0));
 
   // testing the move method
   boolean testMove(Tester t) {
@@ -781,7 +781,7 @@ class Examples {
   }
 
   boolean testMoveAll(Tester t) {
-    IGameItem b0_ = new Bullet(new MyPosn(WIDTH_GAME / 2, HEIGHT_GAME - 10), new MyPosn(0, -6),
+    IGameItem b0_ = new Bullet2(new MyPosn2(WIDTH_GAME / 2, HEIGHT_GAME - 10), new MyPosn2(0, -6),
         RADIUS_BULLET, 0);
     ILo<IGameItem> lob4_ = new ConsLo<IGameItem>(b0_, new ConsLo<IGameItem>(b0_,
         new ConsLo<IGameItem>(b0_, new ConsLo<IGameItem>(b0_, mtIGameItem))));
@@ -791,11 +791,11 @@ class Examples {
 
   // testing generate function object
   boolean testGenerate(Tester t) {
-    Bullet b0_ = new Bullet(new MyPosn(WIDTH_GAME / 2, HEIGHT_GAME - 10), new MyPosn(0, -6),
+    Bullet2 b0_ = new Bullet2(new MyPosn2(WIDTH_GAME / 2, HEIGHT_GAME - 10), new MyPosn2(0, -6),
         RADIUS_BULLET, 0);
     ILo<IGameItem> lob0_ = new ConsLo<IGameItem>(b0_, mtIGameItem);
     return
-    // Generate Bullet
+    // Generate Bullet2
     t.checkExpect(mtIGameItem.buildList(gB, 1), lob0_);
   }
 
@@ -808,7 +808,7 @@ class Examples {
   }
 
   // testing the filter off screen ship method
-  boolean testFilterOffScreenShip(Tester t) {
+  boolean testFilterOffScreenShip2(Tester t) {
     ILo<IGameItem> los0_ = new ConsLo<IGameItem>(s0, new ConsLo<IGameItem>(s1, mtIGameItem));
     return t.checkExpect(los0.filter(oS), los0_) && t.checkExpect(los1.filter(oS), los2);
   }
@@ -841,7 +841,7 @@ class Examples {
   }
 
   // testing remove ship by index
-  boolean testRemoveShipByIndex(Tester t) {
+  boolean testRemoveShip2ByIndex(Tester t) {
     ILo<IGameItem> los0_ = new ConsLo<IGameItem>(s1, new ConsLo<IGameItem>(s2, mtIGameItem));
     ILo<IGameItem> los1_ = new ConsLo<IGameItem>(s3, new ConsLo<IGameItem>(s5, mtIGameItem));
     ILo<IGameItem> los2_ = new ConsLo<IGameItem>(s3, mtIGameItem);
@@ -862,28 +862,28 @@ class Examples {
     return t.checkExpect(new MtLo<IGameItem>().buildListWithIndex(gBWR, 3, 0), lob0_);
   }
 
-  // testing the MyGame constructor
+  // testing the MyGame2 constructor
   boolean testGame(Tester t){
     return
-    t.checkConstructorException(new IllegalArgumentException("The player cannot start without less or equal 0 bullets."), "MyGame", -1)
+    t.checkConstructorException(new IllegalArgumentException("The player cannot start without less or equal 0 bullets."), "MyGame2", -1)
     &&
-    t.checkConstructorException(new IllegalArgumentException("The player cannot start without less or equal 0 bullets."), "MyGame", 0)
+    t.checkConstructorException(new IllegalArgumentException("The player cannot start without less or equal 0 bullets."), "MyGame2", 0)
   ;
   }
 
   // testing explode direction
   boolean testExplodeDirection(Tester t) {
-    return t.checkExpect(new MyPosn(0, 3).explodeDirection(0, 0), new MyPosn(1, 3))
-        && t.checkExpect(new MyPosn(0, 3).explodeDirection(0, 1), new MyPosn(0, 3))
-        && t.checkExpect(new MyPosn(0, 3).explodeDirection(0, 2), new MyPosn(-1, 3))
-        && t.checkExpect(new MyPosn(0, 3).explodeDirection(0, 3), new MyPosn(0, -3));
+    return t.checkExpect(new MyPosn2(0, 3).explodeDirection(0, 0), new MyPosn2(1, 3))
+        && t.checkExpect(new MyPosn2(0, 3).explodeDirection(0, 1), new MyPosn2(0, 3))
+        && t.checkExpect(new MyPosn2(0, 3).explodeDirection(0, 2), new MyPosn2(-1, 3))
+        && t.checkExpect(new MyPosn2(0, 3).explodeDirection(0, 3), new MyPosn2(0, -3));
   }
 
   // testing the big bang method
-  boolean testBigBang(Tester t) {
-    double TICK_RATE = 1.0 / 28.0;
-    int INITIAL_BULLET = 10;
-    MyGame world = new MyGame(INITIAL_BULLET);
-    return world.bigBang(WIDTH_GAME, HEIGHT_GAME, TICK_RATE);
-  }
+  // boolean testBigBang(Tester t) {
+  //   double TICK_RATE = 1.0 / 28.0;
+  //   int INITIAL_BULLET = 10;
+  //   MyGame2 world = new MyGame2(INITIAL_BULLET);
+  //   return world.bigBang(WIDTH_GAME, HEIGHT_GAME, TICK_RATE);
+  // }
 }

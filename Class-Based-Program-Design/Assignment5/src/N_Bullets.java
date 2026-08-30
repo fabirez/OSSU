@@ -868,21 +868,21 @@ class ExamplesGame{
 	}
 
 	// testing the MyGame constructor
-	// boolean testGenerateShip(Tester t){
-	// 	return
-	// 	// MyGame(int bullets, int destroyedShip, ILoShip currentShips, int currentTick, ILoBullet currentBullets){
-	// 	t.checkExpect(new MyGame(10, 0, los0, 30, mtBullet).generateShips(), mtShip) 
-	// 	;
-	// }
+	boolean testGenerateShip(Tester t){
+		return
+		// MyGame(int bullets, int destroyedShip, ILoShip currentShips, int currentTick, ILoBullet currentBullets){
+		t.checkExpect(new MyGame(10, 0, los0, 30, mtBullet).generateShips(), mtShip) 
+		;
+	}
 
 	// testing the big bang method
-	// boolean testBigBang(Tester t) {
-	// 	int          WIDTH =      500;
-	// 	int         HEIGHT =      300;
-	// 	double   TICK_RATE = 1.0/28.0;
-	// 	int INITIAL_BULLET =       10;
-	// 	MyGame world = new MyGame(INITIAL_BULLET);
-	//   return world.bigBang(WIDTH, HEIGHT, TICK_RATE);
-	//  }
+	boolean testBigBang(Tester t) {
+		int          WIDTH =      500;
+		int         HEIGHT =      300;
+		double   TICK_RATE = 1.0/28.0;
+		int INITIAL_BULLET =       10;
+		MyGame world = new MyGame(INITIAL_BULLET);
+	  return world.bigBang(WIDTH, HEIGHT, TICK_RATE);
+	 }
 }
   
