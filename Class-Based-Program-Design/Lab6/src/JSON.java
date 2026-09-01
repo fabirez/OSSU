@@ -14,6 +14,15 @@
 - [x] Extend the visitor pattern on JSONs as needed.
 - [x] A JSONList’s value is the sum of all of its sub-values converted to their number value. 
        Extend JSONToNumber as needed.
+
+## Finders, keepers
+- [x] Implement an IPred<T> interface, which is a function that always returns a boolean.
+      Be sure to extend it with the proper interface.
+
+- [x] Design the findSolutionOrElse method on IList<T>’s,
+      which has the following header: <U> U findSolutionOrElse(IFunc<T, U> convert, IPred<U> pred, U backup).
+      It finds the first element in the list where the result of function applied to that element passes the predicate,
+      and then returns that result. If no such element is found, backup is returned.
 */
 import tester.*;
 

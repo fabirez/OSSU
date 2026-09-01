@@ -16,6 +16,11 @@ interface IFunc<A, R> {
 interface IFunc2<A1, A2, R> {
   R apply(A1 fn, A2 base);
 }
+
+// Represents functions of signature A1 -> Boolean
+interface IPred<T> {
+  boolean apply(T t);
+}
  
 // generic list
 interface IList<T> {
@@ -24,6 +29,10 @@ interface IList<T> {
   <U> IList<U> map(IFunc<T, U> f);
 
   <U> U foldr(IFunc2<T, U, U> f, U base);
+  
+  // It finds the first element in the list where the result of function applied to that element passes the predicate,
+  // and then returns that result. If no such element is found, backup is returned.
+  <U> U findSolutionOrElse(IFunc<T, U> convert, IPred<U> pred, U backup);
 }
 
 class SumInt implements IFunc2<Integer, Integer, Integer>{
@@ -38,10 +47,9 @@ class MtList<T> implements IList<T> {
     return new MtList<U>();
   }
 
-  public <U> U foldr(IFunc2<T, U, U> f, U base)
-  {
-    return base;
-  }
+  public <U> U foldr(IFunc2<T, U, U> f, U base) { return base; }
+
+  public <U> U findSolutionOrElse(IFunc<T, U> convert, IPred<U> pred, U backup) { return backup; }
 }
  
 // non-empty generic list
@@ -62,6 +70,17 @@ class ConsList<T> implements IList<T> {
   {
     return f.apply(this.first,
                     this.rest.foldr(f, base));
+  }
+
+
+  public <U> U findSolutionOrElse(IFunc<T, U> convert, IPred<U> pred, U backup)
+  {
+    U res = convert.apply(this.first);
+    if(pred.apply(res)){
+      return res;
+    }else{
+      return this.rest.findSolutionOrElse(convert, pred, backup);
+    }
   }
 }
 
