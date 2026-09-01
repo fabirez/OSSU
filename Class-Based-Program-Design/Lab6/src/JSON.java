@@ -1,4 +1,5 @@
 /*
+## Let there be JSON
 - [x] Implement the JSONVisitor<T> interface, which is a IFunc<JSON, T> and follows the visitor pattern over JSONs.
 
 - [x] Define a JSONToNumber visitor, which coverts a JSON to its number value.
@@ -8,15 +9,21 @@
       and numbers their value.
 
 - [x] Map over a list of JSON and produce all of their numbers as a test.
+
+## What’s data without a little self-reference?
+- [x] Extend the visitor pattern on JSONs as needed.
+- [x] A JSONList’s value is the sum of all of its sub-values converted to their number value. 
+       Extend JSONToNumber as needed.
 */
 import tester.*;
 
-interface JSONVisitor<R> extends IFunc<JSON, R>
+interface JSONVisitor<R> extends IFunc<JSON, R>, IFunc2<JSON, R, R>
 {
   R applyToBlank(JSONBlank b);
   R applyToNumber(JSONNumber n);
   R applyToBool(JSONBool b);
   R applyToString(JSONString s);
+  R applyToList(JSONList l);
 }
 
 class JSONToNumber implements JSONVisitor<Integer> {
@@ -31,7 +38,9 @@ class JSONToNumber implements JSONVisitor<Integer> {
     }
   }
   public Integer applyToString(JSONString s){ return s.str.length(); }
+  public Integer applyToList(JSONList l){ return l.values.foldr(new JSONToNumber(), 0); }
   public Integer apply(JSON j){ return j.accept(this); }
+  public Integer apply(JSON j, Integer b){ return j.accept(this) + b; }
 }
 
 
@@ -68,6 +77,13 @@ class JSONString implements JSON {
   public <R> R accept(JSONVisitor<R> visitor){ return visitor.applyToString(this); }
 }
 
+//a list of JSON values
+class JSONList implements JSON {
+  IList<JSON> values;
+  JSONList(IList<JSON> values) { this.values = values; }
+  public <R> R accept(JSONVisitor<R> visitor){ return visitor.applyToList(this); }
+}
+
 class ExamplesJSON
 {
   ExamplesJSON(){};
@@ -88,6 +104,8 @@ class ExamplesJSON
   new ConsList<JSON>(bolF,
   new ConsList<JSON>(str,
   new MtList<JSON>())))));
+
+  JSON loj = new JSONList(JSONList);
 
   IList<Integer> expectedList = new ConsList<Integer>(0, 
   new ConsList<Integer>(9,
@@ -110,6 +128,8 @@ class ExamplesJSON
       t.checkExpect(str.accept(jTN), 4)
       &&
       t.checkExpect(JSONList.map(jTN), expectedList)
+      &&
+      t.checkExpect(JSONList.foldr(jTN, 0), 14)
       ;
   }
 }
