@@ -10,9 +10,14 @@
 
 */
 
+// > See the code below
+
 /* Do Now!
 	Design a method in ArrayUtils to capitalize all titles. Which loop form should we use?
 */
+
+
+// > See the code below
 
 
 /* Do Now!
@@ -28,6 +33,7 @@
 	}
 *
 */
+
 // > The original reference will change and every book, in the entire program now have the title uppercase.
 
 
@@ -48,9 +54,6 @@
 
 // > Same reference, same book, but with the new title uppercase.
 */
-
-
-
 
 /* Exercise
 	What goes wrong if we tried removing the old book and adding the new one, as in the first option?
