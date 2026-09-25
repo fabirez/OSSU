@@ -82,12 +82,60 @@ class DequeReverseIterator<T> implements Iterator<T>{
 }
 */
 
+/*
+Do Now!
+	Do this.
+	"We can also define an iterator that takes only the first 𝑛 items from another iterator:"
+*/
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import tester.*;
+/*
+class TakeN<T> implements Iterator<T> {
+  Iterator<T> source;
+  int len;
+  int count;
+  TakeN(Iterator<T> source, int len) {
+    this.source = source;
+    this.len = len;
+    this.count = 0;
+  }
+  public boolean hasNext() {
+    boolean answer = count < len;
+		return this.count < this.len && this.source.hasNext();
+  }
+  public T next() {
+		this.count += 1;
+		return this.source.next();
+  }
+  public void remove() {
+    this.source.remove();
+  }
+}
+**Lecture implementation**
+class TakeN<T> implements Iterator<T> {
+  Iterator<T> source;
+  int howMany;
+  int countSoFar;
+  TakeN(Iterator<T> source, int n) {
+    this.source = source;
+    this.howMany = n;
+    this.countSoFar = 0;
+  }
 
+	public boolean hasNext() {
+		return (this.countSoFar < this.howMany) && this.source.hasNext();
+	}
 
+	public T next() {
+		this.countSoFar = this.countSoFar + 1;
+		return this.source.next();
+	}
+
+  public void remove() {
+    // We can remove an item if our source can remove the item
+    this.source.remove(); // so just delegate to the source
+  }
+}
+*/
 
 /*Do Now!
 class IListIterator<T> implements Iterator<T> {
@@ -123,6 +171,220 @@ class IListIterator<T> implements Iterator<T> {
   // In MtList<T>
 	public asCons() { throw new RuntimeException("An empty list cannot be cons."); }
  */
+
+/* Exercise
+	Define a higher-order iterator that takes two iterators and alternates items from each of them.
+*/
+
+/*
+//ASSUME: they got the same length
+class AlternateIterator<T> implements Iterator<T> {
+  Iterator<T> source1;
+  Iterator<T> source2;
+  int len;
+  int count;
+  Iterator<T> curr;
+
+  AlternateIterator(Iterator<T> source1, Iterator<T> source2, int len) {
+    this.source1 = source1;
+    this.source2 = source2;
+    this.len = len;
+    this.count = 0;
+		this.curr = source1;
+  }
+
+  public boolean hasNext() {
+			return this.count < this.len && this.curr.hasNext();
+  }
+
+  public T next() {
+		T answer = this.curr.next();
+		this.count += 1;
+		if(count % 2 == 0){
+			this.curr = this.source1;
+		}else{
+			this.curr = this.source2;
+		}
+		return answer;
+  }
+
+  public void remove() {
+    this.curr.remove();
+  }
+}
+*/
+
+
+/*Do Now!
+	Try implementing a PreOrderIterator for a tree. The code is very similar to BreadthFirstIterator.
+*/
+
+/*
+class PreOrderIterator<T> implements Iterator<T> {
+  Deque<IBinaryTree<T>> worklist;
+  PreOrderIterator(IBinaryTree<T> source) {
+    this.worklist = new Deque<IBinaryTree<T>>();
+    this.addIfNotLeaf(source);
+  }
+  // EFFECT: only adds the given binary-tree if it's not a leaf
+  void addIfNotLeaf(IBinaryTree bt) {
+    if (bt.isNode()) {
+      this.worklist.addAtHead(bt); 
+    }
+  }
+  public boolean hasNext() {
+    // we have a next item if the worklist isn't empty
+    return this.worklist.size() > 0;
+  }
+  public T next() {
+    // Get (and remove) the first item on the worklist --
+    // and we know it must be a BTNode
+    BTNode<T> node = this.worklist.removeAtHead().asNode();
+		// Add the children of the node to the head of the list
+    this.addIfNotLeaf(node.right); 
+    this.addIfNotLeaf(node.left); 
+    // return the answer
+    return node.data;
+  }
+	public void remove() {
+    throw new UnsupportedOperationException("Don't do this!");
+  }
+}
+*/
+
+/*Exercise
+	Try implementing post-order and in-order traversals as iterators.
+	They are somewhat subtler than the two we have done so far; in particular,
+	figuring out what to add to the worklist is tricky.
+*/
+
+/*
+ NOTE: Not tested
+class PostOrderIterator<T> implements Iterator<T> {
+  Deque<IBinaryTree<T>> worklist;
+  PreOrderIterator(IBinaryTree<T> source) {
+    this.worklist = new Deque<IBinaryTree<T>>();
+    this.addIfNotLeaf(source);
+  }
+  // EFFECT: only adds the given binary-tree if it's not a leaf
+	// Build recursively the worklist, until we found the leaf.
+  void addIfNotLeaf(IBinaryTree bt) {
+    if (bt.isNode()) {
+      this.worklist.addAtHead(bt); 
+			this.addIfNotLeaf(bt.getRightNode());
+			this.addIfNotLeaf(bt.getLeftNode());
+    }
+  }
+  public boolean hasNext() {
+    // we have a next item if the worklist isn't empty
+    return this.worklist.size() > 0;
+  }
+  public T next() {
+    // Get (and remove) the first item on the worklist --
+    // and we know it must be a BTNode
+    BTNode<T> node = this.worklist.removeAtHead().asNode();
+    // return the answer
+    return node.data;
+  }
+	public void remove() {
+    throw new UnsupportedOperationException("Don't do this!");
+  }
+}
+
+ NOTE: Not tested
+class  InOrderIterator<T> implements Iterator<T> {
+  Deque<IBinaryTree<T>> worklist;
+  PreOrderIterator(IBinaryTree<T> source) {
+    this.worklist = new Deque<IBinaryTree<T>>();
+    this.addIfNotLeaf(source);
+  }
+
+  // EFFECT: only adds the given binary-tree if it's not a leaf
+  void addIfNotLeaf(IBinaryTree bt) {
+    if (bt.isNode()) {
+      this.worklist.addAtHead(bt); 
+    }
+  }
+
+  // EFFECT: add the given bt before the given refNode
+  void AddNodeAfter(IBinaryTree bt, BTNode<T> refNode) {
+    if (bt.isNode()) {
+      this.worklist.addAfter(bt, refNode);
+    }
+  }
+
+  // EFFECT: add the given bt after the given refNode
+  void AddNodeBefore(IBinaryTree bt, BTNode<T> refNode) {
+    if (bt.isNode()) {
+      this.worklist.addBefore(bt, refNode); 
+    }
+  }
+
+  public boolean hasNext() {
+    // we have a next item if the worklist isn't empty
+    return this.worklist.size() > 0;
+  }
+  public T next() {
+    // Get (and remove) the first item on the worklist --
+		// and we know it must be a BTNode
+    BTNode<T> node = this.worklist.getHead();
+		// Add the children of the node to the head of the list
+    this.addBefore(node.left, node); 
+    this.addAfter(node.right, node); 
+		// Remove the first item on the worklist
+		// and we know it must be a BTNode
+    BTNode<T> headNode = this.worklist.removeAtHead().asNode();
+    // return the answer
+    return node.data;
+  }
+	public void remove() {
+    throw new UnsupportedOperationException("Don't do this!");
+  }
+}
+
+	Not tested beacuse there is no data about "BTNode", "IBinaryTree"
+ */
+
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import tester.*;
+
+//ASSUME: they got the same length
+class AlternateIterator<T> implements Iterator<T> {
+  Iterator<T> source1;
+  Iterator<T> source2;
+  int len;
+  int count;
+  Iterator<T> curr;
+
+  AlternateIterator(Iterator<T> source1, Iterator<T> source2, int len) {
+    this.source1 = source1;
+    this.source2 = source2;
+    this.len = len;
+    this.count = 0;
+		this.curr = source1;
+  }
+
+  public boolean hasNext() {
+			return this.count < this.len && this.curr.hasNext();
+  }
+
+  public T next() {
+		T answer = this.curr.next();
+		this.count += 1;
+		if(count % 2 == 0){
+			this.curr = this.source1;
+		}else{
+			this.curr = this.source2;
+		}
+		return answer;
+  }
+
+  public void remove() {
+    this.curr.remove();
+  }
+}
 
 interface IFunc<T, U>
 {
@@ -164,6 +426,7 @@ class IListIterator<T> implements Iterator<T> {
     throw new UnsupportedOperationException("Don't do this!");
   }
 }
+
 
 class ArrayListIterator<T> implements Iterator<T> {
   // the list of items that this iterator iterates over
@@ -272,91 +535,6 @@ class MtList<T> implements IList<T>
 	public IList<T> add(T t){ return new ConsList<T>(t, this); }
 }
 
-
-
-
-class Deque<T> implements Iterable<T>{
-	ANode<T> header;
-	Deque(){ this.header=new Sentinel<T>(); }
-	Deque(ANode<T> header)
-	{
-		if(header instanceof Sentinel){
-			this.header=header; 
-		}else{
-			throw new IllegalArgumentException("Dequee can only accept sentinel as header.");
-		}
-	}
-
-	public Iterator<T> iterator() { return new DequeForwardIterator<T>(this.header.next); }
-	public Iterator<T> iteratorReverse() { return new DequeReverseIterator<T>(this.header.prev); }
-	public void allUp(IFunc1<T> fn)
-	{
-		for(T t: this)
-		{
-			t = fn.apply(t);
-		}
-	}
-
-	public Deque<T> allUpReverse(IFunc1<T> fn)
-	{
-		ANode<T> newHeader = new Sentinel<T>();
-		Deque<T> newDeque = new Deque<T>(newHeader);
-		Iterator<T> iterator = this.iteratorReverse();
-		ANode<T> prev = newHeader;
-		while( iterator.hasNext() )
-		{
-			T t = iterator.next();
-			if(prev instanceof Sentinel){
-				newHeader.next = new Node<T>(t);
-				prev = newHeader.next;
-				prev.prev = newHeader;
-			}else{
-				System.out.println(t);
-				prev.next = new Node<T>(t);
-				prev.prev = prev;
-				prev = prev.next;
-			}
-		}
-		// Setting last node, pointing to the header.
-		prev.next = newHeader;
-
-		return newDeque;
-	}
-}
-
-
-abstract class ANode<T>{
-	ANode<T> next; ANode<T> prev;
-
-	ANode(ANode<T> next, ANode<T> prev)
-	{
-		this.next=next;
-		this.prev=prev;
-	}
-	abstract Node<T> asNode();
-	abstract T getData();
-}
-
-class Node<T> extends ANode<T>{
-	T data;
-
-	Node(T data)
-	{
-		super(null, null);
-		this.data = data;
-	}
-	Node<T> asNode(){ return this; }
-	T getData(){ return this.data; }
-}
-
-
-class Sentinel<T> extends ANode<T>{
-	// a constructor that takes zero arguments, and initializes the next and prev fields of the Sentinel to the Sentinel itself.
-	Sentinel(){ super(null, null); }
-	Node<T> asNode(){ throw new RuntimeException("Sentinel is not a node"); }
-	T getData(){  throw new RuntimeException("Sentinel has no data"); }
-}
-
 class Up implements IFunc1<String>
 {
 	public String apply(String s) { return s.toUpperCase(); }
@@ -454,5 +632,29 @@ class ExamplesIterator{
 		t.checkExpect(second.next.getData(), "bcd");
 		ANode<String> third = second.next;
 		t.checkExpect(third.next.getData(),  "abc");
+
+
+		// Alternate Iterator
+		IList<Integer> lon1 = new ConsList<Integer>(1, 
+		new ConsList<Integer>(2, 
+		new ConsList<Integer>(3, 
+		new ConsList<Integer>(4, 
+		new MtList<Integer>()))));
+
+		IList<Integer> lon2 = new ConsList<Integer>(4, 
+		new ConsList<Integer>(5, 
+		new ConsList<Integer>(6, 
+		new ConsList<Integer>(7, 
+		new MtList<Integer>()))));
+
+		Iterator<Integer> aI = new AlternateIterator<Integer>(lon1.iterator(), lon2.iterator(), 4);
+
+		Integer sum = 0;
+		while(aI.hasNext()){
+			Integer el = aI.next();
+			sum += el;
+		}
+
+		t.checkExpect(sum, 12);
 	}
 }
