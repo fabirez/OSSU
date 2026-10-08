@@ -3,6 +3,7 @@ import tester.*;
 import javalib.impworld.*;
 import javalib.worldimages.*;
 import java.awt.Color;
+import java.util.Random;
 
 interface IPred<T>
 {
@@ -49,7 +50,7 @@ class Tile {
   void drawAt(int col, int row, WorldScene s) 
 	{
 		// return this.draw().movePinhole(new Posn(col * 100, row * 100));
-		s.placeImageXY(this.draw(),col * this.WIDTH, row * this.HEIGHT);
+		s.placeImageXY(this.draw(), col * this.WIDTH, row * this.HEIGHT);
 	}
 }
  
@@ -67,7 +68,8 @@ class FifteenGame extends World {
 	ArrayList<Integer> rightIdxs;
 	// rapresent the availables moves
 	ArrayList<Integer> availableMoves;
-	
+	ArrayList<ArrayList<Integer>> presets=this.generatePresets();
+
 	FifteenGame()
 	{
 		this.tiles = this.generateBoard();
@@ -86,33 +88,70 @@ class FifteenGame extends World {
 		return newArr;
 	}
 
+
+
+	// produce an array of integer, that rapresents the values of the tils.
+	// ArrayList<Integer> generatePresetOfValues()
+	// {
+	// 	ArrayList<Integer> res =  new ArrayList<Integer>();
+	// 	for(
+	// 	int i = 1;
+	// 	i <= 16;
+	// 	i = i + 1)
+	// 	{
+	// 		res.add(i);
+	// 	}
+	// 	return res;
+	// }
+
+
+	// presets of preset
+	// a preset is just an arrray of integer, that rapresent the value of the tile
+	ArrayList<ArrayList<Integer>> generatePresets()
+	{
+		ArrayList<ArrayList<Integer>> vals = new ArrayList<ArrayList<Integer>>();
+
+		ArrayList<Integer> val1 = new ArrayList<Integer>();
+		val1.add(13);  val1.add(2); val1.add(10); val1.add(3);
+		 val1.add(1); val1.add(12);  val1.add(8); val1.add(4);
+		 val1.add(5);  val1.add(0);  val1.add(9); val1.add(6);
+		val1.add(15); val1.add(14); val1.add(11); val1.add(7);
+
+		ArrayList<Integer> val2 = new ArrayList<Integer>();
+		 val2.add(6); val2.add(13);  val2.add(7); val2.add(10);
+		 val2.add(8);  val2.add(9); val2.add(11);  val2.add(0);
+		val2.add(15);  val2.add(2); val2.add(12);  val2.add(5);
+		val2.add(14);  val2.add(3);  val2.add(1);  val2.add(4);
+
+		ArrayList<Integer> val3 = new ArrayList<Integer>();
+		val3.add(12); val3.add(1); val3.add(2); val3.add(5);
+		val3.add(11); val3.add(6); val3.add(5); val3.add(8);
+		val3.add(7); val3.add(10); val3.add(9); val3.add(4);
+		val3.add(0); val3.add(13); val3.add(14); val3.add(3);
+
+		vals.add(val1); vals.add(val2); vals.add(val3);
+		return vals;
+	}
+
 	ArrayList<ArrayList<Tile>> generateBoard()
 	{
-	ArrayList<ArrayList<Tile>> res =  new ArrayList<ArrayList<Tile>>();
-		for(
-		int y = 0;
-		y < 4;
-		y = y + 1)
-		{
-			ArrayList<Tile> row = new ArrayList<Tile>();
-			for(
-			int x = 0; 
-			x < 4; 
-			x = x + 1)
-			{
-				// Calculate the val of the tile.
-				// Based on the current row and col, 
-				// adding 1, beacuse of the index 
-				// and multiply by 4 since, we got only 4 rows.
-				int val = 4 * y + x + 1;
+		ArrayList<ArrayList<Tile>> res =  new ArrayList<ArrayList<Tile>>();
+		// Choose a random preset 
+		ArrayList<Integer> preset = this.presets.get(new Random().nextInt(3));
 
-				if(val == 16){
-					row.add(new Tile(0, x, y));
-				}else{
-					row.add(new Tile(val, x, y));
-				}
+		ArrayList<Tile> row = new ArrayList<Tile>();
+
+		for(int i = 0;
+		i < preset.size();
+		i = i + 1)
+		{
+			int val = preset.get(i);
+			row.add(new Tile(val, i % 4, (int) Math.floor(i / 4)));
+			if(val == 0){ this.idxHole = i; }
+			if((i + 1) % 4 == 0){
+				res.add(row);
+			  row = new ArrayList<Tile>();
 			}
-			res.add(row);
 		}
 		return res;
 	}
@@ -129,21 +168,6 @@ class FifteenGame extends World {
 		}
 		return scene;
 	}
-
-  // draws the game
-  public WorldScene makeScene2() { 
-		WorldScene scene = new WorldScene(this.WIDTH, this.HEIGHT);
-		Tile t = this.tiles.get(0).get(0);
-		t.drawAt(t.col, t.row, scene);
-		return scene;
-	}
-
-	// 3
-	// 3 - 1 (andiamo sopra) edge di sopra=11
-	// 11 - diff from 15 (3) - currIdx  = idxOfNextMoveTop.
-	// If the move is not good, then the idx doesn't exist.
-	// example, fi we go 1 down from 3, we have no 4 index from the arr.
-	// example, fi we go 1 up from 0, we have no -1 index from the arr.
 
 	// produce the edge of the give indx.
 	// (the most right idx tile)
@@ -253,37 +277,16 @@ class FifteenGame extends World {
 
 		return movesIdx;
 	}
-
-
-	// How can i take the empty box ?
-	// ArrayList<ArrayList<Tile>>
-	// Iteration every time ?
-	// Or, i can have a ref inside my game.
-	// This ref, is just an idx.
-	// Ed obbliga, che il gioco inizia con la tile vuota
-	// in basso a destra.
-	//     ....|	
-	// ....[12]|
-	// [15][  ]|
-	//
-	// prendere x-1 x+1
-	// prendere y-1  y+1
-	// Se sono validi (>= 0 && <= 3)
-	// Allora, possiamo spostarci.
-	// E posisamo usare l'indice come garanzia, senza
-	// aver bisongo di capire che valore è il tile.
-	// O a che posizione sta. (Anche se l'abbiamo appena 
-	// usata per calcolare
 	
 	// produce an array rapresenting the row and the idx in that row,
 	// based on the given idx (0, 15) 
 	public ArrayList<Integer> getRowAndIdx(int thatIdx)
 	{
 		ArrayList<Integer> arr = new ArrayList<Integer>();
-		int x = thatIdx / 4;
+		double x = (float)thatIdx / 4;
 		int row  = (int) Math.floor(x);
 		double dec = x - Math.floor(x);
-		int idx = (int) dec * 4;
+		int idx = (int) (dec * 4);
 
 		arr.add(row);
 		arr.add(idx);
@@ -292,20 +295,21 @@ class FifteenGame extends World {
 
 	// swap the given tile with the hole in the board (tiles)
 	public void swap(int selectedTileIdx){
-		ArrayList<Integer> x = getRowAndIdx(selectedTileIdx);
-		int xRow = x.get(0);
-		int xIdx = x.get(1);
+		ArrayList<Integer> tilePos = getRowAndIdx(selectedTileIdx);
+		int tileRow = tilePos.get(0);
+		int tileCol = tilePos.get(1);
 
-		ArrayList<Integer> y = getRowAndIdx(this.idxHole);
-		int yRow = y.get(0);
-		int yIdx = y.get(1);
+		ArrayList<Integer> holePos = getRowAndIdx(this.idxHole);
+		int holeRow = holePos.get(0);
+		int holeCol = holePos.get(1);
 
-		Tile selectedTile = this.tiles.get(xRow).get(xIdx);
-		Tile hole = this.tiles.get(yRow).get(yIdx);
+		Tile selectedTile = this.tiles.get(tileRow).get(tileCol);
 
-		Tile temp = hole;
-		hole = selectedTile;
-		selectedTile = temp;
+		Tile newTile = new Tile(selectedTile.value, holeCol, holeRow);
+		Tile newHole = new Tile(0, tileCol, tileRow);
+
+		this.tiles.get(tileRow).set(tileCol, newHole);
+		this.tiles.get(holeRow).set(holeCol, newTile);
 
 		this.idxHole = selectedTileIdx;
 	}
@@ -315,61 +319,64 @@ class FifteenGame extends World {
     // needs to handle up, down, left, right to move the hole
     // extra: handle "u" to undo moves
 
-
-		// [left, right, top, bot]
+		// [left, right, up, down]
 		//   0     1      2    3  
 		if(k.equals("left") && this.availableMoves.get(0) != -1){
 			int selectedTile = this.availableMoves.get(0);
 			// Swap the hole with the current tile
 			swap(selectedTile);
-			// Compute the new possible moves
-			possibleMoves();
-			// Draw them on the screen
-			// makeScene();
-			makeScene2();
 		}
 
 		if(k.equals("right") && this.availableMoves.get(1) != -1){
 			int selectedTile = this.availableMoves.get(1);
 			// Swap the hole with the current tile
 			swap(selectedTile);
-			// Compute the new possible moves
-			possibleMoves();
-			// Draw them on the screen
-			makeScene();
 		}
 
-		if(k.equals("top") && this.availableMoves.get(2) != -1){
+		if(k.equals("up") && this.availableMoves.get(2) != -1){
 			int selectedTile = this.availableMoves.get(2);
 			// Swap the hole with the current tile
 			swap(selectedTile);
-			// Compute the new possible moves
-			possibleMoves();
-			// Draw them on the screen
-			makeScene();
 		}
 
-		if(k.equals("bot") && this.availableMoves.get(3) != -1){
+		if(k.equals("down") && this.availableMoves.get(3) != -1){
 			int selectedTile = this.availableMoves.get(3);
 			// Swap the hole with the current tile
 			swap(selectedTile);
-			// Compute the new possible moves
-			possibleMoves();
-			// Draw them on the screen
+		}
+
+		// Compute the new possible moves
+		this.availableMoves =	possibleMoves();
+		// Draw them on the screen
+		if(this.checkVictory()){
+			this.endOfWorld("Game over");
+		}else{
 			makeScene();
 		}
-		
-		// if(selectedTile.val === oneof arrTiles)
-		// {
-		// 	// Swap the hole with the current tile
-		// 	swap(selectedTile);
-		// 	// Compute the new possible moves
-		// 	possibleMoves()
-		// 	// Draw them on the screen
-		// 	makeScene()
-		// }
   }
 
+	public boolean checkVictory(){
+		for(
+		int y = 0;
+		y < 4;
+		y = y + 1)
+		{
+			for(
+			int x = 0; 
+			x < 4; 
+			x = x + 1)
+			{
+				// Calculate the val of the tile.
+				// Based on the current row and col,
+				// adding 1, beacuse of the index
+				// and multiply by 4 since, we got only 4 rows.
+				int val = 4 * y + x + 1;
+				if(val == 16) { val = 0; }
+				if(val != this.tiles.get(y).get(x).value) { return false; }
+			}
+		}
+		return true;
+	}
 }
 
 class Utility{
@@ -444,15 +451,71 @@ class ExamplesUtility{
 	}
 }
 
+
+
+
 class ExampleFifteenGame {
   void testGame(Tester t) {
     FifteenGame g = new FifteenGame();
     g.bigBang(200, 200);
   }
+}
 
 	// NOTE: You can delete this, 
 	// implentation of the possibleMove method, with the argument
 	// only for testing purpose, now donsn't exist anymore.
+
+	// void testWinner(Tester t){
+	// 	ArrayList<ArrayList<Integer>> winnerTiles = new ArrayList<ArrayList<Integer>>();
+	// 	for(
+	// 	int y = 0;
+	// 	y < 4;
+	// 	y = y + 1)
+	// 	{
+	// 		ArrayList<Integer> row = new ArrayList<Integer>();
+	// 		for(
+	// 		int x = 0; 
+	// 		x < 4; 
+	// 		x = x + 1)
+	// 		{
+	// 			// Calculate the val of the tile.
+	// 			// Based on the current row and col,
+	// 			// adding 1, beacuse of the index
+	// 			// and multiply by 4 since, we got only 4 rows.
+	// 			int val = 4 * y + x + 1;
+	// 			if(val == 16) {
+	// 				row.add(0);
+	// 			}else{
+	// 				row.add(val);
+	// 			}
+	// 		}
+	// 			winnerTiles.add(row);
+	// 		}
+	//
+	// 	ArrayList<Integer> winnerTiles1Row = new ArrayList<Integer>();
+	// 	winnerTiles1Row.add(1); winnerTiles1Row.add(2); winnerTiles1Row.add(3); winnerTiles1Row.add(4);
+	// 	t.checkExpect(winnerTiles.get(0), winnerTiles1Row);
+	//
+	// 	ArrayList<Integer> winnerTiles2Row = new ArrayList<Integer>();
+	// 	winnerTiles2Row.add(5); winnerTiles2Row.add(6); winnerTiles2Row.add(7); winnerTiles2Row.add(8);
+	// 	t.checkExpect(winnerTiles.get(1), winnerTiles2Row);
+	//
+	// 	ArrayList<Integer> winnerTiles3Row = new ArrayList<Integer>();
+	// 	winnerTiles3Row.add(9); winnerTiles3Row.add(10); winnerTiles3Row.add(11); winnerTiles3Row.add(12);
+	// 	t.checkExpect(winnerTiles.get(2), winnerTiles3Row);
+	//
+	// 	ArrayList<Integer> winnerTiles4Row = new ArrayList<Integer>();
+	// 	winnerTiles4Row.add(13); winnerTiles4Row.add(14); winnerTiles4Row.add(15); winnerTiles4Row.add(0);
+	// 	t.checkExpect(winnerTiles.get(3), winnerTiles4Row);
+	//
+	// 	ArrayList<ArrayList<Integer>> winnerTiles_ = new ArrayList<ArrayList<Integer>>();
+	// 	winnerTiles_.add(winnerTiles1Row); winnerTiles_.add(winnerTiles2Row);
+	// 	winnerTiles_.add(winnerTiles3Row); winnerTiles_.add(winnerTiles4Row);
+	// 	t.checkExpect(winnerTiles, winnerTiles_);
+	//
+	// 	t.checkExpect(new FifteenGame().checkVictory(winnerTiles), true);
+	// 	t.checkExpect(new FifteenGame().checkVictory(winnerTiles_), true);
+	// }
 
 	// void testPossibleMove(Tester t){
 	//    FifteenGame g = new FifteenGame();
@@ -478,4 +541,4 @@ class ExampleFifteenGame {
 	// 	e4.add(5); e4.add(7); e4.add(2); e4.add(10);
 	// 	t.checkExpect(g.possibleMoves(6), e4);
 	// }
-}
+
