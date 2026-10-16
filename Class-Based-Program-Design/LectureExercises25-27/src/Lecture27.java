@@ -35,3 +35,17 @@
 // > so it's (1+1)
 // > n * (1+1) + (1+1)
 
+/* To Do!
+	When do the best cases and worst cases happen for insertion-sort?
+	Describe the inputs that lead to these cases.
+*/
+
+// Best case when the input is already sorted. [1,2,3,4]
+// Worst case when the input is reverse sorted. [4,3,2,1]
+
+/*Do Now!
+	What are the best and worst cases for findMinIndex?
+	When do the best cases and worst cases happen for selection-sort? Describe the inputs that lead to these cases.
+*/
+	
+// > They are the same, beacuse the loop goes on also if we have found the minIndex at first.
