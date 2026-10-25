@@ -28,6 +28,118 @@
 // > And the indexes inisde the row (cols), rapresents the positions of other edges and 
 // > if there are any edges with a weight or not.
 
+/*Do Now!
+	How can we tell when two vertices of the graph are “the same”?
+	Which notion of equality is most appropriate here?
+*/
+
+// > By comparing the address memory of each instance 
+// > The most appropriate notion is the native `==` here.
+
+/*Do Now!
+	Why can we not just simplify the if statement to return (e.to == dest) || e.to.hasPathTo(dest)?
+*/
+
+// > Beacuse it will stop the loop, in any case (if we found the veritx or if we don't) and we want ideally to stop it only if we find that.
+
+/*Do Now!
+	Will this code always work? Give an explanation of why, or an example graph that breaks it.
+*/
+
+// > No, it will not always work. Beacuse what happens if a Node is not 'netowrked' to the chaing of edge by the first node ?
+/*
+    A -> B -> D -> E
+    ^
+    |
+    C
+*/
+
+/*Do Now!
+	Why are C and D “backwards” in the worklist?
+*/
+// > Simple beacuse as the method says `addAtHead`, we add the new element at head 
+// > so the last element in the given list become the first
+
+/*Do Now!
+	Trace through the evaluation of this method,
+	trying to find a path between A and C.
+	Which nodes, if any, are left over in the worklist?
+*/
+
+
+
+/*
+// In Graph
+boolean hasPathBetween(Vertex from, Vertex to) {
+  Deque<Vertex> alreadySeen = new Deque<Vertex>();
+  Deque<Vertex> worklist = new Deque<Vertex>();
+ 
+  // Initialize the worklist with the from vertex
+  worklist.addAtHead(from);
+  // As long as the worklist isn't empty...
+  while (!worklist.isEmpty()) {
+    Vertex next = worklist.removeFromHead();
+    if (next.equals(to)) {
+      return true; // Success!
+    }
+    else if (alreadySeen.contains(next)) {
+      // do nothing: we've already seen this one
+    }
+    else {
+      // add all the neighbors of next to the worklist for further processing
+      for (Edge e : next.outEdges) {
+        worklist.addAtHead(e.to);
+      }
+      // add next to alreadySeen, since we're done with it
+      alreadySeen.addAtHead(next);
+    }
+  }
+  // We haven't found the to vertex, and there are no more to try
+  return false;
+}
+*/
+
+// 1. Starts with worklist: [], alreadySeen: []
+// 2. Add A in the worklist: [A]
+// 3. Since the worklist is not empty, we are in the while loop,
+//		and remove A from the worklist 
+//			`worklist:[]` next = A
+// 4. Since A isn't the node we are looking for, and it's not in already seen.
+//		We add all 
+//			the neighbords to the worklist:[B] 
+//			and A to alreadySeen:[A]
+// 5. `worklist=[B]` is not empty, another iteration of the loop
+//		and remove B from it
+//			`worklist:[]` next = B
+// 6. Since B isn't the node we are looking for, and it's not in already seen.
+//		We add all 
+//			the neighbords to the workList:[D, C]
+//			and B to alreadySeen:[B, A]
+// 7. `worklist=[D, C]` is not empty, another iteration of the loop
+//		and remove D from it
+//			`worklist:[C]` next = D
+// 8. Since D isn't the node we are looking for, and it's not in already seen.
+//		We add all 
+//			the neighbords to the worklist (none)
+//			and D to alreadySeen:[D, B, A]
+//
+// 9. `worklist=[C]` is not empty, another iteration of the loop
+//		and remove C from it
+//			`worklist:[]` next = C
+// 10. Since D is the node we are looking for, return true.
+
+
+/*Exercise
+	Extend the code above so that instead of merely returning true,
+	it returns a list of the vertices along the path from the source to the destination.
+*/
+
+
+
+
+
+
+import java.util.Iterator;
 import tester.*;
 
 interface IFunc<A, R> {
@@ -66,19 +178,13 @@ class FirstConc implements IFunc2<IList<Edge>, IList<Edge>, IList<Edge>>{
 class SameVertex implements IPred<Edge>{
 	Vertex v;
 	SameVertex(Vertex v){ this.v = v; }
-	public boolean apply(Edge e){ 
+	public boolean apply(Edge e){ return e.to == this.v; }
+}
 
-		System.out.println("Vertex to find in fobj");
-		System.out.println(this.v);
-
-		System.out.println("Edge out:");
-		System.out.println(e.to);
-
-		System.out.println("Confrontation");
-		System.out.println(e.to == this.v);
-		System.out.println("");
-		return e.to == this.v; 
-	}
+class SameNode implements IPred<Vertex>{
+	Vertex v;
+	SameNode(Vertex v){ this.v = v; }
+	public boolean apply(Vertex v1){ return v1 == this.v; }
 }
 
 class HasEdgeOut implements IPred<Vertex>{
@@ -87,8 +193,10 @@ class HasEdgeOut implements IPred<Vertex>{
 	public boolean apply(Vertex v){ return v.outEdges.some(new SameVertex(this.vOut)); }
 }
 
-interface IList<T>
+interface IList<T> extends Iterable<T>
 { 
+	boolean isCons();
+	ConsLo<T> asCons();
 	int length();
 	T getFirst();
 	IList<T> getRest();
@@ -99,6 +207,27 @@ interface IList<T>
 	boolean some(IPred<T> pred);
 	// Return the element at the given idx
 	T get(int idx);
+	IList<T> add(T el);
+}
+
+class IListIterator<T> implements Iterator<T> {
+  IList<T> items;
+  IListIterator(IList<T> items) {
+    this.items = items;
+  }
+
+  public boolean hasNext() {
+    return this.items.isCons();
+  }
+  public T next() {
+		ConsLo<T> itemsAsCons = this.items.asCons();
+		T answer = itemsAsCons.first;
+		this.items = itemsAsCons.rest;
+		return answer;
+  }
+  public void remove() {
+    throw new UnsupportedOperationException("Don't do this!");
+  }
 }
 
 class ConsLo<T> implements IList<T>{
@@ -110,6 +239,9 @@ class ConsLo<T> implements IList<T>{
 		this.rest = rest;
 	}
 
+	public Iterator<T> iterator() { return new IListIterator<T>(this); }
+	public boolean isCons() { return true; }
+	public ConsLo<T> asCons() { return this; }
 	public int length(){ return 1 + this.rest.length(); }
 	public T getFirst(){ return this.first; }
 	public IList<T> getRest(){ return this.rest; }
@@ -158,11 +290,15 @@ class ConsLo<T> implements IList<T>{
 		}
 	}
 
+	public IList<T> add(T el) { return new ConsLo<T>(el, this); }
 	
 }
 
 class MtLo<T> implements IList<T>{
 	MtLo(){}
+  public Iterator<T> iterator() { return new IListIterator<T>(this); }
+	public boolean isCons() { return false; }
+	public ConsLo<T> asCons() { throw new RuntimeException("An empty list cannot be cons."); }
 	public int length(){ return 0; }
 	public T getFirst(){ throw new RuntimeException("An empty list dosn't have any first."); }
 	public IList<T> getRest(){ throw new RuntimeException("An empty list dosn't have any rest."); }
@@ -176,6 +312,7 @@ class MtLo<T> implements IList<T>{
 		// return null; Or we can return null.
 	}
 	public boolean some(IPred<T> pred) { return false; }
+	public IList<T> add(T el) { return new ConsLo<T>(el, new MtLo<T>()); }
 }
 
 
@@ -187,6 +324,17 @@ class Vertex {
 
 	IList<Edge> getAllEdge(){ return this.outEdges; }
 	boolean hasEdgeOut(Vertex v){ return this.outEdges.some(new SameVertex(v)); }
+	// Implementation by the lecture
+	boolean hasPathTo(Vertex dest, IList<Vertex> saw) {
+		for (Edge e : this.outEdges) {
+			if( saw.some(new SameNode(e.to)) ) return false;
+			if (   e.to == dest            // can get there in just one step
+					|| e.to.hasPathTo(dest, saw.add(e.to))) { // can get there on a path through e.to
+				return true;
+			}
+		}
+		return false;
+	}
 }
 
 class Edge {
@@ -216,6 +364,10 @@ class Graph {
 
 	// Returns a list of all vertices in the graph that have an edge pointing to the given target vertex 
 	IList<Vertex> inEdge(Vertex v){ return this.allVertices.filter(new HasEdgeOut(v)); }
+
+	// Returns true if in the graph we have an edge pointing to the given vertex; otherwise false.
+	boolean hasPath(Vertex v) { return this.allVertices.get(0).hasPathTo(v, new MtLo<Vertex>()); }
+
 }
 
 class ExamplesGraph{
@@ -269,6 +421,10 @@ class ExamplesGraph{
 			new ConsLo<Vertex>(this.v2,
 				new ConsLo<Vertex>(this.v3,
 					new MtLo<Vertex>())));
+    // A ------> B
+    // ^         |
+    // |         v
+    // +---------C
 		this.g1 = new Graph(allVertex);
 		// An empty graph
 		this.g2 = new Graph(new MtLo<Vertex>());
@@ -364,6 +520,17 @@ class ExamplesGraph{
 		t.checkExpect(g1_.inEdge(v4_), new MtLo<Vertex>());
 	}
 
+
+	void testHasPath(Tester t){
+		this.initData();
+
+		t.checkExpect(this.g1.hasPath(this.v1), true);
+		t.checkExpect(this.g1.hasPath(this.v2), true);
+		t.checkExpect(this.g1.hasPath(this.v3), true);
+		// Testing with a given vertex that is not in the graph
+		t.checkExpect(this.g1.hasPath(this.v4), false);
+	}
+
 }
 
 
@@ -402,5 +569,23 @@ class ExamplesList{
 		// Checking the method with +1 out of boundary 
 		t.checkException(new RuntimeException("There is no element at the given index"), loi, "get", loi.length());
 		t.checkException(new RuntimeException("There is no element at the given index"), los, "get", los.length());
+	}
+
+	void testAdd(Tester t){
+		this.initData();
+		IList<Integer> expected = new ConsLo<Integer>(0,
+		new ConsLo<Integer>(1,
+		 new ConsLo<Integer>(2,
+				new ConsLo<Integer>(3,
+					new MtLo<Integer>()))));
+
+		IList<String> expected1 = new ConsLo<String>("Al",
+		new ConsLo<String>("Bob",
+		 new ConsLo<String>("Cheat",
+				new ConsLo<String>("Don",
+					new MtLo<String>()))));
+
+		t.checkExpect(this.loi.add(0), expected);
+		t.checkExpect(this.los.add("Al"), expected1);
 	}
 }
