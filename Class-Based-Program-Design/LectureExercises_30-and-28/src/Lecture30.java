@@ -134,185 +134,51 @@ boolean hasPathBetween(Vertex from, Vertex to) {
 	it returns a list of the vertices along the path from the source to the destination.
 */
 
-
-
-
-
-
-import java.util.Iterator;
 import tester.*;
 
-interface IFunc<A, R> {
-  R apply(A arg);
+
+
+// Represents a mutable collection of items
+interface ICollection<T> {
+  // Is this collection empty?
+  boolean isEmpty();
+  // EFFECT: adds the item to the collection
+  void add(T item);
+  // Returns the first item of the collection
+  // EFFECT: removes that first item
+  T remove();
 }
 
-interface IFunc2<A1, A2, R> {
-  R apply(A1 fn, A2 base);
-}
-
-interface IPred<A>{
-	boolean apply(A a);
-}
-
-interface IPred2<A1, A2>{
-	boolean apply(A1 a1, A2 a2);
-}
-
-class IsHeavy implements IPred<Edge>{
-	public boolean apply(Edge e){ return e.getWeight() > 0; }
-}
-
-class GetAllEdges implements IFunc<Vertex, IList<Edge>>{
-	public IList<Edge> apply(Vertex v){
-		return v.getAllEdge();
-	}
-}
-
-class FirstConc implements IFunc2<IList<Edge>, IList<Edge>, IList<Edge>>{
-	public IList<Edge> apply(IList<Edge> l, IList<Edge> bl)
-	{
-		return l.concatenate(bl);
-	}
-}
-
-class SameVertex implements IPred<Edge>{
-	Vertex v;
-	SameVertex(Vertex v){ this.v = v; }
-	public boolean apply(Edge e){ return e.to == this.v; }
-}
-
-class SameNode implements IPred<Vertex>{
-	Vertex v;
-	SameNode(Vertex v){ this.v = v; }
-	public boolean apply(Vertex v1){ return v1 == this.v; }
-}
-
-class HasEdgeOut implements IPred<Vertex>{
-	Vertex vOut;
-	HasEdgeOut(Vertex vOut){ this.vOut = vOut; }
-	public boolean apply(Vertex v){ return v.outEdges.some(new SameVertex(this.vOut)); }
-}
-
-interface IList<T> extends Iterable<T>
-{ 
-	boolean isCons();
-	ConsLo<T> asCons();
-	int length();
-	T getFirst();
-	IList<T> getRest();
-	<U> IList<U> map(IFunc<T, U> f);
-	IList<T> filter(IPred<T> pred);
-	IList<T> concatenate(IList<T> l);
-  <U> U foldr(IFunc2<T, U, U> f, U base);
-	boolean some(IPred<T> pred);
-	// Return the element at the given idx
-	T get(int idx);
-	IList<T> add(T el);
-}
-
-class IListIterator<T> implements Iterator<T> {
-  IList<T> items;
-  IListIterator(IList<T> items) {
-    this.items = items;
+class Stack<T> implements ICollection<T> {
+  Deque<T> contents;
+  Stack() {
+    this.contents = new Deque<T>();
   }
-
-  public boolean hasNext() {
-    return this.items.isCons();
+  public boolean isEmpty() {
+    return this.contents.isEmpty();
   }
-  public T next() {
-		ConsLo<T> itemsAsCons = this.items.asCons();
-		T answer = itemsAsCons.first;
-		this.items = itemsAsCons.rest;
-		return answer;
+  public T remove() {
+    return this.contents.removeFromHead();
   }
-  public void remove() {
-    throw new UnsupportedOperationException("Don't do this!");
+  public void add(T item) {
+    this.contents.addAtHead(item);
   }
 }
 
-class ConsLo<T> implements IList<T>{
-	T        first;
-	IList<T>  rest;
-
-	ConsLo(T first, IList<T> rest){
-		this.first = first;
-		this.rest = rest;
-	}
-
-	public Iterator<T> iterator() { return new IListIterator<T>(this); }
-	public boolean isCons() { return true; }
-	public ConsLo<T> asCons() { return this; }
-	public int length(){ return 1 + this.rest.length(); }
-	public T getFirst(){ return this.first; }
-	public IList<T> getRest(){ return this.rest; }
-	public IList<T> concatenate(IList<T> l2){ return new ConsLo<T>(this.first, this.rest.concatenate(l2)); }
-	public <U> IList<U> map(IFunc<T, U> f) 
-	{
-		return new ConsLo<U>(f.apply(this.first), this.rest.map(f));
-	}
-	public IList<T> filter(IPred<T> pred) 
-	{
-		if(pred.apply(this.first))
-		{
-			return new ConsLo<T>(this.first, this.rest.filter(pred));
-		}else{
-			return this.rest.filter(pred);
-		}
-		
-	}
-
-  public <U> U foldr(IFunc2<T, U, U> f, U base)
-	{
-    return f.apply(this.first,
-                   this.rest.foldr(f, base));
-	}
-
-
-	public T get(int idx)
-	{
-			if(idx == 0){
-				return this.first;
-			}else{
-				return this.rest.get(idx - 1);
-		}
-	}
-
-
-	public boolean some(IPred<T> pred)
-	{
-		if(pred.apply(this.first))
-		{
-			return true; 
-		}
-		else
-		{
-			return this.rest.some(pred);
-		}
-	}
-
-	public IList<T> add(T el) { return new ConsLo<T>(el, this); }
-	
-}
-
-class MtLo<T> implements IList<T>{
-	MtLo(){}
-  public Iterator<T> iterator() { return new IListIterator<T>(this); }
-	public boolean isCons() { return false; }
-	public ConsLo<T> asCons() { throw new RuntimeException("An empty list cannot be cons."); }
-	public int length(){ return 0; }
-	public T getFirst(){ throw new RuntimeException("An empty list dosn't have any first."); }
-	public IList<T> getRest(){ throw new RuntimeException("An empty list dosn't have any rest."); }
-	public IList<T> concatenate(IList<T> l2){ return l2; }
-	public <U> IList<U> map(IFunc<T, U> f) { return new MtLo<U>(); }
-  public <U> U foldr(IFunc2<T, U, U> f, U base) { return base; }
-  public IList<T> filter(IPred<T> pred) { return new MtLo<T>(); }
-	public T get(int idx)
-	{
-		 throw new RuntimeException("There is no element at the given index"); 
-		// return null; Or we can return null.
-	}
-	public boolean some(IPred<T> pred) { return false; }
-	public IList<T> add(T el) { return new ConsLo<T>(el, new MtLo<T>()); }
+class Queue<T> implements ICollection<T> {
+  Deque<T> contents;
+  Queue() {
+    this.contents = new Deque<T>();
+  }
+  public boolean isEmpty() {
+    return this.contents.isEmpty();
+  }
+  public T remove() {
+    return this.contents.removeFromHead();
+  }
+  public void add(T item) {
+    this.contents.addAtTail(item); // NOTE: Different from Stack!
+  }
 }
 
 
@@ -327,7 +193,7 @@ class Vertex {
 	// Implementation by the lecture
 	boolean hasPathTo(Vertex dest, IList<Vertex> saw) {
 		for (Edge e : this.outEdges) {
-			if( saw.some(new SameNode(e.to)) ) return false;
+			if( saw.some(new SameVertex1(e.to)) ) return false;
 			if (   e.to == dest            // can get there in just one step
 					|| e.to.hasPathTo(dest, saw.add(e.to))) { // can get there on a path through e.to
 				return true;
@@ -368,6 +234,34 @@ class Graph {
 	// Returns true if in the graph we have an edge pointing to the given vertex; otherwise false.
 	boolean hasPath(Vertex v) { return this.allVertices.get(0).hasPathTo(v, new MtLo<Vertex>()); }
 
+	boolean bfs(Vertex from, Vertex to) { return searchHelp(from, to, new Queue<Vertex>()); }
+	boolean dfs(Vertex from, Vertex to) { return searchHelp(from, to, new Stack<Vertex>()); }
+	boolean searchHelp(Vertex from, Vertex to, ICollection<Vertex> worklist) {
+		Deque<Vertex> alreadySeen = new Deque<Vertex>();
+	 
+		// Initialize the worklist with the from vertex
+		worklist.add(from);
+		// As long as the worklist isn't empty...
+		while (!worklist.isEmpty()) {
+			Vertex next = worklist.remove();
+			if (next.equals(to)) {
+				return true; // Success!
+			}
+			else if (alreadySeen.contains(next)) {
+				// do nothing: we've already seen this one
+			}
+			else {
+				// add all the neighbors of next to the worklist for further processing
+				for (Edge e : next.outEdges) {
+					worklist.add(e.to);
+				}
+				// add next to alreadySeen, since we're done with it
+				alreadySeen.addAtHead(next);
+			}
+		}
+		// We haven't found the to vertex, and there are no more to try
+		return false;
+	}
 }
 
 class ExamplesGraph{
