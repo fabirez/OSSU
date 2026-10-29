@@ -12,7 +12,13 @@ class Deque<T>{
   // counts the number of nodes in a list Deque
   int size()
   {
-    if(this.header.getNext() == null){
+    // TODO: check if this header it's okay to pu there
+    //  It can be a problem, whne we got at the tail, 
+    //  in that case the next of the tail is the header, 
+    //  and we want to return the total size, not 0
+    //  but since we are in recursin, it should be some 
+    //  n1 + (n2 + (n3... goin on somewhere
+    if(this.header.getNext() == this.header){
       return 0;
     }else{
       return this.header.getNext().size();
@@ -63,8 +69,8 @@ class Deque<T>{
   // remove the first node in a list with one item.
   ANode<T> removeFirstNode(ANode<T> item){
       // Make the sentinel point at the newNode.
-      this.header.next = null;
-      this.header.prev = null;
+      this.header.next = this.header;
+      this.header.prev = this.header;
       return item;
   }
 
@@ -73,7 +79,7 @@ class Deque<T>{
 
     if(
         !whichOne.toLowerCase().equals("head")
-        ||
+        &&
         !whichOne.toLowerCase().equals("tail")
       )
     {
@@ -185,12 +191,12 @@ class Deque<T>{
   ANode<T> removeNode(ANode<T> node)
   {
     // If there is only one element, let's just reset the header
-    // with next and prev pointing to null
+    // with next and prev pointing to header(sentinel)
     if(this.size() == 1)
     {
       ANode<T> nodeToRemove = this.header.getNext();
-      this.header.next = null;
-      this.header.prev = null;
+      this.header.next = this.header;
+      this.header.prev = this.header;
       return nodeToRemove;
     }
 
@@ -285,7 +291,11 @@ class Node<T> extends ANode<T>{
 
 class Sentinel<T> extends ANode<T>{
   // a constructor that takes zero arguments, and initializes the next and prev fields of the Sentinel to the Sentinel itself.
-  Sentinel(){ super(null, null); }
+  Sentinel(){ 
+    super(null, null); 
+    this.next = this;
+    this.prev = this;
+  }
 
   Sentinel(ANode<T> next, ANode<T> prev){ super(next, prev); }
   T getData(){ throw new RuntimeException("Sentinel doesn't have data!"); }

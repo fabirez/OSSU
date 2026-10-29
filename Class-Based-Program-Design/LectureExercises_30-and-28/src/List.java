@@ -14,7 +14,25 @@ interface IList<T> extends Iterable<T>
 	boolean some(IPred<T> pred);
 	// Return the element at the given idx
 	T get(int idx);
+	// Return the last element in the list
+	T getTail();
+	// Return a list with the given element as head
 	IList<T> add(T el);
+	// Return a list with the given element as tail
+	IList<T> insert(T el);
+	// Return a list without the last element (tail)
+	IList<T> removeTail();
+	// Return a list without the first that matches the pred and all after the given element
+	// [1,2,3]
+	// removeThisAndAllAfter(2) -> [1]
+	IList<T> removeThisAndAllAfter(IPred<T> pred);
+	// Return a list without the elements after the first matche
+	// example
+	// ```java
+	// [1,2,3]
+	// removeAllAfter(2) -> [1,2]
+	// ```
+ IList<T> removeAllAfter(IPred<T> pred);
 }
 
 class IListIterator<T> implements Iterator<T> {
@@ -97,7 +115,49 @@ class ConsLo<T> implements IList<T>{
 		}
 	}
 
+	// Produce the list with the given element as the head of the list
 	public IList<T> add(T el) { return new ConsLo<T>(el, this); }
+	// Produce the list with the given element as the tail of the list
+	public IList<T> insert(T el) { return new ConsLo<T>(this.first, this.rest.insert(el)); }
+	public T getTail() { return this.get(this.length() - 1); }
+	public IList<T> removeTail() { 
+		int newLength = this.length() - 2;
+		IList<T> res = new MtLo<T>();
+		
+		for(
+			int i = newLength;
+			i >= 0;
+			i = i - 1
+		)
+	  {
+			res = res.add(this.get(i));
+		}
+		return res;
+	}
+	// remove the given element and all the rest that follows it.
+	public IList<T> removeThisAndAllAfter(IPred<T> pred)
+	{
+		if(pred.apply(this.first))
+		{
+			return new MtLo<T>();
+		}else{
+			return new ConsLo<T>(this.first, 
+							this.rest.removeThisAndAllAfter(pred));
+		}
+	}
+
+ // remove the rest of the list after the given element
+	public IList<T> removeAllAfter(IPred<T> pred)
+	{
+		if(pred.apply(this.first))
+		{
+			return new ConsLo<T>(this.first, 
+							new MtLo<T>());
+		}else{
+			return new ConsLo<T>(this.first, 
+							this.rest.removeAllAfter(pred));
+		}
+	}
 	
 }
 
@@ -120,4 +180,10 @@ class MtLo<T> implements IList<T>{
 	}
 	public boolean some(IPred<T> pred) { return false; }
 	public IList<T> add(T el) { return new ConsLo<T>(el, new MtLo<T>()); }
+	// Produce the list with the given element as the tail of the list
+	public IList<T> insert(T el) { return new ConsLo<T>(el, new MtLo<T>()); }
+	public T getTail() { throw new RuntimeException("There is no tail in an empty list!");  }
+	public IList<T> removeTail() { throw new RuntimeException("There is no tail in an empty list!"); }
+	public IList<T> removeThisAndAllAfter(IPred<T> pred){ return new MtLo<T>(); }
+	public IList<T> removeAllAfter(IPred<T> pred) { return new MtLo<T>(); }
 }

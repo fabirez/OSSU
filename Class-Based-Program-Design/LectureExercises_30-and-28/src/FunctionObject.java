@@ -55,6 +55,12 @@ class SameString implements IPred<String>{
 	public boolean apply(String t) { return this.s.equals(t); }
 }
 
+class SameInteger implements IPred<Integer>{
+	int i_;
+	SameInteger(int i_){ this.i_ = i_; }
+	public boolean apply(Integer i) { return this.i_ == i; }
+}
+
 class SameNode<T> implements IPred<T>{
 	ANode<T> n;
 	SameNode(ANode<T> n){ this.n = n;}
