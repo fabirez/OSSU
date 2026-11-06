@@ -36,8 +36,65 @@ class ArrayUtility{
     }
 
 
-  // return the k element most smaller from the given ArrayList<T> based on the given IComparator 
   <T> T selectKth(ArrayList<T> arr, IComparator<T> compare, int k){
+    // Sort the array, with just ONE pivot element 
+    // if k <= pivotIdx, then *do things* in the left arr
+    // else *do things* in the right arr.
+    if(k < 1 || arr.size() <= 0 || k > arr.size()) throw new RuntimeException("Cannot find any k value");
+    this.selectKthHelper(arr, compare, 0, arr.size(), k);
+    return arr.get(k-1);
+  }
+
+  <T> void selectKthHelper(ArrayList<T> arr, IComparator<T> compare, int lo, int hi, int k){
+
+    if(lo >= hi || lo == hi - 1){ return; }
+
+    T pEl = arr.get(lo);
+    int pIDX = partition(arr, compare, lo, hi, pEl);
+
+    if(k - 1 == pIDX) return;
+
+    if(k - 1 > pIDX){
+      this.selectKthHelper(arr, compare, pIDX + 1,  hi, k);
+    }else{
+      this.selectKthHelper(arr, compare, lo, pIDX, k);
+    }
+
+  }
+
+
+
+  <T> int partition(ArrayList<T> arr, IComparator<T> compare, int lo, int hi, T pEl)
+  {
+    int currLo = lo;
+    int currHi = hi - 1;
+
+    T currEl = arr.get(currLo);
+    while(currLo < currHi){
+
+      while(currLo < hi && compare.comp(arr.get(currLo), pEl)){  
+        currLo += 1; 
+      }
+      while(currHi >= lo && !compare.comp(arr.get(currHi), pEl)){    currHi -= 1; 
+      }
+
+      if(currLo < currHi){
+        this.swap(arr, currLo, currHi);
+      }
+
+    }
+
+    this.swap(arr, lo, currHi);
+    return currHi;
+  }
+
+  //=================================
+  // Implemention with swap place
+  //=================================
+
+
+  // return the k element most smaller from the given ArrayList<T> based on the given IComparator 
+  <T> T selectKthSwapPlace(ArrayList<T> arr, IComparator<T> compare, int k){
     // Sort the array, with just ONE pivot element 
     // if k <= pivotIdx, then *do things* in the left arr
     // else *do things* in the right arr.
@@ -54,28 +111,28 @@ class ArrayUtility{
       temp.add(arr.get(i));
     }
 
-    this.selectKthHelper(arr, temp, compare, 0, arr.size(), k);
+    this.selectKthSwapPlaceHelper(arr, temp, compare, 0, arr.size(), k);
     return arr.get(k-1);
   }
 
-  <T> void selectKthHelper(ArrayList<T> arr, ArrayList<T> temp, IComparator<T> compare, int lo, int hi, int k){
+  <T> void selectKthSwapPlaceHelper(ArrayList<T> arr, ArrayList<T> temp, IComparator<T> compare, int lo, int hi, int k){
 
     if(lo >= hi || lo == hi - 1){ return; }
 
     T pivotEL = arr.get(lo);
-    int pivotIdx = partition(arr, temp, compare, lo, hi, pivotEL);
+    int pivotIdx = partitionSwapPlace(arr, temp, compare, lo, hi, pivotEL);
     if(k - 1 == pivotIdx) return;
 
     if(k - 1 > pivotIdx){
-      this.selectKthHelper(arr, temp,compare, pivotIdx + 1,  hi, k);
+      this.selectKthSwapPlaceHelper(arr, temp,compare, pivotIdx + 1,  hi, k);
     }else{
-      this.selectKthHelper(arr, temp,compare, lo, pivotIdx, k);
+      this.selectKthSwapPlaceHelper(arr, temp,compare, lo, pivotIdx, k);
     }
 
   }
 
   // returns the final index (position of where the pivot el, is sorted) of the pivotEl
-  <T> int partition(ArrayList<T> arr, ArrayList<T> temp, IComparator<T> compare, int lo, int hi, T pivotEl){
+  <T> int partitionSwapPlace(ArrayList<T> arr, ArrayList<T> temp, IComparator<T> compare, int lo, int hi, T pivotEl){
 
     int currHi = hi - 1;
     int currLo = lo;
@@ -114,13 +171,22 @@ class ExamplesKElement{
     this.los.add("date"); 
   }
 
-  void testSelectKth(Tester t){
+  void testSelectK(Tester t){
     this.initData();
      t.checkExpect(new ArrayUtility().selectKth(this.los, new CompString(), 1), "apple");
     this.initData();
      t.checkExpect(new ArrayUtility().selectKth(this.los, new CompString(), 3), "cherry");
     this.initData();
      t.checkExpect(new ArrayUtility().selectKth(this.los, new CompString(), 5), "watermelon");
+  }
+
+  void testSelectKthSwapPlace(Tester t){
+    this.initData();
+     t.checkExpect(new ArrayUtility().selectKthSwapPlace(this.los, new CompString(), 1), "apple");
+    this.initData();
+     t.checkExpect(new ArrayUtility().selectKthSwapPlace(this.los, new CompString(), 3), "cherry");
+    this.initData();
+     t.checkExpect(new ArrayUtility().selectKthSwapPlace(this.los, new CompString(), 5), "watermelon");
   }
 
   void testSwap(Tester t){
