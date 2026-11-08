@@ -1,3 +1,5 @@
+import tester.Tester;
+
 class Deque<T>{
   ANode<T> header;
   Deque(){ this.header=new Sentinel<T>(); }
@@ -228,6 +230,23 @@ class Deque<T>{
     return this.header.getNext().contains(el);
   }
 
+  T get(int idx)
+  {
+    if(this.size() == 0) { throw new RuntimeException("Cannot get element in an empty deque!"); }
+    if(idx >= this.size()) { throw new RuntimeException("Cannot get an element with an index greater than the deque!"); }
+    if(idx < 0) { throw new RuntimeException("Only positive integer can be an index in the deque!"); }
+    int i = 0;
+    ANode<T> h = this.header.getNext();
+    while(i < idx){
+      h = h.getNext();
+      i = i + 1;
+    }
+    return h.getData();
+
+    // // If we go there something is wrong.
+    //  throw new RuntimeError("Something is wrong."); 
+  }
+
 
 }
 
@@ -304,4 +323,53 @@ class Sentinel<T> extends ANode<T>{
   // node that satisfy the pred
   ANode<T> find(IPred<T> pred) { return this; }
   boolean contains(T el) { return false; }
+}
+
+class ExamplesDeque{
+
+	ANode<String> s1;
+	Deque<String> d1;
+
+	ANode<String> n1;
+	ANode<String> n2;
+	ANode<String> n3;
+
+  void initData(){
+		this.d1 = new Deque<String>();
+
+		this.s1 = new Sentinel<String>();
+
+		this.n1 = new Node<String>("Hello");
+		this.n2 = new Node<String>("World");
+		this.n3 = new Node<String>("!");
+
+		this.d1.header = this.s1;
+
+		this.s1.next =  this.n1;
+		this.s1.prev = this.n3;
+
+		this.n1.prev = this.s1;
+		this.n1.next = this.n2;
+
+		this.n2.prev =  this.n1;
+		this.n2.next = this.n3;
+
+		this.n3.prev = this.n2;
+		this.n3.next = this.s1;
+  }
+  
+  
+  void testGet(Tester t) {
+    this.initData();
+    t.checkExpect(this.d1.get(0), "Hello");
+    t.checkExpect(this.d1.get(1), "World");
+    t.checkExpect(this.d1.get(this.d1.size() - 1), "!");
+    
+    t.checkException(new RuntimeException("Cannot get an element with an index greater than the deque!"), this.d1, "get", this.d1.size());
+    t.checkException(new RuntimeException("Cannot get an element with an index greater than the deque!"), this.d1, "get", 100);
+    t.checkException(new RuntimeException("Only positive integer can be an index in the deque!"), this.d1, "get", -1);
+    // Empty deque
+		Deque<String> d2 = new Deque<String>();
+    t.checkException(new RuntimeException("Cannot get element in an empty deque!"), d2, "get", 0);
+  }
 }
