@@ -241,150 +241,65 @@ class Graph {
 	// Returns true if in the graph we have an edge pointing to the given vertex; otherwise false.
 	boolean hasPath(Vertex v) { return this.allVertices.get(0).hasPathTo(v, new MtLo<Vertex>()); }
 
-	IList<Vertex> bfs(Vertex from, Vertex to) { return searchHelp(from, to, new Queue<Vertex>()); }
-	IList<Vertex> dfs(Vertex from, Vertex to) { return searchHelp(from, to, new Stack<Vertex>()); }
-	IList<Vertex> searchHelp(Vertex from, Vertex to, ICollection<Vertex> worklist) {
-		Deque<Vertex> alreadySeen = new Deque<Vertex>();
+	IList<Vertex> bfs(Vertex from, Vertex to) { 
+		if(this.allVertices.some(new SameVertex1(from)) && this.allVertices.some(new SameVertex1(to))){
+			return searchHelp(from, to, new Queue<Vertex>()); 
+		}else{
+			// If one of the given vertex doesnt' exist in the graph, return an empty list
+			return new MtLo<Vertex>();
+		}
+	}
+	IList<Vertex> dfs(Vertex from, Vertex to) { 
+		if(this.allVertices.some(new SameVertex1(from)) && this.allVertices.some(new SameVertex1(to))){
+			return searchHelp(from, to, new Stack<Vertex>()); 
+		}else{
+			// If one of the given vertex doesnt' exist in the graph, return an empty list
+			return new MtLo<Vertex>();
+		}
+	}
 
+	IList<Vertex> getPath(Deque<Vertex> alreadySeen, Vertex finalNode){
+		Vertex currFinalNode = finalNode;
+		int i = 0;
+		int len = alreadySeen.size();
 		IList<Vertex> res = new MtLo<Vertex>();
-		// When we reach a fork we have two ways to go.
-		// The checkPoint rapresents how many forks a vertex has.
-		// ```text
-		//  A -> B 
-		//	|
-		//	v
-		//	C
-		// ```
-		//	A:2
-		//	The checkpoint it's used only when a fork exist in the graph.
-		//	will not be used, on a graph like this :
-		//	A -> B -> C
-		IList<HashMap<Vertex, Integer>> checkPoint = new MtLo<HashMap<Vertex, Integer>>();
-		System.out.println("Initializing bfs");
+		res = res.add(currFinalNode);
 
-		// NOTE: We already do this inside the for loop, don't need to do it there.
-		// if(from.isFork()){
-		// 	System.out.println("From:");
-		// 	System.out.println(from.name);
-		// 	System.out.println("Is a fork, adding it to checkooint");
-		// 	// Create the fork Hashmap 
-		// 	HashMap<Vertex, Integer> fork = new HashMap<Vertex, Integer>();
-		// 	// Set: A: 2
-		// 	fork.put(from, from.outEdges.length());
-		// 	// Add it to the checkpoint.
-		// 	checkPoint = checkPoint.add(fork);
-		// }
+		while(i < len){
+		  if(alreadySeen.get(i).hasEdgeOut(currFinalNode)){
+		    res = res.add(alreadySeen.get(i));
+				currFinalNode = alreadySeen.get(i);
+			}
+			i = i + 1;
+		}
 
+		return res;
+	}
+	IList<Vertex> searchHelp(Vertex from, Vertex to, ICollection<Vertex> worklist) {	
+		Deque<Vertex> alreadySeen = new Deque<Vertex>();
+	 
 		// Initialize the worklist with the from vertex
 		worklist.add(from);
 		// As long as the worklist isn't empty...
 		while (!worklist.isEmpty()) {
 			Vertex next = worklist.remove();
-			System.out.println("Currently working on: ");
-			System.out.println(next.name);
 			if (next.equals(to)) {
-				res = res.insert(next);
-				return res; // Success!
+				// return list of vertex that represent the final path
+				return getPath(alreadySeen, next); // Success!
 			}
 			else if (alreadySeen.contains(next)) {
-			System.out.println("Already saw: ");
-			System.out.println(next.name);
 				// do nothing: we've already seen this one
 			}
 			else {
-
-        // add next to res, it can be the right path and if it doens't we will remove / filter it with
-			  // the checkpoint
-        res = res.insert(next);
-				// if the node it's a leaf and it's not what are looking for, remove one from the currCheckpoint
-				if(next.isLeaf()) 
-				{
-				 // TODO: having a leaf, doesn't necessary means that we are in a fork and have
-				 // so a checkPoint.
-				 // Imagine the case where we are just searching for something that doesn't exist.
-				  // If it doens't exist in the current graph, then it doens't follow the 'common logic',
-				  // in that case, we would not have any forks and so any checkPoint.
-				 System.out.println("Is a leaf, removing 1 from cp of his parent.");
-				 // If there is nothing in the checkPoint, then we have nothing left to search,
-				 // we can safely return an empty list.
-				 if(checkPoint.length() <= 0) return new MtLo<Vertex>(); 
-				 HashMap<Vertex, Integer> currCheckpoint = checkPoint.getTail();
-				 Vertex keyCP = null;
-				for(Vertex v: currCheckpoint.keySet())
-				{
-						keyCP = v;
-						System.out.println("The parent is:");
-						System.out.println(keyCP.name);
-				}
-				int val = currCheckpoint.get(keyCP);
-				System.out.println("Whit the value:");
-				System.out.println(val);
-				// EFFECT: if we visted all the forks from this edge, then remove it from checkpoint
-				//  Otherwise, mutate the value of the current checkpoint
-					if(val - 1 <= 0)
-					{
-						System.out.println("Removing from checkpoint...");
-						checkPoint = checkPoint.removeTail();
-						// This means that the path was wrong.
-						// we can easily remove all at once the nodes after the checkPoint.
-						res = res.removeThisAndAllAfter(new SameVertex1(keyCP));
-						System.out.println("res:");
-						for(Vertex v: res)
-						{
-							System.out.println(v.name);
-						}
-						System.out.println("Removed successfully!!! (Check this better)");
-					}else{
-						System.out.println("Updating value...");
-						currCheckpoint.put(keyCP, val - 1);
-						System.out.println("Updated value to:");
-						System.out.println(currCheckpoint.get(keyCP));
-						System.out.println("Updating res:");
-						res = res.removeAllAfter(new SameVertex1(keyCP));
-					}
-				}else if(next.isFork()){
-				 System.out.println("Is a fork!!!, creating the hashMap fork.");
-					// Create the Hashmap 
-					HashMap<Vertex, Integer> fork = new HashMap<Vertex, Integer>();
-					// Set: <Node>: <LenghtOfForks>
-					fork.put(next, next.outEdges.length());
-					System.out.println("Fork name:");
-					System.out.println(next.name);
-					System.out.println("Fork value:");
-					System.out.println(fork.get(next));
-					// Add it to the checkpoint.
-					checkPoint = checkPoint.insert(fork);
-				}
-
 				// add all the neighbors of next to the worklist for further processing
-					for (Edge e : next.outEdges) {
-						worklist.add(e.to);
-					}
-
-
+				for (Edge e : next.outEdges) {
+					worklist.add(e.to);
+				}
 				// add next to alreadySeen, since we're done with it
 				alreadySeen.addAtHead(next);
-
-				System.out.println("The whole checkpoint list:");
-				// TODO: remove this after debug
-					for (HashMap<Vertex,Integer> e : checkPoint) 
-					{
-							for(Vertex v: e.keySet())
-							{
-									System.out.println("Vertex:");
-									System.out.println(v.name);
-
-									System.out.println("Current value of the checkpoint:");
-									System.out.println(e.get(v));
-							}
-					}
-
-			
 			}
 		}
 		// We haven't found the to vertex, and there are no more to try
-		// TODO: check if here we can safely return res,
-		// or it's better to just return an empty list.
 		return new MtLo<Vertex>();
 	}
 }
@@ -650,20 +565,19 @@ class ExamplesGraph{
 			new ConsLo<Vertex>(this.v2,
 				new ConsLo<Vertex>(this.v3, 
 					new MtLo<Vertex>())));
-		// t.checkExpect(this.g1.bfs(this.v1, this.v3), expected1);
+		t.checkExpect(this.g1.bfs(this.v1, this.v3), expected1);
 		// Start from v2, and search for v3
 		IList<Vertex> expected2 = 
 		new ConsLo<Vertex>(this.v2,
 			new ConsLo<Vertex>(this.v3, 
 					new MtLo<Vertex>()));
-		// t.checkExpect(this.g1.bfs(this.v2, this.v3),  expected2);
+		t.checkExpect(this.g1.bfs(this.v2, this.v3),  expected2);
 		// Start from v3, and search for v3
 		IList<Vertex> expected3 = new ConsLo<Vertex>(this.v3, new MtLo<Vertex>());
-		// t.checkExpect(this.g1.bfs(this.v3, this.v3),  expected3);
-		
-		//
+		t.checkExpect(this.g1.bfs(this.v3, this.v3),  expected3);
+
 		// Start from v4, and search for v3 (v4 doesn't exist in the graph)
-		// t.checkExpect(this.g1.bfs(this.v4, this.v3), false);
+		t.checkExpect(this.g1.bfs(this.v4, this.v3), new MtLo<Vertex>());
 
 		// Start from v1, and search for v3
 		t.checkExpect(this.g1.dfs(this.v1, this.v3),  expected1);
@@ -673,33 +587,31 @@ class ExamplesGraph{
 		t.checkExpect(this.g1.dfs(this.v3, this.v3),  expected3);
 
 		// Start from v4, and search for v3 (v4 doesn't exist in the graph)
-		// t.checkExpect(this.g1.bfs(this.v4, this.v3), false);
-		//
-		
+		t.checkExpect(this.g1.bfs(this.v4, this.v3), new MtLo<Vertex>());
+
+
 		// ==== Complex Graph ===== //
-    
+
 		// A -> B -> C
-    // |    \
-    // |   F \ 
-    // |  ^   v
-    // | /    G
-    // v/
-    // D -> E -> H
-		
+		// |    \
+		// |   F \ 
+		// |  ^   v
+		// | /    G
+		// v/
+		// D -> E -> H
+
 		IList<Vertex> expected4 = 
 		new ConsLo<Vertex>(this.A,
 			new ConsLo<Vertex>(this.B,
 			new ConsLo<Vertex>(this.C,
 					new MtLo<Vertex>())));
 
-    // Complex to reach (with 1+forks)
-		IList<Vertex> res = this.g4.dfs(this.A, this.C);
-		System.out.println("");
-		System.out.println("Res_0:");
-		for(Vertex v: res) { System.out.println(v.name); }
+		  // Complex to reach (with 1+forks)
+		// IList<Vertex> res = this.g4.dfs(this.A, this.C);
+		IList<Vertex> res = this.g4.bfs(this.A, this.C);
 
 		t.checkExpect(res,  expected4);
-		
+
 		// Complex to reach (with 1+forks)
 		IList<Vertex> res1 = this.g4.dfs(this.A, this.H);
 		IList<Vertex> expected5 = 
@@ -709,16 +621,10 @@ class ExamplesGraph{
 			new ConsLo<Vertex>(this.H,
 					new MtLo<Vertex>()))));
 
-		System.out.println("");
-		System.out.println("Res_1:");
-		for(Vertex v: res1) { System.out.println(v.name); }
 		t.checkExpect(res1,  expected5);
-	  
+
 		// Complex to reach (with 1 fork)
 		IList<Vertex> res2 = this.g4.dfs(this.A, this.F);
-		System.out.println("");
-		System.out.println("Res_2:");
-		for(Vertex v: res2) { System.out.println(v.name); }
 		IList<Vertex> expected6 = 
 		new ConsLo<Vertex>(this.A,
 			new ConsLo<Vertex>(this.D,
@@ -728,9 +634,6 @@ class ExamplesGraph{
 
 		// Simple and directed search (without 'forks')
 		IList<Vertex> res3 = this.g4.dfs(this.E, this.H);
-		System.out.println("");
-		System.out.println("Res_3:");
-		for(Vertex v: res3) { System.out.println(v.name); }
 		IList<Vertex> expected7 = 
 		new ConsLo<Vertex>(this.E,
 			new ConsLo<Vertex>(this.H,
@@ -739,9 +642,6 @@ class ExamplesGraph{
 
 		// Impossible to reach, no solution
 		IList<Vertex> res4 = this.g4.dfs(this.E, this.G);
-		System.out.println("");
-		System.out.println("Res_4:");
-		for(Vertex v: res4) { System.out.println(v.name); }
 		IList<Vertex> expected8 = new MtLo<Vertex>();
 		t.checkExpect(res4,  expected8);
 	}
