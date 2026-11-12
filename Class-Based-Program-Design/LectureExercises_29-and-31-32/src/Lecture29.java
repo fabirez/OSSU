@@ -227,11 +227,12 @@ class Heap<T>{
 		this.rightPlaceFromTop(gChildIDX);
 	}
 
-	void remove(){
-		if(this.size() <= 0) return;
+	T remove(){
+		if(this.size() <= 0) throw new RuntimeException("Cannot remove any item in an empty heap!");
 
 		int lastIDX = this.size() - 1;
 		int currIDX = 0;
+		T root = this.items.get(currIDX);
 
 		// NOTE: i keep this part of the code here instead of abastracting with rightPlaceFromTop,
 		// beacuse it's the only time we need to **remove** an element from the array.
@@ -241,10 +242,11 @@ class Heap<T>{
 		// Remove the root (most valuable element) from the Heap
 		this.items.remove(lastIDX);
 		// Check if heap had only one item, after the remove.
-		if(this.size() <= 0) return;
+		if(this.size() <= 0) return root;
 		// Find the right position for the new element that now is in the root position
 		rightPlaceFromTop(currIDX);
 
+		return root;
 	}
 
 	// To heapsort a list:
@@ -252,17 +254,24 @@ class Heap<T>{
 	//    Remove all the items from the heap.
 
 	// produce a new heap sorted based on this one
-	Heap<T> heapsort(){
-		Heap<T> res = new Heap<T>(this.comparator);
+	ArrayList<T> heapsort(ArrayList<T> alist, IComparator<T> compare){
+		// The heap builded by the given list
+		Heap<T> h = new Heap<T>(compare);
+		ArrayList<T> res = new ArrayList<T>();
 
-		while(this.size() > 0){
-			T root = this.items.get(0);
-			res.add(root);
-			this.remove();
+		// Building the heap with upheap
+		for(int i = 0; i < alist.size(); i=i+1){
+			T root = alist.get(i);
+			h.add(root);
+		}
+
+		// Getting the sorted list with downheap
+		for(int i = 0; i < alist.size(); i=i+1){ 
+			T item = h.remove();
+			res.add(item);
 		}
 
 		return res;
-
 	}
 
 }
@@ -442,17 +451,50 @@ class ExamplesHeap{
 	}
 
 
-	// NOTE: NEED TO START WITH A NORMAL LIST!
+
 	void testHeapSort(Tester t){
-
 		this.initData();
-		ArrayList<Integer> exp = new ArrayList<Integer>();
-		// Sorting on a empty heap.
-		t.checkExpect(this.h1.heapsort(), this.h1);
 
-		// H2:
-		//	 30
-		// 	 / \
-		// 	20 10
+		ArrayList<Integer> arr = new ArrayList<Integer>();
+		arr.add(0,10); arr.add(1,20); arr.add(2,30);
+
+		ArrayList<Integer> exp = new ArrayList<Integer>();
+		exp.add(0,30); exp.add(1,20); exp.add(2,10);
+		t.checkExpect(this.h2.heapsort(arr, new CompNumber()), exp);
+
+
+		ArrayList<Integer> arr1 = new ArrayList<Integer>();
+		arr1.add(0,8);
+		arr1.add(1,2);
+		arr1.add(2,18);
+		arr1.add(3,3);
+		arr1.add(4,0);
+		arr1.add(5,28);
+		arr1.add(6,15);
+		arr1.add(7,30);
+		arr1.add(8,29);
+
+		ArrayList<Integer> exp1 = new ArrayList<Integer>();
+		exp1.add(0,30); exp1.add(1,29); exp1.add(2,28);
+		exp1.add(3,18); exp1.add(4,15); exp1.add(5, 8);
+		exp1.add(6, 3); exp1.add(7, 2); exp1.add(8, 0);
+		t.checkExpect(this.h2.heapsort(arr1, new CompNumber()), exp1);
+		
+    ArrayList<Integer> arr2 = new ArrayList<Integer>();
+    ArrayList<Integer> exp2 = new ArrayList<Integer>();
+    t.checkExpect(this.h2.heapsort(arr2, new CompNumber()), exp2);
+    
+    ArrayList<Integer> arr3 = new ArrayList<Integer>();
+    arr3.add(0,0);
+    ArrayList<Integer> exp3 = new ArrayList<Integer>();
+    exp3.add(0,0);
+    t.checkExpect(this.h2.heapsort(arr3, new CompNumber()), exp3);
+    
+    ArrayList<Integer> arr4 = new ArrayList<Integer>();
+    arr4.add(0,0); arr4.add(1,0); arr4.add(2,0);
+    ArrayList<Integer> exp4 = new ArrayList<Integer>();
+    exp4.add(0,0);  exp4.add(1,0); exp4.add(2,0);
+    t.checkExpect(this.h2.heapsort(arr4, new CompNumber()), exp4);
+    
 	}
 }
