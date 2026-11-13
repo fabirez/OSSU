@@ -1,37 +1,17 @@
 import tester.*;
-// TODO: import hashamp
-
-// Represents one word in a dictionary, together with its definition
-class DictEntry {
-  String word;
-  String meaning;
-}
-
-// Represents a Wiki entry
-class WikiEntry {
-  String url;
-  String contents;
-}
-
+import java.util.ArrayList;
 
 class Examples {
   Examples(){}
 
-  void testHashMaps(Tester t) {
-    HashMap<String, String> rooms = new HashMap<String, String>();
-    // Put all the data into the hashtable
-    rooms.put("Ben Lerner", "WVH314");
-    rooms.put("Leena Razzaq", "WVH310B");
-    rooms.put("Olin Shivers", "WVH308");
-    rooms.put("Matthias Felleisen", "WVH308B");
-    // Get the data
-    t.checkExpect(rooms.get("Ben Lerner"), "WVH314");
-    t.checkExpect(rooms.get("Olin Shivers"), "WVH310B");
-    // Check that some data is present
-    t.checkExpect(rooms.containsKey("Leena Razzaq"), true);
-    t.checkExpect(rooms.containsKey("Amal Ahmed"), false);
-    // Data that isn't present will return null
-    t.checkExpect(rooms.get("Amal Ahmed"), null);
+  void testArray(Tester t) {
+   ArrayList<Integer> alist = new ArrayList<Integer>();
+   alist.add(1); alist.add(2); alist.add(3);
+   
+   alist.remove(1);
+   ArrayList<Integer> exp = new ArrayList<Integer>();
+   exp.add(1); exp.add(3);
+   t.checkExpect(alist, exp);
   }
 
 }
