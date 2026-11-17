@@ -108,7 +108,6 @@ To downheap at index idx:
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.lang.Integer;
 import tester.*;
 
@@ -128,15 +127,13 @@ class Heap<T>{
 	ArrayList<T> items;
 	IComparator<T> comparator;
 
-	// Used only for heapsort
-	int heapSize;
-	Heap(ArrayList<T> items, IComparator<T> comparator){ this.items = items; this.comparator = comparator; this.heapSize = 0; }
+	Heap(ArrayList<T> items, IComparator<T> comparator){
+		this.comparator = comparator; 
+		this.items = new ArrayList<T>();
+		this.buildList(items);
+	}
 	// NOTE: Assuming the heap as items of type Integer.
-	Heap(IComparator<T> comparator){ this.items = new ArrayList<T>(); this.comparator = comparator; this.heapSize = 0; }
-
-	// TODO: check if you need this
-	// get the current size, and remove the given tail that represents the sorted items "removed" in-place from the heap
-	int getHeadTailIDX(){ return this.size() - this.heapSize; }
+	Heap(IComparator<T> comparator){ this.items = new ArrayList<T>(); this.comparator = comparator; }
 
 	// return all the items in the heap
 	ArrayList<T> getItems(){ return this.items; }
@@ -144,11 +141,25 @@ class Heap<T>{
 	// return the size
 	int size(){ return this.items.size(); }
 
+	// Build the given list (items), using the method add, making the list to
+	// satisfy the max-heap and fullness properties.
+	void buildList(ArrayList<T> items){
+		// Building the heap with upheap
+		for(int i = 0; i < items.size(); i=i+1){
+			T root = items.get(i);
+			this.add(root);
+		}
+
+		return;
+	}
+
+	// Adding a new element in the heap, preserving the fullness property
+	// EFFECT: Mutate the item property, swapping the given element in the right position.
 	void add(T el){
+		// Add the new el at the end of the heap
 		this.items.add(el);
-		if(this.getHeadTailIDX() == 1){ return; }
-		// swap the new element with the head of the heap size.
-		this.rightPlace(el, this.getHeadTailIDX() - 1);
+		// Find the right place, of the new el	
+		this.rightPlace(el, this.size() - 1);
 	}
 
 	// Swap the given elements
@@ -162,31 +173,35 @@ class Heap<T>{
 		this.items.set(elIDX, this.items.get(parentIDX));
 		this.items.set(parentIDX, temp);
 	}
-
+	// Find the right position of the given element satisfying the max-heap property
+	// EFFECT: mutate the items property swapping the new el at the right index.
 	void rightPlace(T el, int elIDX){
 		int parentIDX = (int) Math.floor((elIDX - 1) / 2);
-		if(parentIDX < 0){
-			// Then the new element is the root.
-			return; 	
+	  if(parentIDX < 0 || elIDX < 0 || parentIDX >= this.size() || elIDX >= this.size()){
+				throw new RuntimeException("The given index is greater or equal than the length or is less than zero.");
 		}
+
+		if(elIDX == 0){ 
+			// Then the new element is the root.
+			return;
+		}
+
 		T parent = this.items.get(parentIDX);
 		if( this.comparator.compare(parent, el) >= 0 ) return;
 		this.swap(elIDX, parentIDX);
 		this.rightPlace(el, parentIDX);
 	}
 
-	// return the greatest children if exist; otherwise null.
-	//	EFFECT: mutate the given hashmap with the greatest children as a key, and the index as a value.
-	//	if the greatest children exist, otherwise will not mutate the given hashmap.
-	T getGreatestChildren(int currIDX, HashMap<T, Integer> res){
-		int size = this.getHeadTailIDX();
+	// return the index of the greatest children if exist; otherwise -1.
+	int getGreatestChildren(int currIDX){
+		int size = this.size();
 
 		int lChildIDX = (2 * currIDX) + 1;
 		int rChildIDX = (2 * currIDX) + 2;
 
 		// If left is not valid, then right is not valid too. return null. 
 		//	(if the size == 0, if we are at the last level, if we are the only element left (leaf);
-		if ( (lChildIDX < 0 || lChildIDX >= size) ) return null;
+		if ( (lChildIDX < 0 || lChildIDX >= size) ) return -1;
 
 		// Here we are not the leaf.
 		// It's useless to check if left is valid, 
@@ -195,26 +210,20 @@ class Heap<T>{
 		// So, we just need to check if the right in this case exist.
 		if(rChildIDX < 0 || rChildIDX >= size) {
 		// If right doens't exit, return the left.
-				res.put(this.items.get(lChildIDX), lChildIDX);
-				return this.items.get(lChildIDX);
+				return lChildIDX;
 		}else{
 		// If both are valid, then continue.
-		
 			T lChild = this.items.get(lChildIDX);
 			T rChild = this.items.get(rChildIDX);
 			// Get the greatest children
-			T gChild = null;
 			int gChildIDX = -1;
 
 			if(this.comparator.compare(lChild,rChild) <= 0){
-				gChild = rChild;
 				gChildIDX = rChildIDX;
 			}else{
-				gChild = lChild;
 				gChildIDX = lChildIDX;
 			}
-			res.put(gChild, gChildIDX);
-			return gChild;
+			return gChildIDX;
 		}
 
 	}
@@ -222,11 +231,11 @@ class Heap<T>{
 	void rightPlaceFromTop(int currIDX){
 		T curr = this.items.get(currIDX);
 
-		HashMap<T, Integer> greatest = new HashMap<T, Integer>();
-		T gChild = this.getGreatestChildren(currIDX, greatest);
-		if(gChild == null) return;
-		int gChildIDX = greatest.get(gChild);
+		int gChildIDX = this.getGreatestChildren(currIDX);
+		if(gChildIDX <= 0) return;
 
+		// Get the greatest child
+		T gChild = this.items.get(gChildIDX);
 
 		// if the new element is >= than the greatest child, then it's in the right place,
 		// We are satisfying the max-heap property.
@@ -237,36 +246,24 @@ class Heap<T>{
 		this.rightPlaceFromTop(gChildIDX);
 	}
 
-	T remove(){
+	T removeMax(){
 		if(this.size() <= 0) throw new RuntimeException("Cannot remove any item in an empty heap!");
 
-		int lastIDX = this.getHeadTailIDX() - 1;
+		int lastIDX = this.size() - 1;
 		int currIDX = 0;
 		T root = this.items.get(currIDX);
 		
-		System.out.println(lastIDX);
 
 		// NOTE: i keep this part of the code here instead of abastracting with rightPlaceFromTop,
 		// beacuse it's the only time we need to **remove** an element from the array.
 
 		// Swap the firt item (root), with the last item
 		this.swap(currIDX, lastIDX);
-		// Delimiter 
-		// rest of the items ||| root
-		this.heapSize = this.heapSize + 1;
-		
-		// 30, 20, 10
-		// 10 ||| 30, 20
-		// heapSize = 2
-		// size = 3 - 2
-		
-		// (3 - 2) - 1 = 0
-		
-		//
+
 		// Remove the root (most valuable element) from the Heap
-		// this.items.remove(lastIDX);
+		this.items.remove(lastIDX);
 		// Check if heap had only one item, after the remove.
-		if(this.getHeadTailIDX() <= 0) return root;
+		if(this.size() <= 0) return root;
 
 		// Find the right position for the new element that now is in the root position
 		rightPlaceFromTop(currIDX);
@@ -274,39 +271,36 @@ class Heap<T>{
 		return root;
 	}
 
+}
+
+class ArrayUtils{
 	// To heapsort a list:
 	//    Build a heap from all the items in the list.
 	//    Remove all the items from the heap.
 
 	// produce a new heap sorted based on this one
-	ArrayList<T> heapsort(ArrayList<T> alist, IComparator<T> compare){
+	 <T> ArrayList<T> heapsort(ArrayList<T> alist, IComparator<T> compare){
 		// The heap builded by the given list
-		this.items = new ArrayList<T>();
-		this.comparator = compare;
-		
+		// this.items = new ArrayList<T>();
+		// this.comparator = compare;
+		Heap<T>  h = new Heap<T>(compare);
+
 		// Building the heap with upheap
 		for(int i = 0; i < alist.size(); i=i+1){
 			T root = alist.get(i);
-			this.add(root);
+			h.add(root);
 		}
 
 		// Getting the sorted list with downheap
 		for(int i = 0; i < alist.size(); i=i+1){ 
-			T item = this.remove();
-			// removing the element inserted in the tail with remove, for
-			// having a descendent order.
-			this.items.remove(this.getHeadTailIDX());
-			this.items.add(item);
-			System.out.println("After removing one: ");
-			System.out.println(this.items);
+			T item = h.removeMax();
+			alist.set(i, item);
 		}
 
-		System.out.println(this.items);
-
-		return this.items;
+		return alist;
 	}
-
 }
+
 
 class ExamplesHeap{
 	Heap<Integer> h1;
@@ -443,58 +437,64 @@ class ExamplesHeap{
 		//	 30
 		// 	 / \
 		// 	20 10
-		this.h2.remove();
+		ArrayList<Integer> exp0 =  new ArrayList<Integer>();
+		exp0.add(0,20); exp0.add(1,10);
+		t.checkExpect(this.h2.removeMax(), 30);
+		t.checkExpect(this.h2.getItems(), exp0);
 		//	  20
 		// 	 /
 		// 	10 
-		// ArrayList<Integer> exp1 = new ArrayList<Integer>();
-		// exp1.add(0,20); exp1.add(1,10);
-		// t.checkExpect(this.h2.getItems(), exp1);
-		// this.h2.remove();
-		// // 	10 
-		// ArrayList<Integer> exp2 = new ArrayList<Integer>();
-		// exp2.add(0,10);
-		// t.checkExpect(this.h2.getItems(), exp2);
-		//
-		// this.h2.remove();
-		// // 	Empty queue, removing the last element (10)
-		// ArrayList<Integer> exp3 = new ArrayList<Integer>();
-		// t.checkExpect(this.h2.getItems(), exp3);
-		//
-		// // H3:
-		//  //				 80
-		//  //			 /   \
-		//  //			70   60
-		//  //		 / \   / \ 
-		//  //		40 30 10 50
-		//  //	 /
-		//  //	20
-		// this.h3.remove();
-		//  //				 70
-		//  //			 /   \
-		//  //			40   60
-		//  //		 / \   / \ 
-		//  //		20 30 10 50
-		// ArrayList<Integer> exp = new ArrayList<Integer>();
-		// exp.add(0,70); exp.add(1,40); exp.add(2,60); 
-		// exp.add(3,20); exp.add(4,30); exp.add(5,10);
-		// exp.add(6,50);
-		// t.checkExpect(this.h3.getItems(), exp);
+		t.checkExpect(this.h2.removeMax(), 20);
+		ArrayList<Integer> exp1 = new ArrayList<Integer>();
+		exp1.add(0,10);
+		t.checkExpect(this.h2.getItems(), exp1);
+		//	10 
+		t.checkExpect(this.h2.removeMax(), 10);
+		ArrayList<Integer> exp2 = new ArrayList<Integer>();
+		t.checkExpect(this.h2.getItems(), exp2);
+		//	Empty heap. 
+		t.checkException(new RuntimeException("Cannot remove any item in an empty heap!"), this.h2, "removeMax");
+		ArrayList<Integer> exp3 = new ArrayList<Integer>();
+		t.checkExpect(this.h2.getItems(), exp3);
+
+		// H3:
+		//				 80
+		//			 /   \
+		//			70   60
+		//		 / \   / \ 
+		//		40 30 10 50
+		//	 /
+		//	20
+		t.checkExpect(this.h3.removeMax(), 80);
+		//				 70
+		//			 /   \
+		//			40   60
+		//		 / \   / \ 
+		//		20 30 10 50
+		ArrayList<Integer> exp4 = new ArrayList<Integer>();
+		exp4.add(0,70); exp4.add(1,40); exp4.add(2,60); 
+		exp4.add(3,20); exp4.add(4,30); exp4.add(5,10);
+		exp4.add(6,50);
+		t.checkExpect(this.h3.getItems(), exp4);
 	}
 
 
 
 	void testHeapSort(Tester t){
 		this.initData();
+		ArrayUtils u = new ArrayUtils();
 
+		// Using heapsort with [10,20,30]
 		ArrayList<Integer> arr = new ArrayList<Integer>();
 		arr.add(0,10); arr.add(1,20); arr.add(2,30);
 
+		// Getting back [30,20,10]
 		ArrayList<Integer> exp = new ArrayList<Integer>();
 		exp.add(0,30); exp.add(1,20); exp.add(2,10);
-		t.checkExpect(this.h2.heapsort(arr, new CompNumber()), exp);
 
-		this.initData();
+		t.checkExpect(u.heapsort(arr, new CompNumber()), exp);
+
+		// Using heapsort with [8, 1, 18, 3, 0, 28, 15, 30, 29];
 		ArrayList<Integer> arr1 = new ArrayList<Integer>();
 		arr1.add(0,8);
 		arr1.add(1,2);
@@ -506,29 +506,30 @@ class ExamplesHeap{
 		arr1.add(7,30);
 		arr1.add(8,29);
 
+		// Using heapsort with [30, 29, 28, 3, 0, 28, 15, 30, 29];
 		ArrayList<Integer> exp1 = new ArrayList<Integer>();
 		exp1.add(0,30); exp1.add(1,29); exp1.add(2,28);
 		exp1.add(3,18); exp1.add(4,15); exp1.add(5, 8);
 		exp1.add(6, 3); exp1.add(7, 2); exp1.add(8, 0);
-		t.checkExpect(this.h2.heapsort(arr1, new CompNumber()), exp1);
+		t.checkExpect(u.heapsort(arr1, new CompNumber()), exp1);
 
-		this.initData();
+
 		ArrayList<Integer> arr2 = new ArrayList<Integer>();
 		ArrayList<Integer> exp2 = new ArrayList<Integer>();
-		t.checkExpect(this.h2.heapsort(arr2, new CompNumber()), exp2);
-		
-		this.initData();
+		t.checkExpect(u.heapsort(arr2, new CompNumber()), exp2);
+
+
 		ArrayList<Integer> arr3 = new ArrayList<Integer>();
 		arr3.add(0,0);
 		ArrayList<Integer> exp3 = new ArrayList<Integer>();
 		exp3.add(0,0);
-		t.checkExpect(this.h2.heapsort(arr3, new CompNumber()), exp3);
+		t.checkExpect(u.heapsort(arr3, new CompNumber()), exp3);
 
-		this.initData();
+
 		ArrayList<Integer> arr4 = new ArrayList<Integer>();
 		arr4.add(0,0); arr4.add(1,0); arr4.add(2,0);
 		ArrayList<Integer> exp4 = new ArrayList<Integer>();
 		exp4.add(0,0);  exp4.add(1,0); exp4.add(2,0);
-		t.checkExpect(this.h2.heapsort(arr4, new CompNumber()), exp4);
+		t.checkExpect(u.heapsort(arr4, new CompNumber()), exp4);
 	}
 }
