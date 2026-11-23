@@ -66,20 +66,34 @@ class FloodItWorld extends World {
   ArrayList<ArrayList<Cell>> board = this.generateBoard();
   // Pivot, the game start with the Cell top-left.
   Cell pivot = this.board.get(0).get(0);
+  // true if the game is solved; false otherwise.
+  boolean winner = false;
 
   FloodItWorld(){ }
   // draws the game
   public WorldScene makeScene() { 
 		WorldScene scene = new WorldScene(FloodItWorld.BOARD_SIZE, FloodItWorld.BOARD_SIZE);
-		for(ArrayList<Cell> r: this.board)
-		{
-			for(Cell c: r)
-			{
-				c.drawAt(c.x, c.y, scene);
-			}
-		}
+    if(this.winner){
+      scene.placeImageXY(new TextImage("You Win", Color.black), BOARD_SIZE / 2, BOARD_SIZE / 2);
+    }else{
+      for(ArrayList<Cell> r: this.board)
+      {
+        for(Cell c: r)
+        {
+          c.drawAt(c.x, c.y, scene);
+        }
+      }
+    }
 		return scene;
   }
+
+	public WorldEnd worldEnds() {
+		if (this.winner){
+			return new WorldEnd(true, this.makeScene());
+		} else {
+			return new WorldEnd(false, this.makeScene());
+		}
+	}
 
   // produce the length of the baord.
   int getBoardLength(){ return BOARD_LENGHT; }
@@ -179,6 +193,10 @@ class FloodItWorld extends World {
           worklist.add(c); 
         }
       }
+      // If we saw all the cell in the board, then there are no left.
+      if(alreadySaw.size() == BOARD_SIZE) {
+        this.winner = true;
+      }
     }
   }
 
@@ -193,6 +211,13 @@ class FloodItWorld extends World {
     dfs();  
     return;
   }
+
+	public void onKeyEvent(String key) {
+		 if (key.equals("r")) {
+      this.board = this.generateBoard();
+      this.winner = false;
+		 }
+	}
 }
 
 class Utility{
