@@ -60,6 +60,10 @@ class FloodItWorld extends World {
   static int BOARD_LENGHT = 14;
   // Size of the board
   static int BOARD_SIZE = BOARD_LENGHT * BOARD_LENGHT;
+  // Size of the wrapper include the board and the text that count the steps.
+  static int WRAPPER_SIZE = BOARD_SIZE + 50; 
+  // Max steps (moves) on the board
+  static int MAX_MOVES = 25;
   // Utility
   Utility u = new Utility(); 
   // All the cells of the game
@@ -68,6 +72,8 @@ class FloodItWorld extends World {
   Cell pivot = this.board.get(0).get(0);
   // true if the game is solved; false otherwise.
   boolean winner = false;
+  // Counter on how many clicks, the user did untitl finishing the game
+  int steps = 0;
 
   FloodItWorld(){ }
   // draws the game
@@ -75,6 +81,8 @@ class FloodItWorld extends World {
 		WorldScene scene = new WorldScene(FloodItWorld.BOARD_SIZE, FloodItWorld.BOARD_SIZE);
     if(this.winner){
       scene.placeImageXY(new TextImage("You Win", Color.black), BOARD_SIZE / 2, BOARD_SIZE / 2);
+    }else if(this.steps > FloodItWorld.MAX_MOVES){
+      scene.placeImageXY(new TextImage("You Lost, press 'r' to try again.", Color.black), BOARD_SIZE / 2, BOARD_SIZE / 2);
     }else{
       for(ArrayList<Cell> r: this.board)
       {
@@ -83,34 +91,45 @@ class FloodItWorld extends World {
           c.drawAt(c.x, c.y, scene);
         }
       }
+      
+      scene.placeImageXY(new TextImage("Steps: " + this.steps, Color.black), BOARD_SIZE / 2, BOARD_SIZE + 25);
     }
 		return scene;
   }
 
-	public WorldEnd worldEnds() {
-		if (this.winner){
-			return new WorldEnd(true, this.makeScene());
-		} else {
-			return new WorldEnd(false, this.makeScene());
-		}
+	public void onMouseClicked(Posn pos){
+     // What about the ones that are already a pivot in the *past* (It's useless because they have the same color of the one that is the pivot.)
+    Cell clickedCell = this.getCell(pos);
+    // It's the same, we don't want to do nothing.
+    if(clickedCell.getColor() == this.pivot.getColor()) return;
+    // The clicked cell becomes the pivot
+    this.pivot = clickedCell;
+    this.steps = this.steps + 1;
+    dfs();  
+    return;
+  }
+
+	public void onKeyEvent(String key) {
+		 if (key.equals("r")) {
+      this.board = this.generateBoard();
+      this.winner = false;
+      this.steps = 0;
+		 }
 	}
 
-  // produce the length of the baord.
+  // produce the length of the board.
   int getBoardLength(){ return BOARD_LENGHT; }
 
-  // produce the length of the baord.
+  // produce the length of the board.
   int getBoardSize(){ return BOARD_SIZE; }
 
   // generate initial board game with random colors 
-  // TODO: get the *given* size
 	ArrayList<ArrayList<Cell>> generateBoard()
 	{
      ArrayList<ArrayList<Cell>> cells = new ArrayList<ArrayList<Cell>>();
      ArrayList<Cell> row = new ArrayList<Cell>();
      int boardLen = FloodItWorld.BOARD_LENGHT;
      int boardSize = FloodItWorld.BOARD_SIZE;
-     
-
       for(int i = 0;
       i < boardSize;
       i = i + 1)
@@ -129,11 +148,8 @@ class FloodItWorld extends World {
 
   // produce the index from the given x
   int computeRow(int x) { return (int) Math.floor(x / BOARD_LENGHT); }
-
-
   // produce the index from the given y
   int computeCol(int y) { return (int) Math.floor(y / BOARD_LENGHT); }
-
   // produce the Cell at the given [pos]ition, if it doens't exist return null;
   Cell getCell(Posn pos){
     if(pos.x < 0  || pos.x >= BOARD_SIZE || pos.y < 0 || pos.y >= BOARD_SIZE) return null;
@@ -199,25 +215,6 @@ class FloodItWorld extends World {
       }
     }
   }
-
-
-	public void onMouseClicked(Posn pos){
-     // What about the ones that are already a pivot in the *past* (It's useless beacuse they have the same color of the one that is the pivot.)
-    Cell clickedCell = this.getCell(pos);
-    // It's the same, we don't want to do nothing.
-    if(clickedCell.getColor() == this.pivot.getColor()) return;
-    // The clicked cell becomes the pivot
-    this.pivot = clickedCell;
-    dfs();  
-    return;
-  }
-
-	public void onKeyEvent(String key) {
-		 if (key.equals("r")) {
-      this.board = this.generateBoard();
-      this.winner = false;
-		 }
-	}
 }
 
 class Utility{
@@ -297,7 +294,7 @@ class ExamplesStack {
     this.c2 = new Cell( 84,  97, 14, 14, Color.YELLOW, false);
     this.c3 = new Cell(182, 195, 14, 14, Color.RED, false);
 
-    // Emtpy stack
+    // Empty stack
     this.s1 = new Stack<Cell>();
     // Stack with one Cell
     this.s2 = new Stack<Cell>();
@@ -398,6 +395,6 @@ class ExamplesGame{
   }
   void testGame(Tester t){
     FloodItWorld g = new FloodItWorld();
-    g.bigBang(FloodItWorld.BOARD_SIZE, FloodItWorld.BOARD_SIZE);
+    g.bigBang(FloodItWorld.BOARD_SIZE, FloodItWorld.WRAPPER_SIZE);
   }
 }
