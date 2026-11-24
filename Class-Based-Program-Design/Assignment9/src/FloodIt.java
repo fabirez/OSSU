@@ -76,7 +76,9 @@ class FloodItWorld extends World {
   int steps = 0;
 
   FloodItWorld(){ }
+
   // draws the game
+  // handle the winner, loser scene and each updates of the board (cells) on every click.
   public WorldScene makeScene() { 
 		WorldScene scene = new WorldScene(FloodItWorld.BOARD_SIZE, FloodItWorld.BOARD_SIZE);
     if(this.winner){
@@ -97,6 +99,8 @@ class FloodItWorld extends World {
 		return scene;
   }
 
+  // handle the logic at each click on the board
+  // EFFECT: mutate the current pivot, add 1 to the steps if the clicked cell has a different color of the pivot
 	public void onMouseClicked(Posn pos){
      // What about the ones that are already a pivot in the *past* (It's useless because they have the same color of the one that is the pivot.)
     Cell clickedCell = this.getCell(pos);
@@ -109,6 +113,9 @@ class FloodItWorld extends World {
     return;
   }
 
+  // handle the logic when we press a key,
+  // in this case "r" for restarting the game.
+  // EFFECT: mutate the baord with a new one, reset winner to false and steps to zero
 	public void onKeyEvent(String key) {
 		 if (key.equals("r")) {
       this.board = this.generateBoard();
@@ -158,8 +165,10 @@ class FloodItWorld extends World {
     return this.board.get(colIDX).get(rowIDX);
   }
 
-  // start from the top-left, cell in the game and check if the adiacent 
-  // cell have the same color, if yes put them in the worklist otherwise not.
+  // start from the top-left, cell in the game and check if the adjcent cells have the pivot color,
+  // if we didn't saw the cells before then we add them in the worklist, 
+  // otherwise we add it in the hashmap alreadySaw.
+  // EFFECT: If we saw all the cell in the board we mutate winner to true.
   void dfs(){
     // Cell that will represent the initial worklist,
     // always start from (0,0) or in other words 
