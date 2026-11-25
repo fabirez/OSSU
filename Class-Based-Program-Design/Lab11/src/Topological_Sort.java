@@ -16,13 +16,13 @@
 
 	Your example `ArrayList<Course>` from above should satisfy this helper.
 
-- [ ] Design a void method process on Course that takes in a `ArrayList<Course>` called processed,
+- [x] Design a void method process on Course that takes in a `ArrayList<Course>` called processed,
 			representing the courses that have been processed and added to the eventual result so far.
 			If this course is in processed,
 			then do nothing; otherwise, process this course’s prereqs, then add it to processed.
 			HINT: implement this method recursively, rather than iteratively with loops and a stack as you did for DFS in lecture.
 
-- [ ] Design a method topSort on Curriculum that takes in an `ArrayList<Course>`.
+- [x] Design a method topSort on Curriculum that takes in an `ArrayList<Course>`.
 			The method should create a `new ArrayList<Course>` to store the eventual result,
 			then process every course in the given list with that result list.
 			Once every course has been processed, return the result list.
@@ -38,25 +38,24 @@ class Curriculum {
   void addCourse(Course c) { this.courses.add(c); }
   // add methods here...
 
-	// checks whether the provided Course appears in the schedule after all of its prerequisites
+	// checks whether the given Course appears in the schedule after all of its prerequisites
 	// and, that all the prerequisites appear in the schedule!
 	boolean comesAfterPrereqs(ArrayList<Course> schedule, Course c)
 	{
 		// get the prerequisites of the course
 		ArrayList<Course> currPre = c.getPre();
-		// return true if the curr course doens't not have any pre.
-		if(currPre.size() <= 0) return true;
 		// get the index of the course from the schedule
 		int posCourse = schedule.indexOf(c);
 		// if the course doesn't exist, return false.
 		if(posCourse < 0) return false;
-
+		// return true if the curr course doens't not have any pre.
+		if(currPre.size() <= 0) return true;
 		// check if the pre, comes before the course 
 		for(Course p: currPre){
 			// get the index of the pre from the schedule
 			int posPre = schedule.indexOf(p);
 			//  return false
-			// if pre comes after the course then 
+			// if pre comes after the course
 			// OR
 			// if pre doens't exist in the schedule
 			if(posPre > posCourse || posPre < 0) return false;
@@ -75,6 +74,14 @@ class Curriculum {
 		}
 		return true;
 	}
+
+	// process every course in the given list once every course has been processed, return the result list.
+	ArrayList<Course> topSort(ArrayList<Course> courses){
+		ArrayList<Course> res = new ArrayList<Course>();
+		for(Course c: courses){ c.process(res); }
+		return res;
+	}
+
 }
 class Course {
   String name;
@@ -84,20 +91,17 @@ class Course {
   void addPrereq(Course c) { this.prereqs.add(c); }
 	// produce the prereqs of this course
   ArrayList<Course> getPre(){ return this.prereqs; }
-
-	// Design a void method process on Course that takes in a `ArrayList<Course>` called processed,
-	// 		representing the courses that have been processed and added to the eventual result so far.
-	// 		If this course is in processed, then do nothing; 
-	// 		otherwise,
-	// 		process this course’s prereqs, then add it to processed.
-	// 		HINT: implement this method recursively, rather than iteratively with loops and a stack as you did for DFS in lecture.
-
 	// the given courses represent the courses that have been processed and added to the eventual result so far.
 	void process(ArrayList<Course> processed)
 	{
-
+		if(processed.contains(this)) return;
+		ArrayList<Course> currPre = this.prereqs;
+		for(Course c: currPre){
+			c.process(processed);
+		}
+		processed.add(this);
+		return;
 	}
-
 }
 
 class CurriculumOfCourses{
@@ -123,6 +127,8 @@ class CurriculumOfCourses{
 	Course C;
 	// Schedule
 	ArrayList<Course> schedule;
+	// Curriculum
+	Curriculum c;
 
 	void initData(){
 		// Fundamentals 1
@@ -176,6 +182,20 @@ class CurriculumOfCourses{
 		this.schedule.add(this.LSPDP);
 		this.schedule.add(this.PL);
 		this.schedule.add(this.C);
+
+		// Curriculum
+		this.c = new Curriculum();
+		// Adding them in reverse for testing purpose
+		this.c.addCourse(this.C);
+		this.c.addCourse(this.PL);
+		this.c.addCourse(this.LSPDP);
+		this.c.addCourse(this.OOD);
+		this.c.addCourse(this.DD);
+		this.c.addCourse(this.ToC);
+		this.c.addCourse(this.CS);
+		this.c.addCourse(this.AD);
+		this.c.addCourse(this.F2);
+		this.c.addCourse(this.F1);
 	}
 
 
@@ -192,6 +212,10 @@ class CurriculumOfCourses{
 		t.checkExpect(c.comesAfterPrereqs(this.schedule, this.LSPDP), true);
 		t.checkExpect(c.comesAfterPrereqs(this.schedule,    this.PL), true);
 		t.checkExpect(c.comesAfterPrereqs(this.schedule,     this.C), true);
+
+		// Empty schedule, with Fundamentals that has no Pre
+		ArrayList<Course> schedule_ = new ArrayList<Course>();
+		t.checkExpect(c.comesAfterPrereqs(schedule_, this.F1), false);
 
 		// Fundamentals 1 in the wrong position	
 		ArrayList<Course> schedule1 = new ArrayList<Course>();
@@ -240,13 +264,13 @@ class CurriculumOfCourses{
 		// PL needs Toc and OOD as pre, but in this case ONLY OOD is in the right position.
 		schedule5.add(this.ToC);
 		t.checkExpect(c.comesAfterPrereqs(schedule5, this.PL), false);
-		// Computer System in the wrong poistion
+		// Object Orientation Design in the wrong poistion 
 		ArrayList<Course> schedule6 = new ArrayList<Course>();
 		schedule6.add(this.ToC);
 		schedule6.add(this.PL);
 		// PL needs Toc and OOD as pre, but in this case ONLY ToC is in the right position.
 		schedule6.add(this.OOD);
-		t.checkExpect(c.comesAfterPrereqs(schedule4, this.LSPDP), false);
+		t.checkExpect(c.comesAfterPrereqs(schedule6, this.PL), false);
 
 
 		// Programming Language in the wrong position
@@ -411,4 +435,185 @@ class CurriculumOfCourses{
 	}
 
 
+	void testProcess(Tester t){
+		this.initData();
+		// =====
+		// F1 (depth:0)
+		// =====
+		// F1 is already processed
+		ArrayList<Course> processed = new ArrayList<Course>();
+		processed.add(this.F1); 
+		this.F1.process(processed);
+		// Since it's alreddy processed, nothing should change.
+		ArrayList<Course> exp = new ArrayList<Course>();
+		exp.add(this.F1);
+		t.checkExpect(processed, exp);
+
+		// ===============
+		// F2 (depth:1)
+		// ===============
+		// F2 is not processed, with F1 (his pre) already in the processed list
+		ArrayList<Course> processed1 = new ArrayList<Course>();
+		processed1.add(this.F1); 
+		this.F2.process(processed1);
+		// Just add, F2 since his pre it's already processed
+		ArrayList<Course> exp1 = new ArrayList<Course>();
+		exp1.add(this.F1); exp1.add(this.F2);
+		t.checkExpect(processed1, exp1);
+
+		// F2 is not processed, this time processed is EMPTY!
+		ArrayList<Course> processed2 = new ArrayList<Course>();
+		this.F2.process(processed2);
+		// add F1 because is the pre of F2, and F2 himself!
+		ArrayList<Course> exp2 = new ArrayList<Course>();
+		exp2.add(this.F1); exp2.add(this.F2);
+		t.checkExpect(processed2, exp2);
+
+		// ===============
+		// depth:2
+		// ===============
+
+		// AD is not processed, processed is EMPTY!
+		ArrayList<Course> processed3 = new ArrayList<Course>();
+		this.AD.process(processed3);
+		// add F1, F2 because:
+		// AD -> F2
+		// F2 -> F1
+		// F1 -> none
+		ArrayList<Course> exp3 = new ArrayList<Course>();
+		exp3.add(this.F1); exp3.add(this.F2); exp3.add(this.AD);
+		t.checkExpect(processed3, exp3);
+		// AD is not processed, processed contains F1 
+		ArrayList<Course> processed4 = new ArrayList<Course>();
+		processed4.add(this.F1);
+		this.AD.process(processed4);
+		// Add only F2 and AD
+		ArrayList<Course> exp4 = new ArrayList<Course>();
+		exp4.add(this.F1); exp4.add(this.F2); exp4.add(this.AD);
+		t.checkExpect(processed4, exp4);
+		// AD is not processed, processed contains F1, F2 
+		ArrayList<Course> processed5 = new ArrayList<Course>();
+		processed5.add(this.F1); processed5.add(this.F2);
+		this.AD.process(processed5);
+		// add only AD
+		ArrayList<Course> exp5 = new ArrayList<Course>();
+		exp5.add(this.F1); exp5.add(this.F2); exp5.add(this.AD);
+		t.checkExpect(processed5, exp5);
+
+		// AD is processed!
+		ArrayList<Course> processed6 = new ArrayList<Course>();
+		processed6.add(this.F1); processed6.add(this.F2); processed6.add(this.AD);
+		this.AD.process(processed6);
+		// add only AD
+		ArrayList<Course> exp6 = new ArrayList<Course>();
+		exp6.add(this.F1); exp6.add(this.F2); exp6.add(this.AD);
+		t.checkExpect(processed6, exp6);
+
+		// ===============
+		// depth:3
+		// ===============
+
+		// Large-Scale Parallel Data Processing
+		this.LSPDP = new Course("Large-Scale Parallel Data Processing");
+		this.LSPDP.addPrereq(this.AD); this.LSPDP.addPrereq(this.CS);
+
+		// LSPDP is not processed, processed is EMPTY!
+		ArrayList<Course> processed7 = new ArrayList<Course>();
+		this.LSPDP.process(processed7);
+		// add AD, CS, F1, F2 because:
+		// LSPDP -> AD
+			// AD -> F2
+			// F2 -> F1
+			// F1 -> none
+		// LSPDP -> CS
+			// CS -> F2 
+			// F2 -> F1
+			// F1 -> none
+		ArrayList<Course> exp7 = new ArrayList<Course>();
+		exp7.add(this.F1); exp7.add(this.F2); exp7.add(this.AD);
+		exp7.add(this.CS); exp7.add(this.LSPDP); 
+		t.checkExpect(processed7, exp7);
+
+		// LSPDP is not processed, processed contains F1 
+		ArrayList<Course> processed8 = new ArrayList<Course>();
+		processed8.add(this.F1);
+		this.LSPDP.process(processed8);
+		// Add only F2, AD, CS, LSPDP
+		ArrayList<Course> exp8 = new ArrayList<Course>();
+		exp8.add(this.F1); exp8.add(this.F2); exp8.add(this.AD);
+		exp8.add(this.CS); exp8.add(this.LSPDP); 
+		t.checkExpect(processed8, exp8);
+
+		// LSPDP is not processed, processed contains AD, F2, F1
+		ArrayList<Course> processed9 = new ArrayList<Course>();
+		processed9.add(this.F1); processed9.add(this.F2); processed9.add(this.AD);
+		this.LSPDP.process(processed9);
+		// Add only CS and LSPDP
+		ArrayList<Course> exp9 = new ArrayList<Course>();
+		exp9.add(this.F1); exp9.add(this.F2); exp9.add(this.AD);
+		exp9.add(this.CS); exp9.add(this.LSPDP); 
+		t.checkExpect(processed9, exp9);
+
+		// LSPDP is processed.
+		ArrayList<Course> processed10 = new ArrayList<Course>();
+		processed10.add(this.F1); processed10.add(this.F2); processed10.add(this.AD);
+		processed10.add(this.CS); processed10.add(this.LSPDP); 
+		this.LSPDP.process(processed10);
+		// Add only CS and LSPDP
+		ArrayList<Course> exp10 = new ArrayList<Course>();
+		exp10.add(this.F1); exp10.add(this.F2); exp10.add(this.AD);
+		exp10.add(this.CS); exp10.add(this.LSPDP); 
+		t.checkExpect(processed10, exp10);
+
+		// ===============
+		// depth:4
+		// ===============
+		// C -> PL
+			// PL -> TOC
+				// TOC -> F2
+					// F2 -> F1
+						// F1 -> none
+			// PL -> OOD
+				// OOD -> F2
+					// F2 -> F1
+						// F1 -> none
+		// C is processed.
+		ArrayList<Course> processed11 = new ArrayList<Course>();
+		processed11.add(this.F1); processed11.add(this.F2); processed11.add(this.ToC);
+		processed11.add(this.PL); processed11.add(this.OOD); processed11.add(this.C);
+		this.C.process(processed11);
+		// Add all the pre
+		ArrayList<Course> exp11 = new ArrayList<Course>();
+		exp11.add(this.F1); exp11.add(this.F2); exp11.add(this.ToC);
+		exp11.add(this.PL); exp11.add(this.OOD); exp11.add(this.C);
+		t.checkExpect(processed11, exp11);
+	}
+
+	void testTopSort(Tester t){
+		this.initData();
+		Curriculum c = new Curriculum();
+
+		// All the courses already in a good position!
+		ArrayList<Course> courses = new ArrayList<Course>();
+		courses.add(this.C);
+		ArrayList<Course> exp = new ArrayList<Course>();
+		exp.add(this.F1); exp.add(this.F2);  exp.add(this.ToC);
+		exp.add(this.OOD); exp.add(this.PL); exp.add(this.C);
+		t.checkExpect(c.topSort(courses), exp);
+
+		// Curriculum with not the right order
+		ArrayList<Course> courses1 = new ArrayList<Course>();
+		courses1.add(this.C); courses1.add(this.ToC);
+		courses1.add(this.OOD); courses1.add(this.PL);
+		courses1.add(this.F1); courses1.add(this.F2);  
+		t.checkExpect(c.topSort(courses1), exp);
+
+		// Curriculum with course in reverse order
+		ArrayList<Course> exp1 = new ArrayList<Course>();
+		exp1.add(this.F1);  exp1.add(this.F2); exp1.add(this.ToC);
+		exp1.add(this.OOD); exp1.add(this.PL); exp1.add(this.C);
+		exp1.add(this.AD);  exp1.add(this.CS); exp1.add(this.LSPDP);
+		exp1.add(this.DD);
+		t.checkExpect(this.c.topSort(this.c.courses), exp1);
+	}
 }
